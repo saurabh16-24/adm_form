@@ -23,11 +23,7 @@ The easiest way to get started is by using Docker Compose. The configuration is 
 
 Any application you build can connect using these default credentials:
 
-* **Host**: `localhost` (or `127.0.0.1`)
-* **Port**: `5432`
-* **Database**: `svce_admissions`
-* **Username**: `postgres`
-* **Password**: `admin123`
+
 
 ## Table Schema (`enquiries`)
 
