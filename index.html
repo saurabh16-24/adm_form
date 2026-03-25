@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SVCE - Admission Enquiry Form</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="modal.css">
+    <link rel="stylesheet" href="loader.css">
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="animations.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        /* Force content visibility */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0d1117;
+            color: #ffffff;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background-color: #0d1117;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: hideLoader 3s forwards;
+        }
+        @keyframes hideLoader {
+            0%, 90% { opacity: 1; visibility: visible; }
+            100% { opacity: 0; visibility: hidden; display: none; }
+        }
+        .content-container {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 0;
+            animation: showContent 3s forwards;
+            position: relative;
+            z-index: 10;
+        }
+        @keyframes showContent {
+            0%, 90% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        #constellation-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="constellation-canvas"></canvas>
+    
+    <!-- Enhanced 3D Loader overlay -->
+    <div class="loader-container" id="loader">
+        <div class="loader-floor"></div>
+        <div class="loader-content">
+            <div class="loader-spinner">
+                <div class="pyramid-loader">
+                    <div class="pyramid-face front"></div>
+                    <div class="pyramid-face back"></div>
+                    <div class="pyramid-face right"></div>
+                    <div class="pyramid-face left"></div>
+                </div>
+            </div>
+            <div class="loader-text">SVCE Admission Enquiry System</div>
+            <div class="loader-text-small" style="font-size: 0.9em; opacity: 0.7; margin-top: 10px;">Loading your experience</div>
+            <div class="progress-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main content -->
+    <div class="container content-container" id="main-content">
+        <header>
+            <div class="header-top">
+                <div class="banner">
+                    <div class="logo-placeholder">SVCE</div>
+                </div>
+                <div class="pg-form-button-container">
+                    <a href="https://pg-form-svce.netlify.app/" id="pg-form-button">
+                        <i class="fas fa-user-graduate"></i>
+                        PG-FORM
+                    </a>
+                </div>
+            </div>
+            
+            <div class="title-container">
+                <div class="title-meta">
+                    <div class="token-container">
+                        <label>Token No.: </label>
+                        <span id="token-number" class="token-display"></span>
+                    </div>
+                    <div class="date-container">
+                        <label>Date: </label>
+                        <span id="enquiry-date" class="date-display"></span>
+                    </div>
+                </div>
+                <div class="title">
+                    <h3>ADMISSION ENQUIRY FORM</h3>
+                </div>
+            </div>
+        </header>
+        
+        <form id="enquiryForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="studentName"><i class="fas fa-user"></i> Student Name:</label>
+                    <input type="text" id="studentName" name="studentName" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="fatherName"><i class="fas fa-user-tie"></i> Father Name:</label>
+                    <input type="text" id="fatherName" name="fatherName" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter father's name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="motherName"><i class="fas fa-female"></i> Mother Name:</label>
+                    <input type="text" id="motherName" name="motherName" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter mother's name">
+                </div>
+            </div>
+
+            <h3 class="section-heading"><i class="fas fa-address-book"></i> Contact Details</h3>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="studentEmail"><i class="fas fa-envelope"></i> Student Email:</label>
+                    <input type="email" id="studentEmail" name="studentEmail" required placeholder="example@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="studentMobile"><i class="fas fa-mobile-alt"></i> Student Mobile Number:</label>
+                    <input type="tel" id="studentMobile" name="studentMobile" maxlength="10" placeholder="10-digit number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="fatherMobile"><i class="fas fa-phone"></i> Father Mobile Number:</label>
+                    <input type="tel" id="fatherMobile" name="fatherMobile" maxlength="10" placeholder="10-digit number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="motherMobile"><i class="fas fa-phone"></i> Mother Mobile Number:</label>
+                    <input type="tel" id="motherMobile" name="motherMobile" maxlength="10" placeholder="10-digit number">
+                </div>
+            </div>
+            
+            <div class="form-group full-width">
+                <label for="address"><i class="fas fa-map-marker-alt"></i> Address:</label>
+                <textarea id="address" name="address" rows="3" required placeholder="Enter complete residential address"></textarea>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="reference"><i class="fas fa-user-friends"></i> Reference:</label>
+                    <input type="text" id="reference" name="reference" placeholder="How did you hear about us?">
+                </div>
+                
+                <div class="form-group">
+                    <label for="educationalQualification"><i class="fas fa-graduation-cap"></i> Educational Qualification:</label>
+                    <select id="educationalQualification" name="educationalQualification" class="form-select" required>
+                        <option value="">-- Select Qualification --</option>
+                        <option value="Diploma">Diploma</option>
+                        <option value="12th">12th</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="diplomaFields" class="form-grid" style="display:none;">
+                <div class="form-group">
+                    <label for="diplomaPercentage"><i class="fas fa-percentage"></i> Diploma Percentage:</label>
+                    <input type="number" id="diplomaPercentage" name="diplomaPercentage" min="0" max="100" step="0.01" placeholder="e.g. 85.5">
+                </div>
+                <div class="form-group">
+                    <label for="dcetRank"><i class="fas fa-trophy"></i> DCET Rank:</label>
+                    <input type="text" id="dcetRank" name="dcetRank" placeholder="Enter Rank">
+                </div>
+            </div>
+            
+            <div class="form-group" style="max-width: 400px;">
+                <label for="educationBoard"><i class="fas fa-university"></i> Education Board:</label>
+                <select id="educationBoard" name="educationBoard" required class="form-select">
+                    <option value="">-- Select Board --</option>
+                    <option value="CBSE">CBSE</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="AP/Telangana">Andhra Pradesh/Telangana</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div id="marks11thSection" class="form-group marks" style="display: none;">
+                <label>11<sup>th</sup> Standard Marks: <span class="required-note">(For Andhra Pradesh/Telangana students only)</span></label>
+                <div class="marks-fields">
+                    <div class="marks-field">
+                        <label for="physics11">Physics (Theory):</label>
+                        <input type="number" id="physics11" name="physics11">
+                    </div>
+                    <div class="marks-field">
+                        <label for="chemistry11">Chemistry (Theory):</label>
+                        <input type="number" id="chemistry11" name="chemistry11">
+                    </div>
+                    <div class="marks-field">
+                        <label for="mathematics11a">Mathematics (A):</label>
+                        <input type="number" id="mathematics11a" name="mathematics11a">
+                    </div>
+                    <div class="marks-field">
+                        <label for="mathematics11b">Mathematics (B):</label>
+                        <input type="number" id="mathematics11b" name="mathematics11b">
+                    </div>
+                    <div class="marks-field">
+                        <label for="english_marks_11">English <span class="optional-note">(Optional)</span>:</label>
+                        <input type="number" id="english_marks_11" name="english_marks_11">
+                    </div>
+                    <div class="marks-field">
+                        <label for="language_marks_11">Language <span class="optional-note">(Optional)</span>:</label>
+                        <input type="number" id="language_marks_11" name="language_marks_11">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group marks">
+                <label>12<sup>th</sup> Standard: <span class="required-note">(Physics and Mathematics are mandatory)</span></label>
+                <div class="marks-fields marks-fields-12">
+                    <!-- Row 1: Physics, Chemistry, Mathematics -->
+                    <div class="marks-field">
+                        <label for="physics">Physics (Theory):</label>
+                        <input type="number" id="physics" name="physics" required>
+                    </div>
+                    <div class="marks-field">
+                        <label for="chemistry">Chemistry (Theory): <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="chemistry" name="chemistry">
+                    </div>
+                    <div class="marks-field" id="mathematics12_standard_group">
+                        <label for="mathematics">Mathematics:</label>
+                        <input type="number" id="mathematics" name="mathematics" required>
+                    </div>
+                    <!-- Hidden practicals and A/B math -->
+                    <div class="marks-field" id="physics12Practical_group" style="display: none;">
+                        <label for="physics12Practical">Physics (Practical):</label>
+                        <input type="number" id="physics12Practical" name="physics12Practical">
+                    </div>
+                    <div class="marks-field" id="chemistry12Practical_group" style="display: none;">
+                        <label for="chemistry12Practical">Chemistry (Practical):</label>
+                        <input type="number" id="chemistry12Practical" name="chemistry12Practical">
+                    </div>
+                    <div class="marks-field" id="mathematics12a_group" style="display: none;">
+                        <label for="mathematics12a">Mathematics (A):</label>
+                        <input type="number" id="mathematics12a" name="mathematics12a">
+                    </div>
+                    <div class="marks-field" id="mathematics12b_group" style="display: none;">
+                        <label for="mathematics12b">Mathematics (B):</label>
+                        <input type="number" id="mathematics12b" name="mathematics12b">
+                    </div>
+                </div>
+                <div id="cbseKarnatakaOptionals12" class="marks-fields optionals-row">
+                    <div class="marks-field">
+                        <label for="cs">CS: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="cs" name="cs">
+                    </div>
+                    <div class="marks-field">
+                        <label for="bio">BIO: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="bio" name="bio">
+                    </div>
+                    <div class="marks-field">
+                        <label for="ece">ECE: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="ece" name="ece">
+                    </div>
+                </div>
+                <div class="marks-fields marks-fields-languages">
+                    <div class="marks-field">
+                        <label for="kannada_marks_12">Kannada/Telugu/Sanskrit: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="kannada_marks_12" name="kannada_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                    </div>
+                    <div class="marks-field">
+                        <label for="english_marks_12">English: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="english_marks_12" name="english_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                    </div>
+                    <div class="marks-field">
+                        <label for="other_unnamed_marks_12">Others: <span class="optional-note">(Optional)</span></label>
+                        <input type="number" id="other_unnamed_marks_12" name="other_unnamed_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="totalPercentage"><i class="fas fa-percentage"></i> Total Percentage:</label>
+                    <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" required placeholder="Overall %">
+                </div>
+                
+                <div class="form-group">
+                    <label for="pcmPercentage"><i class="fas fa-flask"></i> P+M+Max(chem,bio,cs,ece)</label>
+                    <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" required placeholder="Core %">
+                </div>
+            </div>
+
+            <div class="form-group entrance-exam">
+                <label><i class="fas fa-file-alt"></i> Entrance Exam Detail:</label>
+                <div class="entrance-fields">
+                    <div class="entrance-field">
+                        <label for="jeeRank">JEE Rank:</label>
+                        <input type="text" id="jeeRank" name="jeeRank" placeholder="Rank">
+                    </div>
+                    <div class="entrance-field">
+                        <label for="comedk">COMEDK Rank:</label>
+                        <input type="text" id="comedk" name="comedk" placeholder="Rank">
+                    </div>
+                    <div class="entrance-field">
+                        <label for="cetRank">CET Rank:</label>
+                        <input type="text" id="cetRank" name="cetRank" placeholder="Rank">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group course-preference">
+                <label><i class="fas fa-list-ol"></i> Course Preference Order: <span class="required-note">(Select courses in order)</span></label>
+                <div class="preference-instruction">
+                    <p><i class="fas fa-info-circle"></i> Click on courses in order of your preference. The first course you select will be your first preference.</p>
+                </div>
+                <div id="course-selection" class="course-selection-list">
+                    <div class="course-option">
+                        <input type="checkbox" id="course1" name="coursePreference[]" value="BE Computer Science and Engineering" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course1">BE Computer Science and Engineering</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course2" name="coursePreference[]" value="BE Computer Science and Engineering (Artificial Intelligence)" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course2">BE Computer Science and Engineering (AI)</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course3" name="coursePreference[]" value="BE Computer Science and Engineering (Data Science)" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course3">BE Computer Science and Engineering (Data Science)</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course4" name="coursePreference[]" value="BE Computer Science and Engineering (Cyber Security)" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course4">BE Computer Science and Engineering (Cyber Security)</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course5" name="coursePreference[]" value="BE Information Science and Engineering" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course5">BE Information Science and Engineering</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course6" name="coursePreference[]" value="BE Electronics and Communication Engineering" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course6">BE Electronics and Communication Engineering</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course8" name="coursePreference[]" value="BE Mechanical Engineering" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course8">BE Mechanical Engineering</label>
+                    </div>
+                    <div class="course-option">
+                        <input type="checkbox" id="course9" name="coursePreference[]" value="BE Civil Engineering" class="course-checkbox">
+                        <div class="preference-indicator"></div>
+                        <label for="course9">BE Civil Engineering</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Submit Application</button>
+                <button type="button" id="resetBtn"><i class="fas fa-undo"></i> Reset Form</button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+            <span class="close">&times;</span>
+            <h2>Form Submitted Successfully!</h2>
+            <p>Thank you for your enquiry. We will get back to you soon.</p>
+            <div class="token-box">
+                <p>Your tracking token:</p>
+                <h3 id="tokenNumber"></h3>
+            </div>
+            <div id="qrcodeContainer" style="display:flex; justify-content:center; margin: 20px 0; padding: 10px; background: white; border-radius: 10px; width: fit-content; margin-inline: auto;">
+                <div id="qrcode"></div>
+            </div>
+            <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 15px;">Save or scan this QR code. In the future, scanning this code will open a new form entirely pre-filled with your details.</p>
+            <button id="printFormBtn"><i class="fas fa-print"></i> Print Receipt</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="database-config-docker.js"></script>
+    <script src="constellation.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loader = document.getElementById('loader');
+            const mainContent = document.getElementById('main-content');
+            
+            initializeForm();
+            
+            if (typeof dbConnection !== 'undefined') {
+                dbConnection.testConnection().then(connected => {
+                    showMainContent();
+                }).catch(error => {
+                    showMainContent();
+                });
+            } else {
+                setTimeout(showMainContent, 2000);
+            }
+            
+            function showMainContent() {
+                if (loader) {
+                    loader.style.display = 'none';
+                }
+                if (mainContent) {
+                    mainContent.classList.add('show');
+                }
+            }
+        });
+        
+        function initializeForm() {
+            const today = new Date();
+            const formattedDate = today.toLocaleDateString('en-GB');
+            document.getElementById('enquiry-date').textContent = formattedDate;
+            
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            document.getElementById('token-number').textContent = `${day}/${month}/${year}/(Random)`;
+            
+            document.getElementById('educationalQualification').addEventListener('change', function() {
+                const diplomaFields = document.getElementById('diplomaFields');
+                if (this.value === 'Diploma') {
+                    diplomaFields.style.display = 'flex';
+                } else {
+                    diplomaFields.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('educationBoard').addEventListener('change', function() {
+                const marks11thSection = document.getElementById('marks11thSection');
+                if (this.value === 'AP/Telangana') {
+                    marks11thSection.style.display = 'block';
+                    document.getElementById('physics12Practical_group').style.display = 'block';
+                    document.getElementById('chemistry12Practical_group').style.display = 'block';
+                    document.getElementById('mathematics12a_group').style.display = 'block';
+                    document.getElementById('mathematics12b_group').style.display = 'block';
+                    document.getElementById('mathematics12_standard_group').style.display = 'none';
+                } else {
+                    marks11thSection.style.display = 'none';
+                    document.getElementById('physics12Practical_group').style.display = 'none';
+                    document.getElementById('chemistry12Practical_group').style.display = 'none';
+                    document.getElementById('mathematics12a_group').style.display = 'none';
+                    document.getElementById('mathematics12b_group').style.display = 'none';
+                    document.getElementById('mathematics12_standard_group').style.display = 'block';
+                }
+            });
+            
+            let coursePreferenceOrder = [];
+            document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const optionDiv = this.closest('.course-option');
+                    if (this.checked) {
+                        coursePreferenceOrder.push(this.value);
+                        optionDiv.classList.add('selected');
+                        updatePreferenceIndicators();
+                    } else {
+                        const index = coursePreferenceOrder.indexOf(this.value);
+                        if (index > -1) {
+                            coursePreferenceOrder.splice(index, 1);
+                            optionDiv.classList.remove('selected');
+                            updatePreferenceIndicators();
+                        }
+                    }
+                });
+            });
+            
+            function updatePreferenceIndicators() {
+                document.querySelectorAll('.course-checkbox').forEach(checkbox => {
+                    const indicator = checkbox.parentElement.querySelector('.preference-indicator');
+                    if (checkbox.checked) {
+                        const order = coursePreferenceOrder.indexOf(checkbox.value) + 1;
+                        indicator.textContent = order;
+                        indicator.style.display = 'flex';
+                    } else {
+                        indicator.style.display = 'none';
+                    }
+                });
+            }
+            
+            document.getElementById('enquiryForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const submitBtn = document.getElementById('submitBtn');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+                
+                try {
+                    const randomToken = Math.floor(1000 + Math.random() * 9000);
+                    const tokenStr = document.getElementById('token-number').textContent.includes('(Random)') 
+                        ? document.getElementById('token-number').textContent.replace('(Random)', randomToken)
+                        : document.getElementById('token-number').textContent;
+                    
+                    document.getElementById('token-number').textContent = tokenStr;
+
+                    const formData = {
+                        token_number: tokenStr,
+                        enquiry_date: new Date().toISOString().split('T')[0],
+                        student_name: document.getElementById('studentName').value,
+                        father_name: document.getElementById('fatherName').value,
+                        mother_name: document.getElementById('motherName').value,
+                        student_email: document.getElementById('studentEmail').value,
+                        student_mobile: document.getElementById('studentMobile').value,
+                        father_mobile: document.getElementById('fatherMobile').value,
+                        mother_mobile: document.getElementById('motherMobile').value,
+                        address: document.getElementById('address').value,
+                        reference: document.getElementById('reference').value,
+                        education_qualification: document.getElementById('educationalQualification').value,
+                        education_board: document.getElementById('educationBoard').value,
+                        physics_marks: parseFloat(document.getElementById('physics').value) || null,
+                        chemistry_marks: parseFloat(document.getElementById('chemistry').value) || null,
+                        mathematics_marks: parseFloat(document.getElementById('mathematics').value) || null,
+                        cs_marks: parseFloat(document.getElementById('cs').value) || null,
+                        bio_marks: parseFloat(document.getElementById('bio').value) || null,
+                        ece_marks: parseFloat(document.getElementById('ece').value) || null,
+                        total_percentage: parseFloat(document.getElementById('totalPercentage').value),
+                        pcm_percentage: parseFloat(document.getElementById('pcmPercentage').value),
+                        jee_rank: document.getElementById('jeeRank').value || null,
+                        comedk_rank: document.getElementById('comedk').value || null,
+                        cet_rank: document.getElementById('cetRank').value || null,
+                        course_preferences: coursePreferenceOrder,
+                        diploma_percentage: parseFloat(document.getElementById('diplomaPercentage').value) || null,
+                        dcet_rank: document.getElementById('dcetRank').value || null
+                    };
+
+                    const result = await dbConnection.submitEnquiry(formData);
+                    if (result.error) throw new Error(result.error);
+
+                    document.getElementById('tokenNumber').textContent = tokenStr;
+                    const dbId = result.data?.id || tokenStr;
+                    
+                    // Generate QR
+                    const qrContainer = document.getElementById("qrcode");
+                    qrContainer.innerHTML = ""; // Clear existing QR code
+                    
+                    // Create an autofill link containing the permanent Database ID
+                    const autofillUrl = window.location.origin + "/autofill.html?id=" + dbId;
+                    
+                    new QRCode(qrContainer, {
+                        text: autofillUrl,
+                        width: 150,
+                        height: 150,
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H
+                    });
+
+                    document.getElementById('successModal').style.display = 'flex';
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                        
+                    document.getElementById('enquiryForm').reset();
+                    coursePreferenceOrder = [];
+                    document.querySelectorAll('.course-option').forEach(el => el.classList.remove('selected'));
+                    updatePreferenceIndicators();
+
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    alert('Error submitting form: ' + error.message);
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+            
+            const modal = document.getElementById('successModal');
+            const closeBtn = document.querySelector('.close');
+            const resetBtn = document.getElementById('resetBtn');
+            const printBtn = document.getElementById('printFormBtn');
+            
+            if (closeBtn) {
+                closeBtn.onclick = function() {
+                    modal.style.display = 'none';
+                };
+            }
+            
+            if (resetBtn) {
+                resetBtn.onclick = function() {
+                    if (confirm('Are you sure you want to reset the form?')) {
+                        document.getElementById('enquiryForm').reset();
+                        coursePreferenceOrder = [];
+                        document.querySelectorAll('.course-option').forEach(el => el.classList.remove('selected'));
+                        updatePreferenceIndicators();
+                    }
+                };
+            }
+            
+            if (printBtn) {
+                printBtn.onclick = function() {
+                    window.print();
+                };
+            }
+            
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+        
+        function handleExclusiveOptionalSubjectChange(changedId) {
+            const optionalFields = ['kannada_marks_12', 'english_marks_12', 'other_unnamed_marks_12'];
+            const changedField = document.getElementById(changedId);
+            
+            if (changedField.value) {
+                optionalFields.forEach(fieldId => {
+                    if (fieldId !== changedId) {
+                        document.getElementById(fieldId).value = '';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

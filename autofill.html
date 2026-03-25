@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Filled Form (Future Application)</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0d1117; color: #fff; padding: 20px; }
+        .container { max-width: 600px; margin: 40px auto; background: rgba(22, 27, 34, 0.7); padding: 30px; border-radius: 12px; border: 1px solid rgba(48, 54, 61, 0.8); }
+        h2 { text-align: center; color: #3b82f6; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #8b949e; font-size: 0.9rem; }
+        input[type="text"], input[type="email"] { width: 100%; padding: 10px; background: #0d1117; color: white; border: 1px solid #30363d; border-radius: 8px; box-sizing: border-box; }
+        .loader { text-align: center; margin: 50px 0; color: #10b981; }
+        .success-box { padding: 15px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; margin-bottom: 20px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Future Onboarding Form</h2>
+        <div id="status" class="loader">Scanning QR Data... Fetching records...</div>
+        
+        <div id="successMessage" class="success-box">
+            ✅ Welcome back! We found your record via QR Code. Your details have been instantly auto-filled.
+        </div>
+
+        <form id="autofillForm" style="display: none;">
+            <div class="form-group">
+                <label>Student Name:</label>
+                <input type="text" id="af_studentName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Email Address:</label>
+                <input type="email" id="af_email" readonly>
+            </div>
+            <div class="form-group">
+                <label>Mobile Number:</label>
+                <input type="text" id="af_mobile" readonly>
+            </div>
+            <div class="form-group">
+                <label>Father's Name:</label>
+                <input type="text" id="af_fatherName" readonly>
+            </div>
+            <div class="form-group">
+                <label>Original Token Number:</label>
+                <input type="text" id="af_token" readonly style="border-color: #3b82f6; color: #3b82f6;">
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get ID from URL query parameters (e.g. ?id=13)
+            const urlParams = new URLSearchParams(window.location.search);
+            const dbId = urlParams.get('id');
+
+            if (!dbId) {
+                document.getElementById('status').innerHTML = "❌ No ID found in URL. Please scan a valid QR Code.";
+                return;
+            }
+
+            try {
+                // Fetch the original data using the ID from the database
+                const response = await fetch(`/api/enquiry/${dbId}`);
+                if (!response.ok) throw new Error('Record not found');
+                
+                const result = await response.json();
+                const data = result.data;
+
+                // Pre-fill the mock future form effortlessly
+                document.getElementById('af_studentName').value = data.student_name;
+                document.getElementById('af_email').value = data.student_email;
+                document.getElementById('af_mobile').value = data.student_mobile;
+                document.getElementById('af_fatherName').value = data.father_name;
+                document.getElementById('af_token').value = data.token_number;
+
+                // Hide loader and show form
+                document.getElementById('status').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('autofillForm').style.display = 'block';
+
+            } catch (error) {
+                document.getElementById('status').innerHTML = "❌ Failed to fetch user record. The ID may be invalid.";
+            }
+        });
+    </script>
+</body>
+</html>
