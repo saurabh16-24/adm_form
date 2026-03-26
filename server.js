@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const nodemailer = require('nodemailer');
+const QRCode = require('qrcode');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -70,6 +72,79 @@ app.post('/api/submit-enquiry', async (req, res) => {
 
     const result = await client.query(query, values);
     await client.query('COMMIT');
+
+    // Generate QR Code and send Email
+    try {
+      const autofillUrl = `${req.headers.origin || 'http://localhost:' + port}/autofill.html?id=${result.rows[0].id}`;
+      const qrCodeDataURI = await QRCode.toDataURL(autofillUrl, {
+        width: 150,
+        height: 150,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: "H"
+      });
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
+          pass: process.env.EMAIL_PASS || 'your_app_password'
+        }
+      });
+
+      const mailOptions = {
+        from: '"Admission Team" <enquiry.svce@gmail.com>',
+        to: d.student_email,
+        subject: 'SVCE Admission Enquiry Successful',
+        html: `
+<div style="font-family: Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.5;">
+Enquiry Successful!<br>
+Dear ${d.student_name} ,<br><br>
+Thank you for enquiring for admission at SVCE,Bengaluru<br>
+Your enquiry has been received and recorded.<br><br>
+Your Token Number:<br>
+<strong>${d.token_number}</strong><br>
+Please keep this token number safe. You may be asked to present it during further admission processes.<br><br>
+Our Admission team will be assisting you further.<br><br>
+Thank You<br>
+Have a great day!<br><br>
+Regards<br>
+Admission Team<br>
+ SVCE, Bengaluru<br>
+ 9916775988<br><br>
+<div style="text-align: center;">
+  <p style="font-size: 14px; color: #555; margin-bottom: 5px;">Scan to Access Your Details:</p>
+  <img src="cid:qrcode" alt="QR Code" style="width: 150px; height: 150px; border-radius: 5px; border: 1px solid #ccc; padding: 5px;" />
+</div>
+<br>
+<div style="text-align: center; width: 100%; max-width: 600px; margin: 20px auto;">
+  <img src="cid:svce_promo" alt="Experience SVCE" style="width: 100%; max-width: 600px; height: auto; display: block; border-radius: 8px; margin: 0 auto; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);" />
+</div>
+</div>
+        `,
+        attachments: [
+          {
+            filename: 'qrcode.png',
+            content: qrCodeDataURI.split("base64,")[1],
+            encoding: 'base64',
+            cid: 'qrcode'
+          },
+          {
+            filename: 'svce-promo.gif',
+            path: require('path').join(__dirname, 'svce-promo.gif'),
+            cid: 'svce_promo'
+          }
+        ]
+      };
+
+      transporter.sendMail(mailOptions)
+        .then(() => console.log('Email sent successfully to', d.student_email))
+        .catch(emailError => console.error('Error sending email:', emailError));
+      
+    } catch (error) {
+      console.error('Error preparing email:', error);
+    }
+
     res.status(201).json({ success: true, message: 'Enquiry submitted successfully', id: result.rows[0].id });
   } catch (error) {
     await client.query('ROLLBACK');
