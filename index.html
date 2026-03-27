@@ -300,12 +300,12 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="totalPercentage"><i class="fas fa-percentage"></i> Total Percentage:</label>
-                    <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" required placeholder="Overall %">
+                    <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" required placeholder="Auto-calculated" readonly style="cursor:not-allowed; opacity:0.8;">
                 </div>
                 
                 <div class="form-group">
                     <label for="pcmPercentage"><i class="fas fa-flask"></i> P+M+Max(chem,bio,cs,ece)</label>
-                    <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" required placeholder="Core %">
+                    <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" required placeholder="Auto-calculated" readonly style="cursor:not-allowed; opacity:0.8;">
                 </div>
             </div>
 
@@ -469,7 +469,110 @@
                     document.getElementById('mathematics12b_group').style.display = 'none';
                     document.getElementById('mathematics12_standard_group').style.display = 'block';
                 }
+                calculatePercentages();
             });
+
+            // ── Auto-Calculation Setup ──────────────────────────────────────────
+            const markFieldIds = [
+                'physics','chemistry','mathematics',
+                'physics12Practical','chemistry12Practical',
+                'mathematics12a','mathematics12b',
+                'physics11','chemistry11','mathematics11a','mathematics11b',
+                'english_marks_11','language_marks_11',
+                'cs','bio','ece',
+                'kannada_marks_12','english_marks_12','other_unnamed_marks_12'
+            ];
+            markFieldIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', calculatePercentages);
+            });
+
+            function calculatePercentages() {
+                const board = document.getElementById('educationBoard').value;
+
+                const getMark = (id) => {
+                    const el = document.getElementById(id);
+                    if (!el || el.value.trim() === '') return { value: 0, entered: false };
+                    const v = parseFloat(el.value);
+                    if (isNaN(v) || v < 0) return { value: 0, entered: true };
+                    return { value: v, entered: true };
+                };
+
+                if (board === 'AP/Telangana') {
+                    // 12th marks
+                    const phy12 = getMark('physics');
+                    const chem12 = getMark('chemistry');
+                    const phyPrac = getMark('physics12Practical');
+                    const chemPrac = getMark('chemistry12Practical');
+                    const math12a = getMark('mathematics12a');
+                    const math12b = getMark('mathematics12b');
+                    // 11th marks
+                    const phy11 = getMark('physics11');
+                    const chem11 = getMark('chemistry11');
+                    const math11a = getMark('mathematics11a');
+                    const math11b = getMark('mathematics11b');
+                    const eng11 = getMark('english_marks_11');
+                    const lang11 = getMark('language_marks_11');
+                    // Optional 12th
+                    const cs = getMark('cs');
+                    const bio = getMark('bio');
+                    const ece = getMark('ece');
+                    const kanna = getMark('kannada_marks_12');
+                    const eng12 = getMark('english_marks_12');
+                    const other12 = getMark('other_unnamed_marks_12');
+
+                    // PCM: Phy = phy11+phy12+phyPrac, Chem = chem11+chem12+chemPrac, Math = math11a+math11b+math12a+math12b
+                    const phyTotal = phy11.value + phy12.value + phyPrac.value;
+                    const chemTotal = chem11.value + chem12.value + chemPrac.value;
+                    const mathTotal = math11a.value + math11b.value + math12a.value + math12b.value;
+                    const pcmObtained = phyTotal + chemTotal + mathTotal;
+
+                    // Total: all subjects sum / 1000 × 100
+                    const totalObtained = phy11.value + chem11.value + math11a.value + math11b.value + eng11.value + lang11.value
+                                       + phy12.value + phyPrac.value + chem12.value + chemPrac.value + math12a.value + math12b.value
+                                       + Math.max(cs.value, bio.value, ece.value)
+                                       + Math.max(kanna.value, eng12.value, other12.value);
+
+                    document.getElementById('pcmPercentage').value = ((pcmObtained / 600) * 100).toFixed(2);
+                    document.getElementById('totalPercentage').value = ((totalObtained / 1000) * 100).toFixed(2);
+
+                } else if (board === 'CBSE' || board === 'Karnataka' || board === 'Other') {
+                    const phy = getMark('physics');
+                    const chem = getMark('chemistry');
+                    const math = getMark('mathematics');
+                    const cs = getMark('cs');
+                    const bio = getMark('bio');
+                    const ece = getMark('ece');
+                    const kanna = getMark('kannada_marks_12');
+                    const eng12 = getMark('english_marks_12');
+                    const other12 = getMark('other_unnamed_marks_12');
+
+                    if (!phy.entered || !math.entered) {
+                        document.getElementById('pcmPercentage').value = '';
+                        document.getElementById('totalPercentage').value = '';
+                        return;
+                    }
+
+                    // PCM: Phy + Math + Best(Chem, CS, Bio, ECE)
+                    const bestOptional = Math.max(chem.value, cs.value, bio.value, ece.value);
+                    const pcmMarks = phy.value + math.value + bestOptional;
+                    document.getElementById('pcmPercentage').value = ((pcmMarks / 300) * 100).toFixed(2);
+
+                    // Total: sum of all entered subjects / (count × 100)
+                    const allSubjects = [phy, chem, math, cs, bio, ece, kanna, eng12, other12];
+                    const entered = allSubjects.filter(s => s.entered);
+                    if (entered.length === 0) {
+                        document.getElementById('totalPercentage').value = '';
+                        return;
+                    }
+                    const totalMarks = entered.reduce((sum, s) => sum + s.value, 0);
+                    document.getElementById('totalPercentage').value = ((totalMarks / (entered.length * 100)) * 100).toFixed(2);
+                } else {
+                    // No board selected yet – clear
+                    document.getElementById('pcmPercentage').value = '';
+                    document.getElementById('totalPercentage').value = '';
+                }
+            }
             
             let coursePreferenceOrder = [];
             document.querySelectorAll('.course-checkbox').forEach(checkbox => {
