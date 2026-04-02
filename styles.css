@@ -1,15 +1,15 @@
 :root {
-    --primary: #3b82f6; /* Beautiful Blue */
+    --primary: #3b82f6;
     --primary-hover: #2563eb;
-    --secondary: #10b981; /* Emerald Green */
+    --secondary: #10b981;
     --bg-color: #0d1117;
-    --card-bg: rgba(22, 27, 34, 0.7);
-    --input-bg: rgba(13, 17, 23, 0.8);
-    --border-color: rgba(48, 54, 61, 0.8);
-    --text-primary: #f0f6fc;
-    --text-secondary: #8b949e;
-    --accent: #8b5cf6; /* Vibrant Purple */
-    --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --card-bg: #ffffff;
+    --input-bg: #f8fafc;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --accent: #8b5cf6;
+    --shadow: 0 8px 40px rgba(0,0,0,0.35);
 }
 
 body {
@@ -22,17 +22,14 @@ body {
     max-width: 900px;
     margin: 40px auto;
     padding: 30px 40px;
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--border-color);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
     box-shadow: var(--shadow);
 }
 
 header {
     margin-bottom: 40px;
-    border-bottom: 2px solid var(--border-color);
     padding-bottom: 20px;
 }
 
@@ -43,13 +40,17 @@ header {
     margin-bottom: 20px;
 }
 
+/* SVCE logo image */
+.svce-logo-img {
+    height: 60px;
+    width: auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Legacy text logo (hidden now) */
 .logo-placeholder {
-    font-size: 2rem;
-    font-weight: 800;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 2px;
+    display: none;
 }
 
 #pg-form-button {
@@ -85,7 +86,7 @@ header {
     background: rgba(16, 185, 129, 0.1);
     padding: 4px 10px;
     border-radius: 6px;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .title h3 {
@@ -100,10 +101,11 @@ header {
     margin: 40px 0 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
-    color: #e5e7eb;
+    color: #1e293b;
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 1rem;
 }
 
 .form-grid {
@@ -125,8 +127,8 @@ header {
 }
 
 label {
-    font-weight: 500;
-    font-size: 0.95rem;
+    font-weight: 600;
+    font-size: 0.9rem;
     color: var(--text-secondary);
 }
 
@@ -148,16 +150,18 @@ textarea {
     font-family: inherit;
 }
 
+select option { background: #fff; color: #1e293b; }
+
 input:focus,
 select:focus,
 textarea:focus {
     outline: none;
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 input::placeholder, textarea::placeholder {
-    color: rgba(139, 148, 158, 0.5);
+    color: #94a3b8;
 }
 
 /* MARKS SECTION */
@@ -165,7 +169,7 @@ input::placeholder, textarea::placeholder {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
-    background: rgba(22, 27, 34, 0.5);
+    background: #f1f5f9;
     padding: 20px;
     border-radius: 12px;
     border: 1px solid var(--border-color);
@@ -191,12 +195,13 @@ input::placeholder, textarea::placeholder {
 
 /* COURSE PREFERENCE */
 .preference-instruction {
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.08);
     border-left: 4px solid var(--primary);
     padding: 12px 15px;
     border-radius: 0 8px 8px 0;
     margin-bottom: 15px;
     font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
 .course-selection-list {
@@ -220,12 +225,12 @@ input::placeholder, textarea::placeholder {
 
 .course-option:hover {
     border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.05);
+    background: rgba(59, 130, 246, 0.04);
 }
 
 .course-option.selected {
     border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.07);
 }
 
 .course-checkbox {
@@ -299,11 +304,12 @@ button {
 }
 
 #resetBtn {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
+    background: #f1f5f9;
+    color: var(--text-secondary);
     border: 1px solid var(--border-color);
 }
 
 #resetBtn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #e2e8f0;
+    color: var(--text-primary);
 }

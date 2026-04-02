@@ -89,33 +89,27 @@
     <!-- Main content -->
     <div class="container content-container" id="main-content">
         <header>
-            <div class="header-top">
-                <div class="banner">
-                    <div class="logo-placeholder">SVCE</div>
-                </div>
-                <div class="pg-form-button-container">
-                    <a href="https://pg-form-svce.netlify.app/" id="pg-form-button">
-                        <i class="fas fa-user-graduate"></i>
-                        PG-FORM
-                    </a>
-                </div>
+          <!-- Centered logo -->
+          <div style="text-align:center; padding-bottom: 16px;">
+            <img src="svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
+                 style="height:70px; width:auto; object-fit:contain; display:inline-block;">
+          </div>
+
+          <div class="title-container">
+            <div class="title-meta">
+              <div class="token-container">
+                <label>Token No.: </label>
+                <span id="token-number" class="token-display"></span>
+              </div>
+              <div class="date-container">
+                <label>Date: </label>
+                <span id="enquiry-date" class="date-display"></span>
+              </div>
             </div>
-            
-            <div class="title-container">
-                <div class="title-meta">
-                    <div class="token-container">
-                        <label>Token No.: </label>
-                        <span id="token-number" class="token-display"></span>
-                    </div>
-                    <div class="date-container">
-                        <label>Date: </label>
-                        <span id="enquiry-date" class="date-display"></span>
-                    </div>
-                </div>
-                <div class="title">
-                    <h3>ADMISSION ENQUIRY FORM</h3>
-                </div>
+            <div class="title">
+              <h3>ADMISSION ENQUIRY FORM</h3>
             </div>
+          </div>
         </header>
         
         <form id="enquiryForm">
@@ -162,8 +156,50 @@
             
             <div class="form-group full-width">
                 <label for="address"><i class="fas fa-map-marker-alt"></i> Address:</label>
-                <textarea id="address" name="address" rows="3" required placeholder="Enter complete residential address"></textarea>
+
+                <!-- Pincode at top – auto-detects city/district/state/country -->
+                <div style="margin-bottom:12px;">
+                    <label for="pincode" style="font-size:0.85rem;">PINCODE <span style="color:#ef4444;">*</span></label>
+                    <div style="position:relative;max-width:200px;">
+                        <input type="text" id="pincode" name="pincode" maxlength="6"
+                               placeholder="e.g. 562157" pattern="[0-9]{6}" required
+                               style="padding-right:36px;"
+                               oninput="this.value=this.value.replace(/\D/g,'')">
+                        <span id="pincodeSpinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#3b82f6;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <span id="pincodeStatus" style="font-size:0.78rem;margin-top:3px;display:block;"></span>
+                </div>
+
+                <div class="form-grid" style="margin-bottom:0;">
+                    <div class="form-group" style="grid-column:1/-1;margin-bottom:10px;">
+                        <label for="addressLine1" style="font-size:0.85rem;">ADDRESS LINE 1 <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="addressLine1" name="addressLine1" required placeholder="House No., Street Name" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1;margin-bottom:10px;">
+                        <label for="addressLine2" style="font-size:0.85rem;">ADDRESS LINE 2</label>
+                        <input type="text" id="addressLine2" name="addressLine2" placeholder="Area, Landmark" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="city" style="font-size:0.85rem;">CITY <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="city" name="city" required placeholder="City" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="district" style="font-size:0.85rem;">DISTRICT</label>
+                        <input type="text" id="district" name="district" placeholder="District" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="state" style="font-size:0.85rem;">STATE <span style="color:#ef4444;">*</span></label>
+                        <input type="text" id="state" name="state" required placeholder="State" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label for="country" style="font-size:0.85rem;">COUNTRY</label>
+                        <input type="text" id="country" name="country" value="INDIA" placeholder="Country" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                </div>
             </div>
+
             
             <div class="form-grid">
                 <div class="form-group">
@@ -202,8 +238,41 @@
                     <option value="Other">Other</option>
                 </select>
             </div>
-            
-            <div id="marks11thSection" class="form-group marks" style="display: none;">
+
+            <!-- Result Status – shown after board is selected -->
+            <div class="form-group" style="max-width:400px;" id="resultStatusGroup">
+                <label for="resultStatus"><i class="fas fa-check-circle"></i> Result Status: <span style="color:#ef4444;">*</span></label>
+                <select id="resultStatus" name="resultStatus" required class="form-select">
+                    <option value="">-- Select Status --</option>
+                    <option value="Passed">Passed</option>
+                    <option value="Appearing">Appearing (Exam in Progress)</option>
+                    <option value="Awaiting">Awaiting Results</option>
+                </select>
+                <!-- Info banner for non-passed statuses -->
+                <div id="resultStatusInfo" style="display:none;margin-top:8px;padding:10px 14px;border-radius:8px;background:#fef3c7;border:1px solid #f59e0b;font-size:0.83rem;color:#92400e;">
+                    <i class="fas fa-info-circle"></i>
+                    Marks entry is not required for students who are currently appearing or awaiting results.
+                    You may submit the form and update marks later after your results are declared.
+                </div>
+                <!-- Expected percentage — shown for Appearing / Awaiting -->
+                <div id="expectedPercentSection" style="display:none;margin-top:14px;">
+                    <label for="expectedPercentage" style="font-size:0.88rem;font-weight:600;color:#1e293b;margin-bottom:4px;display:block;">
+                        <i class="fas fa-percentage" style="color:#f59e0b;"></i>
+                        Expected Percentage <span style="color:#6b7280;font-weight:400;">(as per your estimate)</span>
+                    </label>
+                    <div style="display:flex;align-items:center;gap:10px;max-width:280px;">
+                        <input type="number" id="expectedPercentage" name="expectedPercentage"
+                               min="0" max="100" step="0.01"
+                               placeholder="e.g. 82.5"
+                               style="flex:1;">
+                        <span style="font-size:1rem;color:#6b7280;font-weight:500;">%</span>
+                    </div>
+                    <span style="font-size:0.76rem;color:#9ca3af;margin-top:3px;display:block;">Enter your estimated/expected percentage</span>
+                </div>
+            </div>
+
+            <!-- ── All marks fields: shown ONLY when Result Status = Passed ── -->
+            <div id="marksSection" style="display:none;">
                 <label>11<sup>th</sup> Standard Marks: <span class="required-note">(For Andhra Pradesh/Telangana students only)</span></label>
                 <div class="marks-fields">
                     <div class="marks-field">
@@ -231,15 +300,16 @@
                         <input type="number" id="language_marks_11" name="language_marks_11">
                     </div>
                 </div>
-            </div>
+            </div><!-- /11th inner -->
             
-            <div class="form-group marks">
+            <div class="form-group marks" id="marks12thSection" style="display:none;">
+
                 <label>12<sup>th</sup> Standard: <span class="required-note">(Physics and Mathematics are mandatory)</span></label>
                 <div class="marks-fields marks-fields-12">
                     <!-- Row 1: Physics, Chemistry, Mathematics -->
                     <div class="marks-field">
                         <label for="physics">Physics (Theory):</label>
-                        <input type="number" id="physics" name="physics" required>
+                        <input type="number" id="physics" name="physics">
                     </div>
                     <div class="marks-field">
                         <label for="chemistry">Chemistry (Theory): <span class="optional-note">(Optional)</span></label>
@@ -247,7 +317,7 @@
                     </div>
                     <div class="marks-field" id="mathematics12_standard_group">
                         <label for="mathematics">Mathematics:</label>
-                        <input type="number" id="mathematics" name="mathematics" required>
+                        <input type="number" id="mathematics" name="mathematics">
                     </div>
                     <!-- Hidden practicals and A/B math -->
                     <div class="marks-field" id="physics12Practical_group" style="display: none;">
@@ -295,17 +365,16 @@
                         <input type="number" id="other_unnamed_marks_12" name="other_unnamed_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
                     </div>
                 </div>
-            </div>
-            
-            <div class="form-grid">
+            </div><!-- /12th marks -->
+
+            <div class="form-grid" style="margin-top:8px;display:none;" id="marksPercentSection">
                 <div class="form-group">
                     <label for="totalPercentage"><i class="fas fa-percentage"></i> Total Percentage:</label>
-                    <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" required placeholder="Auto-calculated" readonly style="cursor:not-allowed; opacity:0.8;">
+                    <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" placeholder="Auto-calculated" readonly style="cursor:not-allowed;opacity:0.8;">
                 </div>
-                
                 <div class="form-group">
                     <label for="pcmPercentage"><i class="fas fa-flask"></i> P+M+Max(chem,bio,cs,ece)</label>
-                    <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" required placeholder="Auto-calculated" readonly style="cursor:not-allowed; opacity:0.8;">
+                    <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" placeholder="Auto-calculated" readonly style="cursor:not-allowed;opacity:0.8;">
                 </div>
             </div>
 
@@ -433,15 +502,29 @@
             }
         });
         
+        // Fetch next token from server and update the display
+        async function fetchAndDisplayNextToken() {
+            try {
+                const res = await fetch('/api/next-token');
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('token-number').textContent = data.token;
+                } else {
+                    document.getElementById('token-number').textContent = 'Error';
+                }
+            } catch (e) {
+                console.error('Failed to fetch token:', e);
+                document.getElementById('token-number').textContent = '—';
+            }
+        }
+
         function initializeForm() {
             const today = new Date();
             const formattedDate = today.toLocaleDateString('en-GB');
             document.getElementById('enquiry-date').textContent = formattedDate;
-            
-            const day = String(today.getDate()).padStart(2, '0');
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const year = today.getFullYear();
-            document.getElementById('token-number').textContent = `${day}/${month}/${year}/(Random)`;
+
+            // Load token from server (sequential per day, resets each day)
+            fetchAndDisplayNextToken();
             
             document.getElementById('educationalQualification').addEventListener('change', function() {
                 const diplomaFields = document.getElementById('diplomaFields');
@@ -453,16 +536,22 @@
             });
             
             document.getElementById('educationBoard').addEventListener('change', function() {
-                const marks11thSection = document.getElementById('marks11thSection');
+                // #marksSection wraps the 11th-standard marks (AP/Telangana only)
+                const marksSection11th = document.getElementById('marksSection');
+                const resultStatus     = document.getElementById('resultStatus').value;
+                const isPassed         = resultStatus === 'Passed';
+
                 if (this.value === 'AP/Telangana') {
-                    marks11thSection.style.display = 'block';
+                    // Only show 11th section if student has passed
+                    if (marksSection11th) marksSection11th.style.display = isPassed ? 'block' : 'none';
                     document.getElementById('physics12Practical_group').style.display = 'block';
                     document.getElementById('chemistry12Practical_group').style.display = 'block';
                     document.getElementById('mathematics12a_group').style.display = 'block';
                     document.getElementById('mathematics12b_group').style.display = 'block';
                     document.getElementById('mathematics12_standard_group').style.display = 'none';
                 } else {
-                    marks11thSection.style.display = 'none';
+                    // Non-AP boards: always hide 11th section
+                    if (marksSection11th) marksSection11th.style.display = 'none';
                     document.getElementById('physics12Practical_group').style.display = 'none';
                     document.getElementById('chemistry12Practical_group').style.display = 'none';
                     document.getElementById('mathematics12a_group').style.display = 'none';
@@ -470,6 +559,31 @@
                     document.getElementById('mathematics12_standard_group').style.display = 'block';
                 }
                 calculatePercentages();
+            });
+
+            // ── Result Status: show/hide marks section ─────────────────────────
+            document.getElementById('resultStatus').addEventListener('change', function() {
+                const showMarks = this.value === 'Passed';
+                const showExpected = this.value === 'Appearing' || this.value === 'Awaiting';
+                const statusInfo = document.getElementById('resultStatusInfo');
+                const expectedSection = document.getElementById('expectedPercentSection');
+
+                // Toggle all three mark blocks together
+                const markBlocks = ['marksSection', 'marks12thSection', 'marksPercentSection'];
+                markBlocks.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = showMarks ? 'block' : 'none';
+                });
+
+                // Show/hide info banner and expected % field
+                if (statusInfo)     statusInfo.style.display     = showExpected ? 'block' : 'none';
+                if (expectedSection) expectedSection.style.display = showExpected ? 'block' : 'none';
+
+                // Clear expected % when switching to Passed
+                if (showMarks) {
+                    const ep = document.getElementById('expectedPercentage');
+                    if (ep) ep.value = '';
+                }
             });
 
             // ── Auto-Calculation Setup ──────────────────────────────────────────
@@ -615,12 +729,8 @@
                 submitBtn.disabled = true;
                 
                 try {
-                    const randomToken = Math.floor(1000 + Math.random() * 9000);
-                    const tokenStr = document.getElementById('token-number').textContent.includes('(Random)') 
-                        ? document.getElementById('token-number').textContent.replace('(Random)', randomToken)
-                        : document.getElementById('token-number').textContent;
-                    
-                    document.getElementById('token-number').textContent = tokenStr;
+                    // Use the pre-fetched sequential token (already displayed)
+                    const tokenStr = document.getElementById('token-number').textContent;
 
                     const formData = {
                         token_number: tokenStr,
@@ -632,10 +742,26 @@
                         student_mobile: document.getElementById('studentMobile').value,
                         father_mobile: document.getElementById('fatherMobile').value,
                         mother_mobile: document.getElementById('motherMobile').value,
-                        address: document.getElementById('address').value,
+                        address: [
+                            document.getElementById('addressLine1').value,
+                            document.getElementById('addressLine2').value,
+                            document.getElementById('city').value,
+                            document.getElementById('district').value,
+                            document.getElementById('state').value,
+                            document.getElementById('pincode').value
+                        ].filter(Boolean).join(', '),
+                        address_line1: document.getElementById('addressLine1').value,
+                        address_line2: document.getElementById('addressLine2').value,
+                        address_city: document.getElementById('city').value,
+                        address_district: document.getElementById('district').value,
+                        address_state: document.getElementById('state').value,
+                        address_country: document.getElementById('country').value,
+                        address_pincode: document.getElementById('pincode').value,
                         reference: document.getElementById('reference').value,
                         education_qualification: document.getElementById('educationalQualification').value,
                         education_board: document.getElementById('educationBoard').value,
+                        result_status: document.getElementById('resultStatus').value,
+                        expected_percentage: parseFloat(document.getElementById('expectedPercentage').value) || null,
                         physics_marks: parseFloat(document.getElementById('physics').value) || null,
                         chemistry_marks: parseFloat(document.getElementById('chemistry').value) || null,
                         mathematics_marks: parseFloat(document.getElementById('mathematics').value) || null,
@@ -663,16 +789,56 @@
                     qrContainer.innerHTML = ""; // Clear existing QR code
                     
                     // Create an autofill link containing the permanent Database ID
-                    const autofillUrl = window.location.origin + "/autofill.html?id=" + dbId;
+                    const autofillUrl = window.location.origin + "/admission-form/?enquiry_id=" + dbId;
                     
+                    // Generate branded QR: qrcodejs renders first, then we overlay the logo
                     new QRCode(qrContainer, {
                         text: autofillUrl,
-                        width: 150,
-                        height: 150,
-                        colorDark : "#000000",
+                        width: 200,
+                        height: 200,
+                        colorDark : "#1e3a5f",
                         colorLight : "#ffffff",
                         correctLevel : QRCode.CorrectLevel.H
                     });
+
+                    // Overlay SVCE logo in the centre after a brief render delay
+                    setTimeout(() => {
+                        const qrCanvas = qrContainer.querySelector('canvas');
+                        if (!qrCanvas) return;
+
+                        const brandedCanvas = document.createElement('canvas');
+                        brandedCanvas.width  = 200;
+                        brandedCanvas.height = 200;
+                        const ctx = brandedCanvas.getContext('2d');
+
+                        // Draw QR base
+                        ctx.drawImage(qrCanvas, 0, 0, 200, 200);
+
+                        // Draw white backing square for logo
+                        const logoSize = 54;
+                        const pad      = 6;
+                        const cx       = (200 - logoSize) / 2;
+                        const cy       = (200 - logoSize) / 2;
+                        ctx.fillStyle  = '#ffffff';
+                        ctx.beginPath();
+                        ctx.roundRect(cx - pad, cy - pad, logoSize + pad*2, logoSize + pad*2, 6);
+                        ctx.fill();
+
+                        // Draw the logo on top
+                        const logoImg  = new Image();
+                        logoImg.src    = '/image copy 2.png';
+                        logoImg.onload = () => {
+                            ctx.drawImage(logoImg, cx, cy, logoSize, logoSize);
+                            // Replace qrcodejs canvas with our branded one
+                            qrContainer.innerHTML = '';
+                            qrContainer.appendChild(brandedCanvas);
+                        };
+                        logoImg.onerror = () => {
+                            // If logo fails to load, just show plain QR
+                            qrContainer.innerHTML = '';
+                            qrContainer.appendChild(brandedCanvas);
+                        };
+                    }, 100);
 
                     document.getElementById('successModal').style.display = 'flex';
                     submitBtn.innerHTML = originalText;
@@ -699,6 +865,8 @@
             if (closeBtn) {
                 closeBtn.onclick = function() {
                     modal.style.display = 'none';
+                    // Refresh token for the next submission
+                    fetchAndDisplayNextToken();
                 };
             }
             
@@ -709,6 +877,8 @@
                         coursePreferenceOrder = [];
                         document.querySelectorAll('.course-option').forEach(el => el.classList.remove('selected'));
                         updatePreferenceIndicators();
+                        // Refresh token for the next submission
+                        fetchAndDisplayNextToken();
                     }
                 };
             }
@@ -738,6 +908,48 @@
                 });
             }
         }
+
+        // ── Pincode auto-detect ──────────────────────────────────
+        (function() {
+            const pincodeInput = document.getElementById('pincode');
+            if (!pincodeInput) return;
+
+            pincodeInput.addEventListener('input', function() {
+                if (this.value.length === 6) lookupPincode(this.value);
+            });
+            pincodeInput.addEventListener('blur', function() {
+                if (this.value.length === 6) lookupPincode(this.value);
+            });
+
+            async function lookupPincode(pin) {
+                const spinner = document.getElementById('pincodeSpinner');
+                const status  = document.getElementById('pincodeStatus');
+                spinner.style.display = 'inline';
+                status.textContent = '';
+                status.style.color = '#64748b';
+                try {
+                    const res  = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+                    const data = await res.json();
+                    if (data[0].Status === 'Success') {
+                        const po = data[0].PostOffice[0];
+                        document.getElementById('city').value     = (po.Taluk || po.Name || '').toUpperCase();
+                        document.getElementById('district').value = (po.District || '').toUpperCase();
+                        document.getElementById('state').value    = (po.State || '').toUpperCase();
+                        document.getElementById('country').value  = 'INDIA';
+                        status.textContent = '✓ Location detected';
+                        status.style.color = '#059669';
+                    } else {
+                        status.textContent = '⚠ Pincode not found — please fill manually';
+                        status.style.color = '#f59e0b';
+                    }
+                } catch(e) {
+                    status.textContent = '⚠ Could not auto-detect — fill manually';
+                    status.style.color = '#f59e0b';
+                } finally {
+                    spinner.style.display = 'none';
+                }
+            }
+        })();
     </script>
 </body>
 </html>

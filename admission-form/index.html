@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVCE – Admission Application Form</title>
+  <meta name="description" content="Sri Venkateshwara College of Engineering – Online Admission Application Form">
+  <link rel="stylesheet" href="admission.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="bg-grid"></div>
+
+  <!-- ── Form ───────────────────────────────────────────── -->
+  <form id="admissionForm" class="main-wrap" novalidate>
+
+    <!-- Top header card (inside form, like enquiry form) -->
+    <div class="adm-header-card">
+      <!-- Centered logo -->
+      <div style="text-align:center; margin-bottom:12px;">
+        <img src="svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
+             style="height:70px;width:auto;object-fit:contain;display:inline-block;">
+      </div>
+      <!-- Title -->
+      <div style="text-align:center; margin-bottom:14px;">
+        <h1 class="adm-title">ADMISSION APPLICATION FORM</h1>
+        <p class="adm-subtitle">Sri Venkateshwara College of Engineering, Bengaluru &mdash; UG Programs</p>
+      </div>
+      <!-- App no. + Date row (like token/date in enquiry) -->
+      <div class="adm-meta-row">
+        <div class="adm-meta-item">
+          <span class="adm-meta-label">Application No.:</span>
+          <span class="adm-meta-value" id="appNumber">Loading…</span>
+        </div>
+        <div class="adm-meta-item">
+          <span class="adm-meta-label">Date:</span>
+          <span class="adm-meta-value" id="appDate"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- auto-fill banner (hidden by default) -->
+    <div class="autofill-banner" id="autofillBanner" style="display:none;">
+      <div class="banner-inner">
+        <i class="fas fa-magic"></i>
+        <span>Fields pre-filled from your enquiry record. Please review and complete the remaining fields.</span>
+      </div>
+    </div>
+
+    <!-- 1. Personal Details -->
+    <section class="section-card s1">
+      <div class="section-header">
+        <div class="section-badge">1</div>
+        <span class="section-title"><i class="fas fa-user" style="margin-right:6px;opacity:.7"></i>Personal Details</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid">
+          <!-- Name with title -->
+          <div class="form-group span-full">
+            <label>Full Name <span class="req">*</span></label>
+            <div class="name-row">
+              <select id="title" name="title">
+                <option value="Mr.">Mr.</option>
+                <option value="Ms.">Ms.</option>
+                <option value="Mrs.">Mrs.</option>
+                <option value="Dr.">Dr.</option>
+              </select>
+              <input type="text" id="studentName" name="studentName" required
+                placeholder="As per documents" oninput="this.value=this.value.toUpperCase()">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mobile No. <span class="req">*</span></label>
+            <input type="tel" id="mobileNo" name="mobileNo" maxlength="13" required placeholder="+91-XXXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label>Email Address <span class="req">*</span></label>
+            <input type="email" id="email" name="email" required placeholder="example@email.com">
+          </div>
+          <div class="form-group">
+            <label>Date of Birth <span class="req">*</span></label>
+            <input type="date" id="dob" name="dob" required>
+          </div>
+          <div class="form-group">
+            <label>Gender <span class="req">*</span></label>
+            <select id="gender" name="gender" required>
+              <option value="">-- Select --</option>
+              <option>Male</option><option>Female</option>
+              <option>Other</option><option>Prefer not to say</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Aadhaar Number <span class="req">*</span></label>
+            <input type="text" id="aadhaarNo" name="aadhaarNo" required
+              maxlength="14" placeholder="XXXX XXXX XXXX"
+              oninput="this.value=this.value.replace(/[^0-9 ]/g,'').replace(/(\d{4})(?=\d)/g,'$1 ').trim().substring(0,14)">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Preference Details -->
+    <section class="section-card s2">
+      <div class="section-header">
+        <div class="section-badge">2</div>
+        <span class="section-title"><i class="fas fa-graduation-cap" style="margin-right:6px;opacity:.7"></i>Preference Details</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid cols-3">
+
+          <div class="form-group">
+            <label>Course Preference <span class="req">*</span></label>
+            <select id="coursePreference" name="coursePreference" required>
+              <option value="">-- Select Course --</option>
+              <option>BE Computer Science and Engineering</option>
+              <option>BE Computer Science and Engineering (Artificial Intelligence)</option>
+              <option>BE Computer Science and Engineering (Data Science)</option>
+              <option>BE Computer Science and Engineering (Cyber Security)</option>
+              <option>BE Information Science and Engineering</option>
+              <option>BE Electronics and Communication Engineering</option>
+              <option>BE Mechanical Engineering</option>
+              <option>BE Civil Engineering</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Program Preference <span class="req">*</span></label>
+            <select id="programPreference" name="programPreference" required>
+              <option value="">-- Select --</option>
+              <option>UG Programs</option>
+              <option>PG Programs</option>
+              <option>Diploma Programs</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Address Details -->
+    <section class="section-card s3">
+      <div class="section-header">
+        <div class="section-badge">3</div>
+        <span class="section-title"><i class="fas fa-map-marker-alt" style="margin-right:6px;opacity:.7"></i>Address Details</span>
+      </div>
+      <div class="section-body">
+        <div class="address-same-row">
+          <input type="checkbox" id="sameAsComm" name="sameAsComm">
+          <label for="sameAsComm">Permanent Address is Same as Communication Address</label>
+        </div>
+        <div class="address-cols">
+          <!-- Communication -->
+          <div class="address-col">
+            <div class="address-col-header">Communication Address <span class="col-badge">Primary</span></div>
+            <div class="form-group"><label>Address Line 1 <span class="req">*</span></label>
+              <input type="text" id="commLine1" name="commLine1" required placeholder="House No., Street"></div>
+            <div class="form-group"><label>Address Line 2</label>
+              <input type="text" id="commLine2" name="commLine2" placeholder="Area, Landmark"></div>
+            <div class="form-group"><label>City <span class="req">*</span></label>
+              <input type="text" id="commCity" name="commCity" required placeholder="City"></div>
+            <div class="form-group"><label>District</label>
+              <input type="text" id="commDistrict" name="commDistrict" placeholder="District"></div>
+            <div class="form-group"><label>State <span class="req">*</span></label>
+              <select id="commState" name="commState" required><option value="">-- State --</option>
+                <option>Karnataka</option><option>Tamil Nadu</option><option>Andhra Pradesh</option>
+                <option>Telangana</option><option>Kerala</option><option>Maharashtra</option>
+                <option>Gujarat</option><option>Rajasthan</option><option>Uttar Pradesh</option>
+                <option>Delhi</option><option>West Bengal</option><option>Odisha</option>
+                <option>Punjab</option><option>Haryana</option><option>Madhya Pradesh</option>
+                <option>Bihar</option><option>Other</option></select></div>
+            <div class="form-group"><label>Country</label>
+              <input type="text" id="commCountry" name="commCountry" value="India" placeholder="Country"></div>
+            <div class="form-group">
+              <label>Pincode <span class="req">*</span>
+                <i class="fas fa-spinner fa-spin" id="commPincodeSpinner" style="display:none;margin-left:6px;color:#3b82f6;font-size:0.8rem;"></i>
+                <span id="commPincodeStatus" style="font-size:0.75rem;margin-left:6px;font-weight:normal;"></span>
+              </label>
+              <input type="text" id="commPincode" name="commPincode" maxlength="6" required placeholder="Pincode">
+            </div>
+          </div>
+          <!-- Permanent -->
+          <div class="address-col" id="permAddressCol">
+            <div class="address-col-header">Permanent Address <span class="col-badge">Legal</span></div>
+            <div class="form-group"><label>Address Line 1</label>
+              <input type="text" id="permLine1" name="permLine1" placeholder="House No., Street"></div>
+            <div class="form-group"><label>Address Line 2</label>
+              <input type="text" id="permLine2" name="permLine2" placeholder="Area, Landmark"></div>
+            <div class="form-group"><label>City</label>
+              <input type="text" id="permCity" name="permCity" placeholder="City"></div>
+            <div class="form-group"><label>District</label>
+              <input type="text" id="permDistrict" name="permDistrict" placeholder="District"></div>
+            <div class="form-group"><label>State</label>
+              <select id="permState" name="permState"><option value="">-- State --</option>
+                <option>Karnataka</option><option>Tamil Nadu</option><option>Andhra Pradesh</option>
+                <option>Telangana</option><option>Kerala</option><option>Maharashtra</option>
+                <option>Gujarat</option><option>Rajasthan</option><option>Uttar Pradesh</option>
+                <option>Delhi</option><option>West Bengal</option><option>Odisha</option>
+                <option>Punjab</option><option>Haryana</option><option>Madhya Pradesh</option>
+                <option>Bihar</option><option>Other</option></select></div>
+            <div class="form-group"><label>Country</label>
+              <input type="text" id="permCountry" name="permCountry" value="India" placeholder="Country"></div>
+            <div class="form-group">
+              <label>Pincode
+                <i class="fas fa-spinner fa-spin" id="permPincodeSpinner" style="display:none;margin-left:6px;color:#3b82f6;font-size:0.8rem;"></i>
+                <span id="permPincodeStatus" style="font-size:0.75rem;margin-left:6px;font-weight:normal;"></span>
+              </label>
+              <input type="text" id="permPincode" name="permPincode" maxlength="6" placeholder="Pincode">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Parent Details -->
+    <section class="section-card s4">
+      <div class="section-header">
+        <div class="section-badge">4</div>
+        <span class="section-title"><i class="fas fa-users" style="margin-right:6px;opacity:.7"></i>Parent Details</span>
+      </div>
+      <div class="section-body">
+        <div class="form-grid cols-3">
+          <div class="form-group">
+            <label>Father Name <span class="req">*</span></label>
+            <input type="text" id="fatherName" name="fatherName" required placeholder="Father's full name"
+              oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label>Father's Mobile Number</label>
+            <input type="tel" id="fatherMobile" name="fatherMobile" maxlength="13" placeholder="+91-XXXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label>Father's Occupation</label>
+            <input type="text" id="fatherOccupation" name="fatherOccupation" placeholder="e.g. Business">
+          </div>
+          <div class="form-group">
+            <label>Mother Name <span class="req">*</span></label>
+            <input type="text" id="motherName" name="motherName" required placeholder="Mother's full name"
+              oninput="this.value=this.value.toUpperCase()">
+          </div>
+          <div class="form-group">
+            <label>Mother's Mobile Number</label>
+            <input type="tel" id="motherMobile" name="motherMobile" maxlength="13" placeholder="+91-XXXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label>Mother's Occupation</label>
+            <input type="text" id="motherOccupation" name="motherOccupation" placeholder="e.g. Homemaker">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Educational Details -->
+    <section class="section-card s5">
+      <div class="section-header">
+        <div class="section-badge">5</div>
+        <span class="section-title"><i class="fas fa-book-open" style="margin-right:6px;opacity:.7"></i>Educational Details</span>
+      </div>
+      <div class="section-body">
+
+        <div class="edu-table-wrap">
+          <table class="edu-table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>10th Details</th>
+                <th>12th Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Institution Name</td>
+                <td><input type="text" id="tenth_institution" name="tenth_institution" placeholder="School name"></td>
+                <td><input type="text" id="twelfth_institution" name="twelfth_institution" placeholder="College/School name"></td>
+              </tr>
+              <tr>
+                <td>Board / University</td>
+                <td>
+                  <select id="tenth_board" name="tenth_board">
+                    <option value="">-- Board --</option>
+                    <option>Central Board Of Secondary Education (CBSE)</option>
+                    <option>Karnataka Board Of The Pre-University Education</option>
+                    <option>Andhra Pradesh Board of Secondary Education</option>
+                    <option>Telangana Board of Secondary Education</option>
+                    <option>Tamil Nadu Board</option>
+                    <option>ICSE / ISC</option>
+                    <option>Other</option>
+                  </select>
+                </td>
+                <td>
+                  <select id="twelfth_board" name="twelfth_board">
+                    <option value="">-- Board --</option>
+                    <option>Central Board Of Secondary Education (CBSE)</option>
+                    <option>Karnataka Board Of The Pre-University Education</option>
+                    <option>Andhra Pradesh Board of Intermediate Education</option>
+                    <option>Telangana Board of Intermediate Education</option>
+                    <option>Tamil Nadu HSC Board</option>
+                    <option>ICSE / ISC</option>
+                    <option>Other</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Stream</td>
+                <td><input type="text" id="tenth_stream" name="tenth_stream" placeholder="e.g. General"></td>
+                <td>
+                  <select id="twelfth_stream" name="twelfth_stream">
+                    <option value="">-- Stream --</option>
+                    <option>Science</option><option>Commerce</option><option>Arts</option><option>Other</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Year of Passing</td>
+                <td><input type="text" id="tenth_year" name="tenth_year" placeholder="e.g. 2022" maxlength="4"></td>
+                <td><input type="text" id="twelfth_year" name="twelfth_year" placeholder="e.g. 2024" maxlength="4"></td>
+              </tr>
+              <tr>
+                <td>Result Status</td>
+                <td>
+                  <select id="tenth_result" name="tenth_result">
+                    <option value="">-- Status --</option>
+                    <option>Pass</option><option>Appearing</option><option>Fail</option>
+                  </select>
+                </td>
+                <td>
+                  <select id="twelfth_result" name="twelfth_result">
+                    <option value="">-- Status --</option>
+                    <option>Pass</option><option>Appearing</option><option>Fail</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Marking Scheme</td>
+                <td>
+                  <select id="tenth_scheme" name="tenth_scheme">
+                    <option value="">-- Scheme --</option>
+                    <option>Percentage</option>
+                    <option>CGPA out of 10</option>
+                    <option>CGPA out of 5</option>
+                  </select>
+                </td>
+                <td>
+                  <select id="twelfth_scheme" name="twelfth_scheme">
+                    <option value="">-- Scheme --</option>
+                    <option>Percentage</option>
+                    <option>CGPA out of 10</option>
+                    <option>CGPA out of 5</option>
+                  </select>
+                </td>
+              </tr>
+              <tr>
+                <td>Obtained Percentage / CGPA</td>
+                <td><input type="text" id="tenth_percentage" name="tenth_percentage" placeholder="e.g. 85.5 or 8.5"></td>
+                <td><input type="text" id="twelfth_percentage" name="twelfth_percentage" placeholder="e.g. 90 or 9.0"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-group" style="margin-top:16px;max-width:500px;">
+          <label>Have you taken / appearing for any entrance exam?</label>
+          <p class="entrance-note">Select all that apply (comma-separated or choose from list)</p>
+          <input type="text" id="entranceExams" name="entranceExams"
+            placeholder="e.g. Comed-K, JEE, CET, DCET">
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Document Upload -->
+    <section class="section-card s7">
+      <div class="section-header">
+        <div class="section-badge">7</div>
+        <span class="section-title"><i class="fas fa-cloud-upload-alt" style="margin-right:6px;opacity:.7"></i>Document Upload</span>
+      </div>
+      <div class="section-body">
+
+        <!-- Passport Photo -->
+        <div class="form-group" style="margin-bottom:24px;">
+          <label>Passport Size Photograph <span class="req">*</span></label>
+          <!-- Hidden file input (browse only, no capture attr) -->
+          <input type="file" id="photoFile" class="upload-input" accept="image/jpeg,image/png,image/webp">
+
+          <div class="photo-upload-wrap" id="photoWrap" style="margin-top:10px;">
+            <div class="photo-preview-ring" id="photoRing">
+              <img id="photoPreview" alt="Passport photo preview">
+              <div class="photo-placeholder">
+                <i class="fas fa-user-circle"></i>
+                <span>Passport<br>Photo</span>
+              </div>
+            </div>
+            <div class="photo-actions">
+              <button type="button" class="upload-btn camera" id="openCameraBtn">
+                <i class="fas fa-camera"></i> Use Camera
+              </button>
+              <button type="button" class="upload-btn file-upload" onclick="document.getElementById('photoFile').click()">
+                <i class="fas fa-folder-open"></i> Browse File
+              </button>
+              <button type="button" class="upload-btn remove-photo" id="removePhoto">
+                <i class="fas fa-trash-alt"></i> Remove
+              </button>
+              <p class="photo-hint">
+                <b>Requirements:</b> Recent passport-size, clear face visible<br>
+                Accepted: JPG / PNG / WEBP &bull; Max 5 MB
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Marksheets -->
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+          Marksheet Documents
+        </div>
+        <div class="doc-upload-grid">
+
+          <!-- 10th Marksheet -->
+          <div class="doc-upload-card" id="tenthCard">
+            <input type="file" id="tenthFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <div class="doc-card-title"><i class="fas fa-graduation-cap" style="margin-right:4px;"></i>10th Marksheet</div>
+            <i class="fas fa-file-alt doc-card-icon" id="tenthIcon"></i>
+            <div class="doc-card-actions">
+              <button type="button" class="upload-btn camera" onclick="document.getElementById('tenthFile').click()">
+                <i class="fas fa-upload"></i> Upload Document
+              </button>
+            </div>
+            <div class="doc-file-info" id="tenthInfo">
+              <i class="fas fa-check-circle"></i>
+              <span class="doc-file-name" id="tenthName"></span>
+              <button type="button" class="doc-file-remove" id="tenthRemove" title="Remove file">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 12th Marksheet -->
+          <div class="doc-upload-card" id="twelfthCard">
+            <input type="file" id="twelfthFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <div class="doc-card-title"><i class="fas fa-graduation-cap" style="margin-right:4px;"></i>12th Marksheet</div>
+            <i class="fas fa-file-alt doc-card-icon" id="twelfthIcon"></i>
+            <div class="doc-card-actions">
+              <button type="button" class="upload-btn camera" onclick="document.getElementById('twelfthFile').click()">
+                <i class="fas fa-upload"></i> Upload Document
+              </button>
+            </div>
+            <div class="doc-file-info" id="twelfthInfo">
+              <i class="fas fa-check-circle"></i>
+              <span class="doc-file-name" id="twelfthName"></span>
+              <button type="button" class="doc-file-remove" id="twelfthRemove" title="Remove file">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:12px;">
+          <i class="fas fa-info-circle"></i>&nbsp;
+          Accepted formats: PDF, JPG, PNG, WEBP &bull; Max 10 MB per file
+        </p>
+      </div>
+    </section>
+
+    <!-- 8. Application Fee Payment -->
+    <section class="section-card s8">
+      <div class="section-header">
+        <div class="section-badge">8</div>
+        <span class="section-title"><i class="fas fa-rupee-sign" style="margin-right:6px;opacity:.7"></i>Application Fee Payment</span>
+      </div>
+      <div class="section-body">
+
+        <!-- Amount badge -->
+        <div class="payment-amount-badge">
+          <div>
+            <div style="display:flex;align-items:baseline;gap:4px;">
+              <span class="currency">₹</span>
+              <span class="amount">1,250</span>
+            </div>
+            <div class="label">Application Fee <span style="color:var(--danger);font-weight:700;">*</span></div>
+          </div>
+          <div style="height:40px;width:1px;background:rgba(16,185,129,0.3);"></div>
+          <div style="font-size:0.78rem;color:var(--text-muted);line-height:1.6;">
+            <i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Secure UPI Payment<br>
+            Non-refundable
+          </div>
+        </div>
+
+        <div class="payment-layout">
+          <!-- QR Code -->
+          <div style="text-align:center;">
+            <div class="qr-card">
+              <img src="payment-qr.png" alt="UPI Payment QR Code">
+            </div>
+            <p style="font-size:0.72rem;color:var(--text-muted);margin-top:10px;line-height:1.5;">
+              <i class="fas fa-mobile-alt" style="color:#10b981;"></i>
+              Scan with any UPI app<br>GPay · PhonePe · Paytm · BHIM
+            </p>
+          </div>
+
+          <!-- Steps + Receipt -->
+          <div>
+            <div class="payment-steps">
+              <div class="pay-step">
+                <div class="pay-step-num">1</div>
+                <div class="pay-step-text">
+                  Open any UPI app (GPay, PhonePe, Paytm, BHIM) and scan the QR code on the left.
+                </div>
+              </div>
+              <div class="pay-step">
+                <div class="pay-step-num">2</div>
+                <div class="pay-step-text">
+                  Pay exactly <b>₹1,250</b> as the application fee. Do <b>not</b> close the app until you receive a success confirmation.
+                </div>
+              </div>
+              <div class="pay-step">
+                <div class="pay-step-num">3</div>
+                <div class="pay-step-text">
+                  Note the <b>UTR / Transaction Reference Number</b> and take a screenshot of the payment receipt, then upload it below.
+                </div>
+              </div>
+            </div>
+
+            <!-- UTR Number -->
+            <div class="form-group" style="margin-bottom:16px;">
+              <label>UTR / Transaction Reference Number <span class="req">*</span></label>
+              <input type="text" id="paymentUtr" name="paymentUtr" required
+                placeholder="e.g. 407812345678"
+                style="font-family:'Courier New',monospace;letter-spacing:0.5px;"
+                oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase()">
+              <span style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+                Found in your UPI app under Payment History / Transaction Details
+              </span>
+            </div>
+
+            <!-- Receipt Upload -->
+            <div>
+              <label style="font-size:0.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;margin-bottom:8px;display:block;">
+                Payment Receipt Screenshot <span class="req">*</span>
+              </label>
+              <input type="file" id="receiptFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+              <div class="receipt-upload-card" id="receiptCard" onclick="document.getElementById('receiptFile').click()">
+                <div class="receipt-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                <div class="receipt-title">Click to upload payment receipt</div>
+                <div class="receipt-hint">Screenshot or PDF of your UPI payment · JPG, PNG, WEBP, PDF · Max 10 MB</div>
+                <button type="button" class="upload-btn camera" style="margin:0 auto;">
+                  <i class="fas fa-upload"></i> Choose File
+                </button>
+                <div class="receipt-file-info" id="receiptInfo">
+                  <i class="fas fa-check-circle"></i>
+                  <span class="receipt-file-name" id="receiptName"></span>
+                  <button type="button" class="doc-file-remove" id="receiptRemove" onclick="event.stopPropagation();" title="Remove">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end right col -->
+        </div><!-- end payment-layout -->
+
+      </div>
+    </section>
+
+    <!-- 6. Declaration -->
+    <section class="section-card s6">
+      <div class="section-header">
+        <div class="section-badge">6</div>
+        <span class="section-title"><i class="fas fa-file-signature" style="margin-right:6px;opacity:.7"></i>Declaration</span>
+      </div>
+      <div class="section-body">
+        <div class="declaration-text">
+          <ol style="margin:0;padding-left:1.4em;line-height:1.8;">
+            <li>I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
+            <li>I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
+            <li>I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
+            <li>I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
+            <li>I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
+            <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
+          </ol>
+        </div>
+
+        <div class="declaration-check">
+          <input type="checkbox" id="declarationAccepted" name="declarationAccepted" required>
+          <label for="declarationAccepted">
+            I hereby declare that all information provided is true and correct. I agree to the terms stated above.
+            <span class="req">*</span>
+          </label>
+        </div>
+
+        <div class="sign-row">
+          <!-- Name & Date -->
+          <div>
+            <div class="sign-label">Student Full Name</div>
+            <input type="text" id="declName" name="declName" placeholder="Your full name"
+              style="margin-bottom:12px;" oninput="this.value=this.value.toUpperCase()">
+            <div class="sign-label" style="margin-top:8px;">Date &amp; Time of Submission</div>
+            <input type="text" id="declDate" name="declDate" readonly
+              style="cursor:not-allowed;opacity:0.7;">
+          </div>
+          <!-- Signature Upload -->
+          <div>
+            <div class="sign-label">Student Signature <span style="font-size:0.7rem;color:#8b949e;">(upload image)</span></div>
+            <input type="file" id="signatureFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+            <div class="sign-upload-card" id="signUploadCard" onclick="document.getElementById('signatureFile').click()">
+              <div id="signUploadPlaceholder">
+                <i class="fas fa-file-signature" style="font-size:1.8rem;color:var(--accent);margin-bottom:8px;display:block;"></i>
+                <div style="font-size:0.85rem;font-weight:600;color:var(--text-muted);">Click to upload signature</div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">JPG, PNG, WEBP, PDF &bull; Max 5 MB</div>
+              </div>
+              <img id="signPreview" alt="Signature preview" style="display:none;max-height:100px;max-width:100%;border-radius:6px;object-fit:contain;">
+              <div class="doc-file-info" id="signFileInfo" style="display:none;margin-top:8px;">
+                <i class="fas fa-check-circle" style="color:#10b981;"></i>
+                <span class="doc-file-name" id="signFileName"></span>
+                <button type="button" class="doc-file-remove" id="signRemove" onclick="event.stopPropagation();" title="Remove">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submit -->
+    <div class="submit-area">
+      <button type="button" class="btn-reset" id="resetBtn">
+        <i class="fas fa-undo"></i> Reset Form
+      </button>
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <i class="fas fa-paper-plane"></i> Submit Admission Application
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Camera Modal -->
+  <div class="modal-overlay" id="cameraModal">
+    <div class="camera-modal-box">
+      <div class="camera-modal-header">
+        <span><i class="fas fa-camera" style="margin-right:8px;"></i>Take Passport Photo</span>
+        <button type="button" class="camera-close-btn" id="cameraClose">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="camera-video-wrap">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <canvas id="cameraCanvas" style="display:none;"></canvas>
+        <div class="camera-overlay-guide">
+          <div class="camera-face-guide"></div>
+        </div>
+      </div>
+      <div class="camera-modal-footer">
+        <button type="button" class="upload-btn file-upload" id="flipCameraBtn" title="Flip camera">
+          <i class="fas fa-sync-alt"></i> Flip
+        </button>
+        <button type="button" class="camera-capture-btn" id="captureBtn">
+          <i class="fas fa-circle"></i>
+        </button>
+        <button type="button" class="upload-btn file-upload" id="cancelCameraBtn">
+          <i class="fas fa-times"></i> Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="successModal">
+    <div class="modal-box">
+      <div class="modal-icon"><i class="fas fa-check"></i></div>
+      <h2>Application Submitted!</h2>
+      <p>Your admission application has been successfully submitted.<br>Keep your Application Number for reference.</p>
+      <div class="modal-app-no" id="modalAppNo"></div>
+      <p style="font-size:0.78rem;color:#8b949e;margin-bottom:20px;">
+        Our admissions team will contact you soon at the submitted email and mobile number.
+      </p>
+      <button class="modal-close-btn" id="modalCloseBtn">
+        <i class="fas fa-check-circle"></i> Done
+      </button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+  (function () {
+    /* ── Helpers ───────────────────────────────────────────── */
+    const sel = (id) => document.getElementById(id);
+    const setVal = (id, val) => { const el = sel(id); if (el && val != null && val !== '') el.value = val; };
+    const setOpt = (id, val) => {
+      const el = sel(id);
+      if (!el || !val) return;
+      [...el.options].forEach(o => { if (o.text.toLowerCase().includes(val.toLowerCase()) || o.value === val) el.value = o.value; });
+    };
+
+    /* ── Date/Time ─────────────────────────────────────────── */
+    function fmtDateTime(d) {
+      return d.toLocaleDateString('en-GB') + '  ' + d.toLocaleTimeString('en-IN');
+    }
+    const now = new Date();
+    sel('appDate').textContent = now.toLocaleDateString('en-GB', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+    sel('declDate').value = fmtDateTime(now);
+
+    /* ── Application Number ────────────────────────────────── */
+    async function loadAppNumber() {
+      try {
+        const r = await fetch('/api/admissions/next-token');
+        const d = await r.json();
+        sel('appNumber').textContent = d.success ? d.token : 'ADM/------';
+      } catch { sel('appNumber').textContent = 'ADM/------'; }
+    }
+    loadAppNumber();
+
+    /* ── Auto-fill from Enquiry QR ─────────────────────────── */
+    const params = new URLSearchParams(window.location.search);
+    const enquiryId = params.get('enquiry_id');
+
+    if (enquiryId) {
+      fetch('/api/enquiry/' + enquiryId)
+        .then(r => r.json())
+        .then(res => {
+          if (!res.success) return;
+          const e = res.data;
+
+          // Personal
+          if (e.student_name) {
+            const parts = e.student_name.trim().split(' ');
+            // detect title prefix
+            const titles = ['MR.','MS.','MRS.','DR.'];
+            if (titles.includes(parts[0].toUpperCase())) {
+              setOpt('title', parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase());
+              setVal('studentName', parts.slice(1).join(' '));
+            } else {
+              setVal('studentName', e.student_name);
+            }
+          }
+          setVal('mobileNo', e.student_mobile || '');
+          setVal('email', e.student_email || '');
+
+          // Parent
+          setVal('fatherName', e.father_name || '');
+          setVal('fatherMobile', e.father_mobile || '');
+          setVal('motherName', e.mother_name || '');
+          setVal('motherMobile', e.mother_mobile || '');
+
+          // Address – populate structured fields if available, fallback to combined address
+          if (e.address_line1) {
+            setVal('commLine1',    e.address_line1 || '');
+            setVal('commLine2',    e.address_line2 || '');
+            setVal('commCity',     e.address_city  || '');
+            setVal('commDistrict', e.address_district || '');
+            setOpt('commState',    e.address_state || '');
+            setVal('commCountry',  e.address_country || 'India');
+            setVal('commPincode',  e.address_pincode || '');
+          } else if (e.address) {
+            // Legacy: put combined address string into line 1
+            setVal('commLine1', e.address);
+          }
+
+          // Course preferences (first preference → coursePreference)
+          let prefs = [];
+          try { prefs = typeof e.course_preferences === 'string' ? JSON.parse(e.course_preferences) : (e.course_preferences || []); } catch {}
+          if (prefs.length > 0) setOpt('coursePreference', prefs[0]);
+          if (prefs.length > 0) setVal('programPreference', 'UG Programs');
+
+          // Education board → 12th board
+          if (e.education_board) setOpt('twelfth_board', e.education_board);
+          if (e.total_percentage) setVal('twelfth_percentage', e.total_percentage);
+
+          // Entrance exams
+          const exams = [e.jee_rank&&'JEE', e.comedk_rank&&'Comed-K', e.cet_rank&&'CET', e.dcet_rank&&'DCET']
+            .filter(Boolean).join(', ');
+          if (exams) setVal('entranceExams', exams);
+
+          // Declaration name
+          setVal('declName', e.student_name || '');
+
+          sel('autofillBanner').style.display = 'block';
+        })
+        .catch(err => console.warn('Auto-fill failed:', err));
+    }
+
+    /* ── Same Address Checkbox ─────────────────────────────── */
+    sel('sameAsComm').addEventListener('change', function () {
+      const perm = sel('permAddressCol');
+      if (this.checked) {
+        perm.style.opacity = '0.45';
+        perm.style.pointerEvents = 'none';
+        // Copy values
+        setVal('permLine1',    sel('commLine1').value);
+        setVal('permLine2',    sel('commLine2').value);
+        setVal('permCity',     sel('commCity').value);
+        setVal('permDistrict', sel('commDistrict').value);
+        setVal('permState',    sel('commState').value);
+        setVal('permCountry',  sel('commCountry').value);
+        setVal('permPincode',  sel('commPincode').value);
+      } else {
+        perm.style.opacity = '1';
+        perm.style.pointerEvents = 'auto';
+      }
+    });
+    // Live-sync when same-as is checked
+    // Live-sync when same-as is checked
+    ['commLine1','commLine2','commCity','commDistrict','commState','commCountry','commPincode'].forEach(id => {
+      sel(id).addEventListener('input', () => {
+        if (sel('sameAsComm').checked) setVal('perm' + id.charAt(0).toUpperCase() + id.slice(4), sel(id).value);
+      });
+    });
+
+    /* ── Pincode Auto-detect (PostalPincode API) ───────────── */
+    function setupPincodeLookup(pinId, prefix) {
+      const pinInput = sel(pinId);
+      if (!pinInput) return;
+
+      const lookup = async (pin) => {
+        if (pin.length !== 6) return;
+        const spinner = sel(prefix + 'PincodeSpinner');
+        const status  = sel(prefix + 'PincodeStatus');
+        spinner.style.display = 'inline';
+        status.textContent = '';
+        try {
+          const res  = await fetch(`https://api.postalpincode.in/pincode/${pin}`);
+          const data = await res.json();
+          if (data[0].Status === 'Success') {
+            const po = data[0].PostOffice[0];
+            setVal(prefix + 'City',     (po.Taluk || po.Name || '').toUpperCase());
+            setVal(prefix + 'District', (po.District || '').toUpperCase());
+            // Select State dropdown
+            setOpt(prefix + 'State',    (po.State || '').toUpperCase());
+            setVal(prefix + 'Country',  'India');
+            status.textContent = '✓ Detected';
+            status.style.color = '#059669';
+          } else {
+            status.textContent = '⚠ Not found';
+            status.style.color = '#f59e0b';
+          }
+        } catch(e) {
+          status.textContent = '⚠ Fetch failed';
+          status.style.color = '#f59e0b';
+        } finally {
+          spinner.style.display = 'none';
+          // Trigger same-as sync if this was comm address
+          if (prefix === 'comm' && sel('sameAsComm').checked) {
+             setVal('permCity', sel('commCity').value);
+             setVal('permDistrict', sel('commDistrict').value);
+             setVal('permState', sel('commState').value);
+             setVal('permCountry', sel('commCountry').value);
+          }
+        }
+      };
+
+      pinInput.addEventListener('input', () => lookup(pinInput.value));
+      pinInput.addEventListener('blur',  () => lookup(pinInput.value));
+    }
+
+    setupPincodeLookup('commPincode', 'comm');
+    setupPincodeLookup('permPincode', 'perm');
+
+    /* ── Signature Upload ──────────────────────────────────── */
+    let signatureFile = null;
+    const signInput   = sel('signatureFile');
+    const signCard    = sel('signUploadCard');
+    const signPreview = sel('signPreview');
+    const signInfo    = sel('signFileInfo');
+    const signName    = sel('signFileName');
+    const signRemove  = sel('signRemove');
+    const signPlaceholder = sel('signUploadPlaceholder');
+
+    signInput.addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      signatureFile = f;
+      signName.textContent = `${f.name}  (${(f.size/1024/1024).toFixed(1)} MB)`;
+      signInfo.style.display  = 'flex';
+      signCard.classList.add('has-file');
+      // Show image preview if image type
+      if (f.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => { signPreview.src = ev.target.result; signPreview.style.display = 'block'; signPlaceholder.style.display = 'none'; };
+        reader.readAsDataURL(f);
+      } else {
+        signPreview.style.display = 'none';
+        signPlaceholder.style.display = 'none';
+      }
+    });
+
+    signRemove.addEventListener('click', () => {
+      signatureFile = null;
+      signInput.value = '';
+      signPreview.src = '';
+      signPreview.style.display   = 'none';
+      signInfo.style.display      = 'none';
+      signPlaceholder.style.display = 'block';
+      signCard.classList.remove('has-file');
+    });
+
+    /* ── Passport Photo – getUserMedia Camera ──────────────── */
+    let passportPhotoFile = null;
+    let cameraStream = null;
+    let facingMode = 'user'; // 'user' = front, 'environment' = back
+
+    function showPhotoPreview(file) {
+      if (!file) return;
+      passportPhotoFile = file;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        sel('photoPreview').src = ev.target.result;
+        sel('photoRing').classList.add('has-photo');
+        sel('photoWrap').classList.add('has-photo');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearPhoto() {
+      passportPhotoFile = null;
+      sel('photoPreview').src = '';
+      sel('photoRing').classList.remove('has-photo');
+      sel('photoWrap').classList.remove('has-photo');
+      sel('photoFile').value = '';
+    }
+
+    async function startCamera() {
+      // Stop any existing stream
+      if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
+          audio: false
+        });
+        sel('cameraVideo').srcObject = cameraStream;
+      } catch (err) {
+        console.warn('Camera error:', err);
+        closeCameraModal();
+        // Fallback: open file picker
+        alert('Camera not accessible. Please use "Browse File" to upload your photo.');
+        sel('photoFile').click();
+      }
+    }
+
+    function closeCameraModal() {
+      if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+      sel('cameraVideo').srcObject = null;
+      sel('cameraModal').classList.remove('open');
+    }
+
+    function openCameraModal() {
+      sel('cameraModal').classList.add('open');
+      facingMode = 'user';
+      startCamera();
+    }
+
+    // Open camera modal
+    sel('openCameraBtn').addEventListener('click', openCameraModal);
+
+    // Flip between front and back camera
+    sel('flipCameraBtn').addEventListener('click', () => {
+      facingMode = facingMode === 'user' ? 'environment' : 'user';
+      startCamera();
+    });
+
+    // Capture photo from video frame
+    sel('captureBtn').addEventListener('click', () => {
+      const video = sel('cameraVideo');
+      const cvs   = sel('cameraCanvas');
+      cvs.width  = video.videoWidth  || 640;
+      cvs.height = video.videoHeight || 480;
+      const c = cvs.getContext('2d');
+      // Mirror for front camera
+      if (facingMode === 'user') {
+        c.translate(cvs.width, 0); c.scale(-1, 1);
+      }
+      c.drawImage(video, 0, 0, cvs.width, cvs.height);
+      cvs.toBlob((blob) => {
+        const file = new File([blob], `passport_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        showPhotoPreview(file);
+        closeCameraModal();
+      }, 'image/jpeg', 0.92);
+    });
+
+    // Close buttons
+    sel('cameraClose').addEventListener('click',      closeCameraModal);
+    sel('cancelCameraBtn').addEventListener('click',  closeCameraModal);
+    sel('cameraModal').addEventListener('click', (e) => {
+      if (e.target === sel('cameraModal')) closeCameraModal();
+    });
+
+    // Browse file fallback
+    sel('photoFile').addEventListener('change', (e) => {
+      if (e.target.files[0]) showPhotoPreview(e.target.files[0]);
+    });
+    sel('removePhoto').addEventListener('click', clearPhoto);
+
+    /* ── Marksheet Upload ──────────────────────────────────── */
+    function setupDocUpload(fileId, cardId, nameId, removeId) {
+      const fileInput = sel(fileId);
+      const card     = sel(cardId);
+      const nameEl   = sel(nameId);
+      const removeEl = sel(removeId);
+
+      fileInput.addEventListener('change', (e) => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const sizeMB = (f.size / 1024 / 1024).toFixed(1);
+        nameEl.textContent = `${f.name}  (${sizeMB} MB)`;
+        card.classList.add('has-file');
+      });
+      removeEl.addEventListener('click', () => {
+        fileInput.value = '';
+        nameEl.textContent = '';
+        card.classList.remove('has-file');
+      });
+    }
+    setupDocUpload('tenthFile',   'tenthCard',   'tenthName',   'tenthRemove');
+    setupDocUpload('twelfthFile', 'twelfthCard', 'twelfthName', 'twelfthRemove');
+
+    /* ── Receipt Upload ────────────────────────────────────── */
+    sel('receiptFile').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const sizeMB = (f.size / 1024 / 1024).toFixed(1);
+      sel('receiptName').textContent = `${f.name}  (${sizeMB} MB)`;
+      sel('receiptCard').classList.add('has-file');
+    });
+    sel('receiptRemove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      sel('receiptFile').value = '';
+      sel('receiptName').textContent = '';
+      sel('receiptCard').classList.remove('has-file');
+    });
+
+    /* ── Form Submit (FormData for file upload) ────────────── */
+    sel('admissionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      if (!sel('declarationAccepted').checked) {
+        alert('Please accept the declaration to proceed.');
+        sel('declarationAccepted').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      // Validate payment fields
+      if (!sel('paymentUtr').value.trim()) {
+        alert('Please enter the UTR / Transaction Reference Number.');
+        sel('paymentUtr').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        sel('paymentUtr').focus();
+        return;
+      }
+      if (!sel('receiptFile').files[0]) {
+        alert('Please upload the payment receipt screenshot.');
+        sel('receiptCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const submitBtn = sel('submitBtn');
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
+      submitBtn.disabled = true;
+
+      const signatureData = sel('signWrap').classList.contains('has-sig')
+        ? canvas.toDataURL('image/png') : null;
+      const sameAsComm = sel('sameAsComm').checked;
+      const appNum = sel('appNumber').textContent;
+
+      // Build FormData (supports both text fields and file uploads)
+      const fd = new FormData();
+
+      // Text fields
+      const fields = {
+        enquiry_id: enquiryId || '',
+        application_number: appNum,
+        title: sel('title').value,
+        student_name: sel('studentName').value,
+        mobile_no: sel('mobileNo').value,
+        email: sel('email').value,
+        date_of_birth: sel('dob').value || '',
+        gender: sel('gender').value,
+        religion: sel('religion').value,
+        caste_category: sel('casteCategory').value,
+        aadhaar_no: sel('aadhaarNo').value,
+        selected_institute: sel('selectedInstitute').value,
+        course_preference: sel('coursePreference').value,
+        program_preference: sel('programPreference').value,
+        comm_address_line1: sel('commLine1').value,
+        comm_address_line2: sel('commLine2').value,
+        comm_city: sel('commCity').value,
+        comm_district: sel('commDistrict').value,
+        comm_state: sel('commState').value,
+        comm_country: sel('commCountry').value,
+        comm_pincode: sel('commPincode').value,
+        same_as_comm: sameAsComm,
+        perm_address_line1: sameAsComm ? sel('commLine1').value : sel('permLine1').value,
+        perm_address_line2: sameAsComm ? sel('commLine2').value : sel('permLine2').value,
+        perm_city:     sameAsComm ? sel('commCity').value     : sel('permCity').value,
+        perm_district: sameAsComm ? sel('commDistrict').value : sel('permDistrict').value,
+        perm_state:    sameAsComm ? sel('commState').value    : sel('permState').value,
+        perm_country:  sameAsComm ? sel('commCountry').value  : sel('permCountry').value,
+        perm_pincode:  sameAsComm ? sel('commPincode').value  : sel('permPincode').value,
+        father_name: sel('fatherName').value,
+        father_mobile: sel('fatherMobile').value,
+        father_occupation: sel('fatherOccupation').value,
+        mother_name: sel('motherName').value,
+        mother_mobile: sel('motherMobile').value,
+        mother_occupation: sel('motherOccupation').value,
+        candidate_name_marksheet: sel('candidateNameMarksheet').value,
+        tenth_institution: sel('tenth_institution').value,
+        tenth_board: sel('tenth_board').value,
+        tenth_stream: sel('tenth_stream').value,
+        tenth_year_passing: sel('tenth_year').value,
+        tenth_result_status: sel('tenth_result').value,
+        tenth_marking_scheme: sel('tenth_scheme').value,
+        tenth_percentage: sel('tenth_percentage').value,
+        twelfth_institution: sel('twelfth_institution').value,
+        twelfth_board: sel('twelfth_board').value,
+        twelfth_stream: sel('twelfth_stream').value,
+        twelfth_year_passing: sel('twelfth_year').value,
+        twelfth_result_status: sel('twelfth_result').value,
+        twelfth_marking_scheme: sel('twelfth_scheme').value,
+        twelfth_percentage: sel('twelfth_percentage').value,
+        entrance_exams: sel('entranceExams').value,
+        declaration_accepted: true,
+        student_signature: signatureData || '',
+        payment_utr_no: sel('paymentUtr').value
+      };
+      for (const [k, v] of Object.entries(fields)) fd.append(k, v ?? '');
+
+      // File fields
+      if (passportPhotoFile)          fd.append('passport_photo',   passportPhotoFile);
+      const tenthF   = sel('tenthFile').files[0];
+      const twelfthF = sel('twelfthFile').files[0];
+      const receiptF = sel('receiptFile').files[0];
+      if (tenthF)   fd.append('tenth_marksheet',   tenthF);
+      if (twelfthF) fd.append('twelfth_marksheet', twelfthF);
+      if (receiptF) fd.append('payment_receipt',   receiptF);
+
+      try {
+        // No Content-Type header — browser sets multipart boundary automatically
+        const res = await fetch('/api/admissions/submit', { method: 'POST', body: fd });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.error || 'Submission failed');
+
+        sel('modalAppNo').textContent = appNum;
+        sel('successModal').classList.add('open');
+        sel('admissionForm').reset();
+        clearPhoto();
+        sel('tenthCard').classList.remove('has-file');
+        sel('twelfthCard').classList.remove('has-file');
+        sel('receiptCard').classList.remove('has-file');
+        sel('receiptName').textContent = '';
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        sel('signWrap').classList.remove('has-sig');
+        sel('declDate').value = fmtDateTime(new Date());
+        await loadAppNumber();
+
+      } catch (err) {
+        console.error(err);
+        alert('Error submitting application: ' + err.message);
+      } finally {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Admission Application';
+        submitBtn.disabled = false;
+      }
+    });
+
+    /* ── Reset ─────────────────────────────────────────────── */
+    sel('resetBtn').addEventListener('click', () => {
+      if (!confirm('Reset all fields?')) return;
+      sel('admissionForm').reset();
+      clearPhoto();
+      sel('tenthCard').classList.remove('has-file');
+      sel('twelfthCard').classList.remove('has-file');
+      sel('tenthName').textContent = '';
+      sel('twelfthName').textContent = '';
+      sel('receiptCard').classList.remove('has-file');
+      sel('receiptName').textContent = '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      sel('signWrap').classList.remove('has-sig');
+      sel('declDate').value = fmtDateTime(new Date());
+      sel('permAddressCol').style.opacity = '1';
+      sel('permAddressCol').style.pointerEvents = 'auto';
+    });
+
+    /* ── Modal close ───────────────────────────────────────── */
+    sel('modalCloseBtn').addEventListener('click', () => sel('successModal').classList.remove('open'));
+    sel('successModal').addEventListener('click', e => { if (e.target === sel('successModal')) sel('successModal').classList.remove('open'); });
+
+  })();
+  </script>
+
+</body>
+</html>
