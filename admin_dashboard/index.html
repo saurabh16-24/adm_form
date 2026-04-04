@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVCE Admin Dashboard</title>
+  <meta name="description" content="SVCE Admissions Admin Dashboard - Manage enquiries and admissions">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <!-- ═══════════════ LOGIN SCREEN ═══════════════ -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-bg-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon">
+          <span class="material-icons-round">school</span>
+        </div>
+        <h1>SVCE Admin</h1>
+        <p>Admissions Management System</p>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <div class="input-group">
+          <span class="material-icons-round input-icon">person</span>
+          <input type="text" id="login-user" placeholder="Username" required autofocus>
+        </div>
+        <div class="input-group">
+          <span class="material-icons-round input-icon">lock</span>
+          <input type="password" id="login-pass" placeholder="Password" required>
+          <button type="button" class="toggle-pass" onclick="togglePass()">
+            <span class="material-icons-round">visibility</span>
+          </button>
+        </div>
+        <div id="login-error" class="login-error"></div>
+        <button type="submit" class="login-btn" id="login-btn">
+          <span>Sign In</span>
+          <span class="material-icons-round">arrow_forward</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DASHBOARD ═══════════════ -->
+  <div id="dashboard" class="dashboard hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <span class="material-icons-round">school</span>
+        </div>
+        <div class="sidebar-title">
+          <h2>SVCE</h2>
+          <span>Admin Panel</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-tab="overview" id="nav-overview">
+          <span class="material-icons-round">dashboard</span>
+          <span>Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="enquiries" id="nav-enquiries">
+          <span class="material-icons-round">contact_mail</span>
+          <span>Enquiries</span>
+        </a>
+        <a href="#" class="nav-item" data-tab="admissions" id="nav-admissions">
+          <span class="material-icons-round">how_to_reg</span>
+          <span>Admissions</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="logout()" id="logout-btn">
+          <span class="material-icons-round">logout</span>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="topbar">
+        <button class="menu-toggle" onclick="toggleSidebar()" id="menu-toggle">
+          <span class="material-icons-round">menu</span>
+        </button>
+        <div class="topbar-title">
+          <h1 id="page-title">Overview</h1>
+          <span id="page-subtitle">Dashboard analytics and insights</span>
+        </div>
+        <div class="topbar-right">
+          <div class="topbar-time" id="topbar-time"></div>
+          <div class="topbar-avatar">
+            <span class="material-icons-round">admin_panel_settings</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ───── TAB: Overview ───── -->
+      <section class="tab-content active" id="tab-overview">
+        <div class="stats-grid">
+          <div class="stat-card stat-blue">
+            <div class="stat-icon"><span class="material-icons-round">contact_mail</span></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-enquiries">0</span>
+              <span class="stat-label">Total Enquiries</span>
+            </div>
+          </div>
+          <div class="stat-card stat-green">
+            <div class="stat-icon"><span class="material-icons-round">how_to_reg</span></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-admissions">0</span>
+              <span class="stat-label">Total Admissions</span>
+            </div>
+          </div>
+          <div class="stat-card stat-purple">
+            <div class="stat-icon"><span class="material-icons-round">today</span></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-today-enq">0</span>
+              <span class="stat-label">Today's Enquiries</span>
+            </div>
+          </div>
+          <div class="stat-card stat-orange">
+            <div class="stat-icon"><span class="material-icons-round">event_available</span></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-today-adm">0</span>
+              <span class="stat-label">Today's Admissions</span>
+            </div>
+          </div>
+        </div>
+        <!-- Recent activity -->
+        <div class="card recent-card">
+          <div class="card-header">
+            <h3><span class="material-icons-round">history</span> Recent Enquiries</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="recent-enquiries-table">
+              <thead>
+                <tr>
+                  <th>Token</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Course Pref</th>
+                </tr>
+              </thead>
+              <tbody id="recent-enquiries-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card recent-card">
+          <div class="card-header">
+            <h3><span class="material-icons-round">history</span> Recent Admissions</h3>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="recent-admissions-table">
+              <thead>
+                <tr>
+                  <th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Course</th>
+                </tr>
+              </thead>
+              <tbody id="recent-admissions-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── TAB: Enquiries ───── -->
+      <section class="tab-content" id="tab-enquiries">
+        <div class="tab-toolbar">
+          <div class="search-box">
+            <span class="material-icons-round">search</span>
+            <input type="text" id="enq-search" placeholder="Search by name, email, token..." oninput="filterEnquiries()">
+          </div>
+          <div class="toolbar-actions">
+            <select id="enq-filter-date" onchange="filterEnquiries()">
+              <option value="">All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <button class="btn btn-export" onclick="exportEnquiriesCSV()" id="export-enq-btn">
+              <span class="material-icons-round">download</span>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table" id="enquiries-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>Token</th><th>Name</th><th>Email</th><th>Mobile</th><th>Father</th><th>Qualification</th><th>Board</th><th>Total %</th><th>Date</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="enquiries-body"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="enq-count">0 records</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───── TAB: Admissions ───── -->
+      <section class="tab-content" id="tab-admissions">
+        <div class="tab-toolbar">
+          <div class="search-box">
+            <span class="material-icons-round">search</span>
+            <input type="text" id="adm-search" placeholder="Search by name, email, app no..." oninput="filterAdmissions()">
+          </div>
+          <div class="toolbar-actions">
+            <select id="adm-filter-date" onchange="filterAdmissions()">
+              <option value="">All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <button class="btn btn-export" onclick="exportAdmissionsCSV()" id="export-adm-btn">
+              <span class="material-icons-round">download</span>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table" id="admissions-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>DOB</th><th>Course</th><th>Programme</th><th>UTR No.</th><th>Date</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admissions-body"></tbody>
+            </table>
+          </div>
+          <div class="table-footer">
+            <span id="adm-count">0 records</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ═══════════════ DETAIL MODAL ═══════════════ -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="modal-title">Record Details</h2>
+        <button class="modal-close" onclick="closeModal()" id="modal-close-btn">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

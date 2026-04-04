@@ -1,4 +1,5 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
@@ -619,7 +620,117 @@ app.post('/api/admissions/submit', (req, res) => {
   });
 });
 
+// ── Admin Dashboard ─────────────────────────────────────────────────────────
+app.use('/admin_dashboard', express.static(path.join(__dirname, 'admin_dashboard')));
+
+const ADMIN_USER  = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS  = process.env.ADMIN_PASS || 'admin123';
+const ADMIN_SECRET = crypto.randomBytes(32).toString('hex');
+
+function generateToken() {
+  const payload = { user: ADMIN_USER, iat: Date.now() };
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64');
+  const sig  = crypto.createHmac('sha256', ADMIN_SECRET).update(data).digest('hex');
+  return `${data}.${sig}`;
+}
+
+function verifyToken(token) {
+  if (!token) return false;
+  const [data, sig] = token.split('.');
+  if (!data || !sig) return false;
+  const expected = crypto.createHmac('sha256', ADMIN_SECRET).update(data).digest('hex');
+  return sig === expected;
+}
+
+function adminAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  const token = auth && auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!verifyToken(token)) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  next();
+}
+
+// Login
+app.post('/api/admin/login', (req, res) => {
+  const { username, password } = req.body;
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    return res.json({ success: true, token: generateToken() });
+  }
+  res.status(401).json({ success: false, message: 'Invalid username or password' });
+});
+
+// Stats
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const totalEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries');
+    const totalAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions');
+    const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
+    const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
+    const recentEnq = await pool.query('SELECT * FROM enquiries  ORDER BY id DESC LIMIT 5');
+    const recentAdm = await pool.query('SELECT * FROM admissions ORDER BY id DESC LIMIT 5');
+    res.json({
+      total_enquiries:   parseInt(totalEnq.rows[0].c),
+      total_admissions:  parseInt(totalAdm.rows[0].c),
+      today_enquiries:   parseInt(todayEnq.rows[0].c),
+      today_admissions:  parseInt(todayAdm.rows[0].c),
+      recent_enquiries:  recentEnq.rows,
+      recent_admissions: recentAdm.rows
+    });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// All enquiries
+app.get('/api/admin/enquiries', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM enquiries ORDER BY id DESC');
+    res.json({ rows: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Single enquiry
+app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM enquiries WHERE id = $1', [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Delete enquiry
+app.delete('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM enquiries WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// All admissions
+app.get('/api/admin/admissions', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM admissions ORDER BY id DESC');
+    res.json({ rows: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Single admission
+app.get('/api/admin/admission/:id', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM admissions WHERE id = $1', [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Delete admission
+app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM admissions WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Open http://localhost:${port} to see the form.`);
+  console.log(`Admin dashboard: http://localhost:${port}/admin_dashboard/`);
 });

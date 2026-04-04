@@ -1049,8 +1049,7 @@
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting…';
       submitBtn.disabled = true;
 
-      const signatureData = sel('signWrap').classList.contains('has-sig')
-        ? canvas.toDataURL('image/png') : null;
+      const signatureData = signatureFile ? signatureFile.name : null;
       const sameAsComm = sel('sameAsComm').checked;
       const appNum = sel('appNumber').textContent;
 
@@ -1061,58 +1060,58 @@
       const fields = {
         enquiry_id: enquiryId || '',
         application_number: appNum,
-        title: sel('title').value,
-        student_name: sel('studentName').value,
-        mobile_no: sel('mobileNo').value,
-        email: sel('email').value,
-        date_of_birth: sel('dob').value || '',
-        gender: sel('gender').value,
-        religion: sel('religion').value,
-        caste_category: sel('casteCategory').value,
-        aadhaar_no: sel('aadhaarNo').value,
-        selected_institute: sel('selectedInstitute').value,
-        course_preference: sel('coursePreference').value,
-        program_preference: sel('programPreference').value,
-        comm_address_line1: sel('commLine1').value,
-        comm_address_line2: sel('commLine2').value,
-        comm_city: sel('commCity').value,
-        comm_district: sel('commDistrict').value,
-        comm_state: sel('commState').value,
-        comm_country: sel('commCountry').value,
-        comm_pincode: sel('commPincode').value,
+        title: sel('title')?.value || '',
+        student_name: sel('studentName')?.value || '',
+        mobile_no: sel('mobileNo')?.value || '',
+        email: sel('email')?.value || '',
+        date_of_birth: sel('dob')?.value || '',
+        gender: sel('gender')?.value || '',
+        religion: sel('religion')?.value || '',
+        caste_category: sel('casteCategory')?.value || '',
+        aadhaar_no: sel('aadhaarNo')?.value || '',
+        selected_institute: sel('selectedInstitute')?.value || '',
+        course_preference: sel('coursePreference')?.value || '',
+        program_preference: sel('programPreference')?.value || '',
+        comm_address_line1: sel('commLine1')?.value || '',
+        comm_address_line2: sel('commLine2')?.value || '',
+        comm_city: sel('commCity')?.value || '',
+        comm_district: sel('commDistrict')?.value || '',
+        comm_state: sel('commState')?.value || '',
+        comm_country: sel('commCountry')?.value || '',
+        comm_pincode: sel('commPincode')?.value || '',
         same_as_comm: sameAsComm,
-        perm_address_line1: sameAsComm ? sel('commLine1').value : sel('permLine1').value,
-        perm_address_line2: sameAsComm ? sel('commLine2').value : sel('permLine2').value,
-        perm_city:     sameAsComm ? sel('commCity').value     : sel('permCity').value,
-        perm_district: sameAsComm ? sel('commDistrict').value : sel('permDistrict').value,
-        perm_state:    sameAsComm ? sel('commState').value    : sel('permState').value,
-        perm_country:  sameAsComm ? sel('commCountry').value  : sel('permCountry').value,
-        perm_pincode:  sameAsComm ? sel('commPincode').value  : sel('permPincode').value,
-        father_name: sel('fatherName').value,
-        father_mobile: sel('fatherMobile').value,
-        father_occupation: sel('fatherOccupation').value,
-        mother_name: sel('motherName').value,
-        mother_mobile: sel('motherMobile').value,
-        mother_occupation: sel('motherOccupation').value,
-        candidate_name_marksheet: sel('candidateNameMarksheet').value,
-        tenth_institution: sel('tenth_institution').value,
-        tenth_board: sel('tenth_board').value,
-        tenth_stream: sel('tenth_stream').value,
-        tenth_year_passing: sel('tenth_year').value,
-        tenth_result_status: sel('tenth_result').value,
-        tenth_marking_scheme: sel('tenth_scheme').value,
-        tenth_percentage: sel('tenth_percentage').value,
-        twelfth_institution: sel('twelfth_institution').value,
-        twelfth_board: sel('twelfth_board').value,
-        twelfth_stream: sel('twelfth_stream').value,
-        twelfth_year_passing: sel('twelfth_year').value,
-        twelfth_result_status: sel('twelfth_result').value,
-        twelfth_marking_scheme: sel('twelfth_scheme').value,
-        twelfth_percentage: sel('twelfth_percentage').value,
-        entrance_exams: sel('entranceExams').value,
+        perm_address_line1: sameAsComm ? (sel('commLine1')?.value || '') : (sel('permLine1')?.value || ''),
+        perm_address_line2: sameAsComm ? (sel('commLine2')?.value || '') : (sel('permLine2')?.value || ''),
+        perm_city:     sameAsComm ? (sel('commCity')?.value || '')     : (sel('permCity')?.value || ''),
+        perm_district: sameAsComm ? (sel('commDistrict')?.value || '') : (sel('permDistrict')?.value || ''),
+        perm_state:    sameAsComm ? (sel('commState')?.value || '')    : (sel('permState')?.value || ''),
+        perm_country:  sameAsComm ? (sel('commCountry')?.value || '')  : (sel('permCountry')?.value || ''),
+        perm_pincode:  sameAsComm ? (sel('commPincode')?.value || '')  : (sel('permPincode')?.value || ''),
+        father_name: sel('fatherName')?.value || '',
+        father_mobile: sel('fatherMobile')?.value || '',
+        father_occupation: sel('fatherOccupation')?.value || '',
+        mother_name: sel('motherName')?.value || '',
+        mother_mobile: sel('motherMobile')?.value || '',
+        mother_occupation: sel('motherOccupation')?.value || '',
+        candidate_name_marksheet: sel('candidateNameMarksheet')?.value || '',
+        tenth_institution: sel('tenth_institution')?.value || '',
+        tenth_board: sel('tenth_board')?.value || '',
+        tenth_stream: sel('tenth_stream')?.value || '',
+        tenth_year_passing: sel('tenth_year')?.value || '',
+        tenth_result_status: sel('tenth_result')?.value || '',
+        tenth_marking_scheme: sel('tenth_scheme')?.value || '',
+        tenth_percentage: sel('tenth_percentage')?.value || '',
+        twelfth_institution: sel('twelfth_institution')?.value || '',
+        twelfth_board: sel('twelfth_board')?.value || '',
+        twelfth_stream: sel('twelfth_stream')?.value || '',
+        twelfth_year_passing: sel('twelfth_year')?.value || '',
+        twelfth_result_status: sel('twelfth_result')?.value || '',
+        twelfth_marking_scheme: sel('twelfth_scheme')?.value || '',
+        twelfth_percentage: sel('twelfth_percentage')?.value || '',
+        entrance_exams: sel('entranceExams')?.value || '',
         declaration_accepted: true,
         student_signature: signatureData || '',
-        payment_utr_no: sel('paymentUtr').value
+        payment_utr_no: sel('paymentUtr')?.value || ''
       };
       for (const [k, v] of Object.entries(fields)) fd.append(k, v ?? '');
 
@@ -1139,8 +1138,13 @@
         sel('twelfthCard').classList.remove('has-file');
         sel('receiptCard').classList.remove('has-file');
         sel('receiptName').textContent = '';
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        sel('signWrap').classList.remove('has-sig');
+        // Reset signature upload
+        signatureFile = null;
+        sel('signatureFile').value = '';
+        sel('signPreview').src = ''; sel('signPreview').style.display = 'none';
+        sel('signFileInfo').style.display = 'none';
+        sel('signUploadPlaceholder').style.display = 'block';
+        sel('signUploadCard').classList.remove('has-file');
         sel('declDate').value = fmtDateTime(new Date());
         await loadAppNumber();
 
@@ -1164,8 +1168,13 @@
       sel('twelfthName').textContent = '';
       sel('receiptCard').classList.remove('has-file');
       sel('receiptName').textContent = '';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      sel('signWrap').classList.remove('has-sig');
+      // Reset signature upload
+      signatureFile = null;
+      sel('signatureFile').value = '';
+      sel('signPreview').src = ''; sel('signPreview').style.display = 'none';
+      sel('signFileInfo').style.display = 'none';
+      sel('signUploadPlaceholder').style.display = 'block';
+      sel('signUploadCard').classList.remove('has-file');
       sel('declDate').value = fmtDateTime(new Date());
       sel('permAddressCol').style.opacity = '1';
       sel('permAddressCol').style.pointerEvents = 'auto';
