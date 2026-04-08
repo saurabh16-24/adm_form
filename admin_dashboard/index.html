@@ -22,8 +22,8 @@
     </div>
     <div class="login-card">
       <div class="login-logo">
-        <div class="logo-icon">
-          <span class="material-icons-round">school</span>
+        <div class="logo-icon" style="background: none; box-shadow: none;">
+          <img src="/admin_dashboard/image_copy_2.png" alt="SVCE Logo" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <h1>SVCE Admin</h1>
         <p>Admissions Management System</p>
@@ -55,8 +55,8 @@
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo">
-          <span class="material-icons-round">school</span>
+        <div class="sidebar-logo" style="background: none;">
+          <img src="/admin_dashboard/image_copy_2.png" alt="SVCE Logo" style="width:100%; height:100%; object-fit:contain;">
         </div>
         <div class="sidebar-title">
           <h2>SVCE</h2>
@@ -97,10 +97,7 @@
           <span id="page-subtitle">Dashboard analytics and insights</span>
         </div>
         <div class="topbar-right">
-          <div class="topbar-time" id="topbar-time"></div>
-          <div class="topbar-avatar">
-            <span class="material-icons-round">admin_panel_settings</span>
-          </div>
+          <img src="/admin_dashboard/image_copy.png" alt="SVCE Logo" style="height: 90px; width: auto; max-width: 380px; object-fit: contain;">
         </div>
       </header>
 
@@ -183,6 +180,25 @@
               <option value="week">This Week</option>
               <option value="month">This Month</option>
             </select>
+            <select id="enq-filter-action" onchange="filterEnquiries()">
+              <option value="">All Actions</option>
+              <option value="Booking Done">Booking Done</option>
+              <option value="After CET">After CET</option>
+              <option value="After COMEDK">After COMEDK</option>
+              <option value="Follow-up Date">Follow-up Pending</option>
+            </select>
+            <select id="enq-filter-course" onchange="filterEnquiries()">
+              <option value="">All 1st Pref. Courses</option>
+              <option value="CSE_ANY">Computer Science (Any)</option>
+              <option value="BE Computer Science and Engineering">BE Computer Science and Engineering</option>
+              <option value="BE Computer Science and Engineering (Artificial Intelligence)">BE Computer Science and Engineering (AI)</option>
+              <option value="BE Computer Science and Engineering (Data Science)">BE Computer Science and Engineering (Data Science)</option>
+              <option value="BE Computer Science and Engineering (Cyber Security)">BE Computer Science and Engineering (Cyber Security)</option>
+              <option value="BE Information Science and Engineering">BE Information Science and Engineering</option>
+              <option value="BE Electronics and Communication Engineering">BE Electronics and Communication Engineering</option>
+              <option value="BE Mechanical Engineering">BE Mechanical Engineering</option>
+              <option value="BE Civil Engineering">BE Civil Engineering</option>
+            </select>
             <button class="btn btn-export" onclick="exportEnquiriesCSV()" id="export-enq-btn">
               <span class="material-icons-round">download</span>
               Export CSV
@@ -194,7 +210,7 @@
             <table class="data-table" id="enquiries-table">
               <thead>
                 <tr>
-                  <th>ID</th><th>Token</th><th>Name</th><th>Email</th><th>Mobile</th><th>Father</th><th>Qualification</th><th>Board</th><th>Total %</th><th>Date</th><th>Actions</th>
+                  <th>ID</th><th>Token</th><th>Name</th><th>Mobile</th><th>Reference</th><th>Remarks</th><th>Date</th><th class="actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody id="enquiries-body"></tbody>
@@ -219,6 +235,18 @@
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
+            </select>
+            <select id="adm-filter-course" onchange="filterAdmissions()">
+              <option value="">All Courses</option>
+              <option value="CSE_ANY">Computer Science (Any)</option>
+              <option value="BE Computer Science and Engineering">BE Computer Science and Engineering</option>
+              <option value="BE Computer Science and Engineering (Artificial Intelligence)">BE Computer Science and Engineering (AI)</option>
+              <option value="BE Computer Science and Engineering (Data Science)">BE Computer Science and Engineering (Data Science)</option>
+              <option value="BE Computer Science and Engineering (Cyber Security)">BE Computer Science and Engineering (Cyber Security)</option>
+              <option value="BE Information Science and Engineering">BE Information Science and Engineering</option>
+              <option value="BE Electronics and Communication Engineering">BE Electronics and Communication Engineering</option>
+              <option value="BE Mechanical Engineering">BE Mechanical Engineering</option>
+              <option value="BE Civil Engineering">BE Civil Engineering</option>
             </select>
             <button class="btn btn-export" onclick="exportAdmissionsCSV()" id="export-adm-btn">
               <span class="material-icons-round">download</span>
@@ -249,7 +277,10 @@
   <div class="modal-overlay" id="detail-modal">
     <div class="modal-card">
       <div class="modal-header">
-        <h2 id="modal-title">Record Details</h2>
+        <div class="modal-brand">
+          <img src="/admin_dashboard/image_copy.png" alt="SVCE Logo" class="modal-logo">
+          <h2 id="modal-title">Record Details</h2>
+        </div>
         <button class="modal-close" onclick="closeModal()" id="modal-close-btn">
           <span class="material-icons-round">close</span>
         </button>

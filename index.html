@@ -108,6 +108,7 @@
             </div>
             <div class="title">
               <h3>ADMISSION ENQUIRY FORM</h3>
+              <div id="academic-year-info" style="font-weight: 700; color: #3b82f6; font-size: 0.95rem; margin-top: 4px;">Academic Year: <span id="acadYearDisplay"></span></div>
             </div>
           </div>
         </header>
@@ -237,6 +238,16 @@
                     <option value="AP/Telangana">Andhra Pradesh/Telangana</option>
                     <option value="Other">Other</option>
                 </select>
+            </div>
+            
+            <div class="form-group" style="max-width: 400px;">
+                <label for="institution_name"><i class="fas fa-school"></i> Institution / School Name:</label>
+                <input type="text" id="institution_name" name="institution_name" oninput="this.value = this.value.toUpperCase()" placeholder="Enter your school/college name">
+            </div>
+            
+            <div class="form-group" style="max-width: 400px;">
+                <label for="year_of_passing"><i class="fas fa-calendar-alt"></i> Year of Passing:</label>
+                <input type="text" id="year_of_passing" name="year_of_passing" maxlength="4" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="e.g. 2024">
             </div>
 
             <!-- Result Status – shown after board is selected -->
@@ -397,50 +408,55 @@
             </div>
             
             <div class="form-group course-preference">
-                <label><i class="fas fa-list-ol"></i> Course Preference Order: <span class="required-note">(Select courses in order)</span></label>
+                <label><i class="fas fa-list-ol"></i> Course Preference Order & Fee: <span class="required-note">(Choose up to 8 rank-ordered preferences)</span></label>
                 <div class="preference-instruction">
-                    <p><i class="fas fa-info-circle"></i> Click on courses in order of your preference. The first course you select will be your first preference.</p>
+                    <p><i class="fas fa-info-circle"></i> Select your course preferences and enter the agreed fee for each.</p>
                 </div>
+                
                 <div id="course-selection" class="course-selection-list">
-                    <div class="course-option">
-                        <input type="checkbox" id="course1" name="coursePreference[]" value="BE Computer Science and Engineering" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course1">BE Computer Science and Engineering</label>
+                    <!-- Dropdowns will be generated in JS, but we place the container here -->
+                    <div id="preferenceDropdownsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS injected dropdowns 1-8 -->
                     </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course2" name="coursePreference[]" value="BE Computer Science and Engineering (Artificial Intelligence)" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course2">BE Computer Science and Engineering (AI)</label>
+                </div>
+
+                <!-- Hostel & Transport Options -->
+                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="hostelRequired" name="hostelRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="toggleHostelOptions()">
+                            <label for="hostelRequired" style="margin: 0; cursor: pointer; color: var(--text-primary); font-weight: 600;">Hostel Required</label>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="transportRequired" name="transportRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="toggleTransportOptions()">
+                            <label for="transportRequired" style="margin: 0; cursor: pointer; color: var(--text-primary); font-weight: 600;">Transport Required</label>
+                        </div>
                     </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course3" name="coursePreference[]" value="BE Computer Science and Engineering (Data Science)" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course3">BE Computer Science and Engineering (Data Science)</label>
+
+                    <!-- Hidden Hostel Details -->
+                    <div id="hostelDetailsContainer" style="display: none; border-top: 1px dashed #cbd5e1; margin-top: 5px; padding-top: 15px;">
+                        <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block;">Select Hostel Type:</label>
+                        <select id="hostelType" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">-- Choose Hostel Accomodation --</option>
+                            <optgroup label="Accommodation Only">
+                                <option value="Hostel with shared toilets (Only Accomm)">Hostel with shared toilets - ₹50,000</option>
+                                <option value="Hostel with attached toilets (Boys only, Only Accomm)">Hostel with attached toilets (Boys only) - ₹75,000</option>
+                            </optgroup>
+                            <optgroup label="Accommodation with Food">
+                                <option value="Hostel with shared toilets (With Food)">Hostel with shared toilets - ₹1,10,000</option>
+                                <option value="Hostel with attached toilets (Boys only, With Food)">Hostel with attached toilets (Boys only) - ₹1,30,000</option>
+                            </optgroup>
+                        </select>
                     </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course4" name="coursePreference[]" value="BE Computer Science and Engineering (Cyber Security)" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course4">BE Computer Science and Engineering (Cyber Security)</label>
-                    </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course5" name="coursePreference[]" value="BE Information Science and Engineering" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course5">BE Information Science and Engineering</label>
-                    </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course6" name="coursePreference[]" value="BE Electronics and Communication Engineering" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course6">BE Electronics and Communication Engineering</label>
-                    </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course8" name="coursePreference[]" value="BE Mechanical Engineering" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course8">BE Mechanical Engineering</label>
-                    </div>
-                    <div class="course-option">
-                        <input type="checkbox" id="course9" name="coursePreference[]" value="BE Civil Engineering" class="course-checkbox">
-                        <div class="preference-indicator"></div>
-                        <label for="course9">BE Civil Engineering</label>
+
+                    <!-- Hidden Transport Details -->
+                    <div id="transportDetailsContainer" style="display: none; border-top: 1px dashed #cbd5e1; margin-top: 5px; padding-top: 15px;">
+                        <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block;">Select Transport Route:</label>
+                        <select id="transportRoute" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <option value="">-- Choose Route --</option>
+                            <option value="Chintamani Route">Chintamani Route - ₹45,000</option>
+                            <option value="Other Routes">Other Routes - ₹40,000</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -523,6 +539,11 @@
             const formattedDate = today.toLocaleDateString('en-GB');
             document.getElementById('enquiry-date').textContent = formattedDate;
 
+            // Fill Dynamic Academic Year
+            const curYr = today.getFullYear();
+            const acadYrDisplay = document.getElementById('acadYearDisplay');
+            if (acadYrDisplay) acadYrDisplay.textContent = `${curYr}-${curYr + 1}`;
+
             // Load token from server (sequential per day, resets each day)
             fetchAndDisplayNextToken();
             
@@ -568,12 +589,17 @@
                 const statusInfo = document.getElementById('resultStatusInfo');
                 const expectedSection = document.getElementById('expectedPercentSection');
 
-                // Toggle all three mark blocks together
-                const markBlocks = ['marksSection', 'marks12thSection', 'marksPercentSection'];
-                markBlocks.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.display = showMarks ? 'block' : 'none';
-                });
+                const board = document.getElementById('educationBoard').value;
+                const marksSection11 = document.getElementById('marksSection');
+                if (marksSection11) {
+                    marksSection11.style.display = (showMarks && board === 'AP/Telangana') ? 'block' : 'none';
+                }
+
+                const marks12th = document.getElementById('marks12thSection');
+                if (marks12th) marks12th.style.display = showMarks ? 'block' : 'none';
+
+                const marksPct = document.getElementById('marksPercentSection');
+                if (marksPct) marksPct.style.display = showMarks ? 'block' : 'none';
 
                 // Show/hide info banner and expected % field
                 if (statusInfo)     statusInfo.style.display     = showExpected ? 'block' : 'none';
@@ -688,37 +714,68 @@
                 }
             }
             
-            let coursePreferenceOrder = [];
-            document.querySelectorAll('.course-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const optionDiv = this.closest('.course-option');
-                    if (this.checked) {
-                        coursePreferenceOrder.push(this.value);
-                        optionDiv.classList.add('selected');
-                        updatePreferenceIndicators();
-                    } else {
-                        const index = coursePreferenceOrder.indexOf(this.value);
-                        if (index > -1) {
-                            coursePreferenceOrder.splice(index, 1);
-                            optionDiv.classList.remove('selected');
-                            updatePreferenceIndicators();
-                        }
-                    }
-                });
-            });
-            
-            function updatePreferenceIndicators() {
-                document.querySelectorAll('.course-checkbox').forEach(checkbox => {
-                    const indicator = checkbox.parentElement.querySelector('.preference-indicator');
-                    if (checkbox.checked) {
-                        const order = coursePreferenceOrder.indexOf(checkbox.value) + 1;
-                        indicator.textContent = order;
-                        indicator.style.display = 'flex';
-                    } else {
-                        indicator.style.display = 'none';
-                    }
-                });
+            const courseData = [
+                { name: "BE Computer Science and Engineering", fee: 375000 },
+                { name: "BE Computer Science and Engineering (Artificial Intelligence)", fee: 375000 },
+                { name: "BE Computer Science and Engineering (Data Science)", fee: 350000 },
+                { name: "BE Computer Science and Engineering (Cyber Security)", fee: 325000 },
+                { name: "BE Information Science and Engineering", fee: 325000 },
+                { name: "BE Electronics and Communication Engineering", fee: 275000 },
+                { name: "BE Civil Engineering", fee: 125000 },
+                { name: "BE Mechanical Engineering", fee: 125000 }
+            ];
+
+            function initializeCoursePreferences() {
+                const container = document.getElementById('preferenceDropdownsContainer');
+                container.innerHTML = '';
+                
+                for (let i = 1; i <= 8; i++) {
+                    const row = document.createElement('div');
+                    row.className = 'preference-row';
+                    row.style.display = 'grid';
+                    row.style.gridTemplateColumns = '120px 1fr';
+                    row.style.gap = '15px';
+                    row.style.alignItems = 'center';
+                    row.style.marginBottom = '8px';
+                    row.style.background = 'rgba(255, 255, 255, 0.5)';
+                    row.style.padding = '8px';
+                    row.style.borderRadius = '8px';
+                    row.style.border = '1px solid #e2e8f0';
+                    
+                    row.innerHTML = `
+                        <div style="font-weight: 600; color: #475569; font-size: 0.9rem;">Preference ${i}:</div>
+                        <div style="display: flex; gap: 10px; width: 100%;">
+                            <select class="pref-course-select" id="pref-course-${i}" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 500; font-family: inherit;">
+                                <option value="">-- Select Course --</option>
+                                ${courseData.map(c => `<option value="${c.name}">${c.name} - ₹${c.fee.toLocaleString()}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                }
             }
+
+            initializeCoursePreferences();
+
+            const hostelFees = {
+                "Hostel with shared toilets (Only Accomm)": 50000,
+                "Hostel with attached toilets (Boys only, Only Accomm)": 75000,
+                "Hostel with shared toilets (With Food)": 110000,
+                "Hostel with attached toilets (Boys only, With Food)": 130000
+            };
+            const transportFees = {
+                "Chintamani Route": 45000,
+                "Other Routes": 40000
+            };
+
+            window.toggleHostelOptions = function() {
+                const container = document.getElementById('hostelDetailsContainer');
+                container.style.display = document.getElementById('hostelRequired').checked ? 'block' : 'none';
+            };
+            window.toggleTransportOptions = function() {
+                const container = document.getElementById('transportDetailsContainer');
+                container.style.display = document.getElementById('transportRequired').checked ? 'block' : 'none';
+            };
             
             document.getElementById('enquiryForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
@@ -768,14 +825,41 @@
                         cs_marks: parseFloat(document.getElementById('cs').value) || null,
                         bio_marks: parseFloat(document.getElementById('bio').value) || null,
                         ece_marks: parseFloat(document.getElementById('ece').value) || null,
-                        total_percentage: parseFloat(document.getElementById('totalPercentage').value),
-                        pcm_percentage: parseFloat(document.getElementById('pcmPercentage').value),
+                        total_percentage: parseFloat(document.getElementById('totalPercentage').value) || null,
+                        pcm_percentage: parseFloat(document.getElementById('pcmPercentage').value) || null,
                         jee_rank: document.getElementById('jeeRank').value || null,
                         comedk_rank: document.getElementById('comedk').value || null,
                         cet_rank: document.getElementById('cetRank').value || null,
-                        course_preferences: coursePreferenceOrder,
+                        course_preferences: Array.from(document.querySelectorAll('.pref-course-select')).map(select => {
+                            const courseName = select.value;
+                            if (!courseName) return null;
+                            const matched = courseData.find(c => c.name === courseName);
+                            return { course: courseName, fee: matched ? matched.fee : null };
+                        }).filter(item => item !== null),
+                        hostel_required: document.getElementById('hostelRequired').checked,
+                        transport_required: document.getElementById('transportRequired').checked,
+                        hostel_type: document.getElementById('hostelRequired').checked ? document.getElementById('hostelType').value : null,
+                        hostel_fee: document.getElementById('hostelRequired').checked ? (hostelFees[document.getElementById('hostelType').value] || null) : null,
+                        transport_route: document.getElementById('transportRequired').checked ? document.getElementById('transportRoute').value : null,
+                        transport_fee: document.getElementById('transportRequired').checked ? (transportFees[document.getElementById('transportRoute').value] || null) : null,
                         diploma_percentage: parseFloat(document.getElementById('diplomaPercentage').value) || null,
-                        dcet_rank: document.getElementById('dcetRank').value || null
+                        dcet_rank: document.getElementById('dcetRank').value || null,
+                        institution_name: document.getElementById('institution_name').value,
+                        year_of_passing: document.getElementById('year_of_passing').value,
+                        // Extensive marks fields (AP/Telangana + Detailed)
+                        physics_11: parseFloat(document.getElementById('physics11').value) || null,
+                        chemistry_11: parseFloat(document.getElementById('chemistry11').value) || null,
+                        math_11a: parseFloat(document.getElementById('mathematics11a').value) || null,
+                        math_11b: parseFloat(document.getElementById('mathematics11b').value) || null,
+                        english_11: parseFloat(document.getElementById('english_marks_11').value) || null,
+                        language_11: parseFloat(document.getElementById('language_marks_11').value) || null,
+                        physics_12_prac: parseFloat(document.getElementById('physics12Practical').value) || null,
+                        chemistry_12_prac: parseFloat(document.getElementById('chemistry12Practical').value) || null,
+                        math_12a: parseFloat(document.getElementById('mathematics12a').value) || null,
+                        math_12b: parseFloat(document.getElementById('mathematics12b').value) || null,
+                        kannada_12: parseFloat(document.getElementById('kannada_marks_12').value) || null,
+                        english_12: parseFloat(document.getElementById('english_marks_12').value) || null,
+                        other_12: parseFloat(document.getElementById('other_unnamed_marks_12').value) || null
                     };
 
                     const result = await dbConnection.submitEnquiry(formData);
@@ -845,9 +929,8 @@
                     submitBtn.disabled = false;
                         
                     document.getElementById('enquiryForm').reset();
-                    coursePreferenceOrder = [];
-                    document.querySelectorAll('.course-option').forEach(el => el.classList.remove('selected'));
-                    updatePreferenceIndicators();
+                    // Clear the dynamically generated dropdowns if needed, or simply let the browser reset handle it
+                    // The dropdown values are reset by enquiryForm.reset() because they are inside it.
 
                 } catch (error) {
                     console.error('Submission error:', error);
@@ -874,9 +957,6 @@
                 resetBtn.onclick = function() {
                     if (confirm('Are you sure you want to reset the form?')) {
                         document.getElementById('enquiryForm').reset();
-                        coursePreferenceOrder = [];
-                        document.querySelectorAll('.course-option').forEach(el => el.classList.remove('selected'));
-                        updatePreferenceIndicators();
                         // Refresh token for the next submission
                         fetchAndDisplayNextToken();
                     }

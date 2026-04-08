@@ -14,6 +14,7 @@ const GREEN  = '#059669';
 const LGREEN = '#d1fae5';
 const GRAY   = '#64748b';
 const DARK   = '#1e293b';
+const BLACK  = '#000000';
 const WHITE  = '#ffffff';
 const BORDER = '#e2e8f0';
 
@@ -49,12 +50,16 @@ function generateAdmissionPdf(data) {
     }
 
     // Right side – doc title
+    const currentYear = new Date().getFullYear();
+    const academicYear = `${currentYear}-${currentYear + 1}`;
     doc.fillColor(WHITE)
        .font('Helvetica-Bold').fontSize(17)
        .text('ADMISSION CONFIRMATION', M, 26, { width: CW, align: 'right' });
+    doc.fillColor('#bfdbfe').font('Helvetica-Bold').fontSize(11)
+       .text(`Academic Year: ${academicYear}`, M, 46, { width: CW, align: 'right' });
     doc.font('Helvetica').fontSize(9).fillColor('#bfdbfe')
-       .text('Sri Venkateshwara College of Engineering, Bengaluru', M, 50, { width: CW, align: 'right' })
-       .text('Estd. 2001 · Autonomous Institute · AICTE Approved', M, 63, { width: CW, align: 'right' });
+       .text('Sri Venkateshwara College of Engineering, Bengaluru', M, 62, { width: CW, align: 'right' })
+       .text('Estd. 2001 · Autonomous Institute · AICTE Approved', M, 75, { width: CW, align: 'right' });
 
     // Application number pill
     const appNum = data.application_number || 'ADM/------';
@@ -134,26 +139,38 @@ function generateAdmissionPdf(data) {
     doubleRow('Mobile No.',     data.mobile_no || '',
               'Email',          data.email || '', true);
     doubleRow('Gender',         data.gender || '',
-              'Religion',       data.religion || '', false);
-    doubleRow('Caste Category', data.caste_category || '',
-              'Aadhaar No.',    data.aadhaar_no || '', true);
+              'Aadhaar No.',    data.aadhaar_no || '', false);
 
     gap(8);
 
-    // ── 3. Preference Details ────────────────────────────────────
-    sectionTitle('Course Preference', '🎓');
-    fullRow('Selected Institute',   data.selected_institute || '',   false);
-    fullRow('Course Preference',    data.course_preference || '',    true);
-    fullRow('Program Preference',   data.program_preference || '',   false);
+    // ── 3. Preference Details (Table) ────────────────────────────
+    sectionTitle('Course Preference Details (First 4 from Enquiry)', '🎓');
+    const thY = y;
+    doc.fillColor('#f8fafc').rect(M, thY, CW, 15).fill();
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5);
+    doc.text('#', M + 5, thY + 4);
+    doc.text('Course Name', M + 30, thY + 4);
+    doc.text('Fee (Agreed)', M + 300, thY + 4);
+    y += 15;
+
+    const top4 = data._top_prefs || [];
+    const tableHeight = 60; // 4 rows x 15px
+
+    for (let i = 0; i < 4; i++) {
+        const p = top4[i] || '';
+        const rowY = y;
+        doc.fillColor(BLACK).font('Helvetica').fontSize(8.5);
+        doc.text(String(i + 1), M + 5, rowY + 4);
+        doc.text(typeof p === 'object' ? String(p.course) : (p || '—'), M + 30, rowY + 4);
+        doc.text(typeof p === 'object' && p.fee ? '₹' + p.fee : '—', M + 300, rowY + 4);
+        doc.rect(M, rowY, CW, 15).stroke();
+        y += 15;
+    }
 
     gap(8);
 
-    // ── 4. Academic Details (10th) ───────────────────────────────
+    // ── 4. Academic Details ──────────────────────────────────────
     sectionTitle('Academic Details', '📚');
-    doubleRow('10th Institution',   data.tenth_institution || '',
-              '10th Board',         data.tenth_board || '', false);
-    doubleRow('10th Year',          data.tenth_year_passing || '',
-              '10th Percentage',    data.tenth_percentage ? data.tenth_percentage + '%' : '', true);
     doubleRow('12th Institution',   data.twelfth_institution || '',
               '12th Board',         data.twelfth_board || '', false);
     doubleRow('12th Year',          data.twelfth_year_passing || '',

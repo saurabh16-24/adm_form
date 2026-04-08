@@ -11,6 +11,20 @@ const fs = require('fs');
 const generateAdmissionPdf = require('./generateAdmissionPdf');
 const Jimp = require('jimp');  // v0.22 — stable compositing API
 
+// ── Email Transporter Shared Configuration ─────────────────────────────────────
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // true for port 465
+    auth: {
+      user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
+      pass: process.env.EMAIL_PASS || 'your_app_password'
+    }
+  });
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Branded QR generator (server-side logo compositing) ──────────────────────
 const LOGO_PATH = path.join(__dirname, 'image copy 2.png');
 async function generateBrandedQR(url, size = 300) {
@@ -80,9 +94,9 @@ const upload = multer({
 });
 const admissionUpload = upload.fields([
   { name: 'passport_photo', maxCount: 1 },
-  { name: 'tenth_marksheet', maxCount: 1 },
   { name: 'twelfth_marksheet', maxCount: 1 },
-  { name: 'payment_receipt', maxCount: 1 }
+  { name: 'payment_receipt', maxCount: 1 },
+  { name: 'signature_image', maxCount: 1 }
 ]);
 
 // PostgreSQL Connection
@@ -94,16 +108,99 @@ const pool = new Pool({
   port: process.env.DB_PORT || 5432,
 });
 
-// Endpoint to Test Database Connection
-app.get('/api/test-db', async (req, res) => {
+// Database Initialization & Migrations
+async function initDB() {
+  const client = await pool.connect();
   try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ connected: true, time: result.rows[0].now });
-  } catch (error) {
-    console.error('Database connection error:', error);
-    res.status(500).json({ connected: false, error: error.message });
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS enquiries (
+        id SERIAL PRIMARY KEY,
+        token_number VARCHAR(100),
+        sequence_number INTEGER,
+        enquiry_date DATE,
+        student_name VARCHAR(100),
+        father_name VARCHAR(100),
+        mother_name VARCHAR(100),
+        student_email VARCHAR(100),
+        student_mobile VARCHAR(50),
+        father_mobile VARCHAR(50),
+        mother_mobile VARCHAR(50),
+        address TEXT,
+        address_line1 VARCHAR(255),
+        address_line2 VARCHAR(255),
+        address_city VARCHAR(100),
+        address_district VARCHAR(100),
+        address_state VARCHAR(100),
+        address_country VARCHAR(100),
+        address_pincode VARCHAR(20),
+        result_status VARCHAR(50),
+        expected_percentage NUMERIC(5,2),
+        reference VARCHAR(255),
+        education_qualification VARCHAR(50),
+        education_board VARCHAR(50),
+        physics_marks NUMERIC(5,2),
+        chemistry_marks NUMERIC(5,2),
+        mathematics_marks NUMERIC(5,2),
+        cs_marks NUMERIC(5,2),
+        bio_marks NUMERIC(5,2),
+        ece_marks NUMERIC(5,2),
+        total_percentage NUMERIC(5,2),
+        pcm_percentage NUMERIC(5,2),
+        jee_rank VARCHAR(50),
+        comedk_rank VARCHAR(50),
+        cet_rank VARCHAR(50),
+        course_preferences JSONB,
+        diploma_percentage NUMERIC(5,2),
+        dcet_rank VARCHAR(50),
+        physics_11 NUMERIC(5,2),
+        chemistry_11 NUMERIC(5,2),
+        math_11a NUMERIC(5,2),
+        math_11b NUMERIC(5,2),
+        english_11 NUMERIC(5,2),
+        language_11 NUMERIC(5,2),
+        physics_12_prac NUMERIC(5,2),
+        chemistry_12_prac NUMERIC(5,2),
+        math_12a NUMERIC(5,2),
+        math_12b NUMERIC(5,2),
+        kannada_12 NUMERIC(5,2),
+        english_12 NUMERIC(5,2),
+        other_12 NUMERIC(5,2),
+        follow_up_date DATE,
+        admin_remarks VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Ensure all new columns exist (Migration)
+    const columns = [
+      ['physics_11', 'NUMERIC(5,2)'], ['chemistry_11', 'NUMERIC(5,2)'], ['math_11a', 'NUMERIC(5,2)'],
+      ['math_11b', 'NUMERIC(5,2)'], ['english_11', 'NUMERIC(5,2)'], ['language_11', 'NUMERIC(5,2)'],
+      ['physics_12_prac', 'NUMERIC(5,2)'], ['chemistry_12_prac', 'NUMERIC(5,2)'], ['math_12a', 'NUMERIC(5,2)'],
+      ['math_12b', 'NUMERIC(5,2)'], ['kannada_12', 'NUMERIC(5,2)'], ['english_12', 'NUMERIC(5,2)'],
+      ['other_12', 'NUMERIC(5,2)'], ['address_line1', 'VARCHAR(255)'], ['address_line2', 'VARCHAR(255)'],
+      ['address_city', 'VARCHAR(100)'], ['address_district', 'VARCHAR(100)'],
+      ['address_state', 'VARCHAR(100)'], ['address_country', 'VARCHAR(100)'],
+      ['address_pincode', 'VARCHAR(20)'], ['result_status', 'VARCHAR(50)'], ['expected_percentage', 'NUMERIC(5,2)'],
+      ['follow_up_date', 'DATE'], ['admin_remarks', 'VARCHAR(100)'],
+      ['hostel_required', 'BOOLEAN DEFAULT FALSE'], ['transport_required', 'BOOLEAN DEFAULT FALSE'],
+      ['pref_fees', 'JSONB'],
+      ['hostel_type', 'TEXT'], ['hostel_fee', 'NUMERIC'],
+      ['transport_route', 'TEXT'], ['transport_fee', 'NUMERIC'],
+      ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)']
+    ];
+
+    for (const [col, type] of columns) {
+      await client.query(`ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS ${col} ${type}`);
+    }
+    
+    console.log("Database schema is up to date.");
+  } catch (err) {
+    console.error("DB Init Error:", err.message);
+  } finally {
+    client.release();
   }
-});
+}
+initDB();
 
 // Endpoint to get next token number for today (preview only – final is assigned at submit)
 app.get('/api/next-token', async (req, res) => {
@@ -125,6 +222,17 @@ app.get('/api/next-token', async (req, res) => {
   } catch (error) {
     console.error('Error fetching next token:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Endpoint to Test Database Connection
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ connected: true, time: result.rows[0].now });
+  } catch (error) {
+    console.error('Database connection error:', error);
+    res.status(500).json({ connected: false, error: error.message });
   }
 });
 
@@ -167,7 +275,14 @@ app.post('/api/submit-enquiry', async (req, res) => {
         reference, education_qualification, education_board, physics_marks,
         chemistry_marks, mathematics_marks, cs_marks, bio_marks, ece_marks,
         total_percentage, pcm_percentage, jee_rank, comedk_rank, cet_rank,
-        course_preferences, diploma_percentage, dcet_rank
+        course_preferences, diploma_percentage, dcet_rank,
+        physics_11, chemistry_11, math_11a, math_11b, english_11, language_11,
+        physics_12_prac, chemistry_12_prac, math_12a, math_12b,
+        kannada_12, english_12, other_12,
+        hostel_required, transport_required,
+        hostel_type, hostel_fee,
+        transport_route, transport_fee,
+        institution_name, year_of_passing
       )
       VALUES (
         $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,  $9,  $10,
@@ -177,7 +292,13 @@ app.post('/api/submit-enquiry', async (req, res) => {
         $24, $25, $26, $27, $28, $29,
         $30, $31,
         $32, $33, $34,
-        $35, $36, $37
+        $35, $36, $37,
+        $38, $39, $40, $41, $42, $43,
+        $44, $45, $46, $47,
+        $48, $49, $50,
+        $51, $52,
+        $53, $54, $55, $56,
+        $57, $58
       ) RETURNING id;
     `;
 
@@ -218,34 +339,50 @@ app.post('/api/submit-enquiry', async (req, res) => {
       /* $34 */ d.cet_rank || null,
       /* $35 */ preferences_json,
       /* $36 */ d.diploma_percentage || null,
-      /* $37 */ d.dcet_rank || null
+      /* $37 */ d.dcet_rank || null,
+      /* $38 */ d.physics_11 || null,
+      /* $39 */ d.chemistry_11 || null,
+      /* $40 */ d.math_11a || null,
+      /* $41 */ d.math_11b || null,
+      /* $42 */ d.english_11 || null,
+      /* $43 */ d.language_11 || null,
+      /* $44 */ d.physics_12_prac || null,
+      /* $45 */ d.chemistry_12_prac || null,
+      /* $46 */ d.math_12a || null,
+      /* $47 */ d.math_12b || null,
+      /* $48 */ d.kannada_12 || null,
+      /* $49 */ d.english_12 || null,
+      /* $50 */ d.other_12 || null,
+      /* $51 */ d.hostel_required || false,
+      /* $52 */ d.transport_required || false,
+      /* $53 */ d.hostel_type || null,
+      /* $54 */ d.hostel_fee || null,
+      /* $55 */ d.transport_route || null,
+      /* $56 */ d.transport_fee || null,
+      /* $57 */ d.institution_name || null,
+      /* $58 */ d.year_of_passing || null
     ];
 
     const result = await client.query(query, values);
     await client.query('COMMIT');
-    // Return the server-assigned token so the frontend always shows the correct one
-    const assignedToken = d.token_number;
 
-    // Generate QR Code and send Email
-    try {
-      const autofillUrl = `${req.headers.origin || 'http://localhost:' + port}/admission-form/?enquiry_id=${result.rows[0].id}`;
+    // --- Respond Early to satisfy the frontend and avoid timeouts ---
+    res.status(201).json({ success: true, message: 'Enquiry submitted successfully', id: result.rows[0].id, token_number: d.token_number });
 
-      // Generate branded QR — SVCE logo composited in centre server-side
-      const qrPngBuffer = await generateBrandedQR(autofillUrl, 300);
+    // --- Background supplemental tasks (Email + branded QR) ---
+    (async () => {
+      try {
+        const origin = req.headers.origin || ('http://' + req.headers.host);
+        const autofillUrl = `${origin}/admission-form/?enquiry_id=${result.rows[0].id}`;
+        console.log(`[Enquiry-BG] Preparing email to ${d.student_email}...`);
 
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
-          pass: process.env.EMAIL_PASS || 'your_app_password'
-        }
-      });
-
-      const mailOptions = {
-        from: '"Admission Team" <enquiry.svce@gmail.com>',
-        to: d.student_email,
-        subject: 'SVCE Admission Enquiry Successful',
-        html: `
+        const qrPngBuffer = await generateBrandedQR(autofillUrl, 300);
+        const transporter = createTransporter();
+        const mailOptions = {
+          from: '"Admission Team" <enquiry.svce@gmail.com>',
+          to: d.student_email,
+          subject: 'SVCE Admission Enquiry Successful',
+          html: `
 <div style="font-family: Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.5;">
 Enquiry Successful!<br>
 Dear ${d.student_name} ,<br><br>
@@ -272,35 +409,28 @@ Admission Team<br>
 <div style="text-align: center; width: 100%; max-width: 600px; margin: 20px auto;">
   <img src="cid:svce_promo" alt="Experience SVCE" style="width: 100%; max-width: 600px; height: auto; display: block; border-radius: 8px; margin: 0 auto; box-shadow: 0px 4px 10px rgba(0,0,0,0.1);" />
 </div>
-</div>
-        `,
-        attachments: [
-          {
-            filename: 'qrcode.png',
-            content: qrPngBuffer,
-            cid: 'qrcode'
-          },
-          {
-            filename: 'svce-promo.gif',
-            path: require('path').join(__dirname, 'svce-promo.gif'),
-            cid: 'svce_promo'
-          }
-        ]
-      };
+</div>`,
+          attachments: [
+            { filename: 'qrcode.png', content: qrPngBuffer, cid: 'qrcode' },
+            { filename: 'svce-promo.gif', path: path.join(__dirname, 'svce-promo.gif'), cid: 'svce_promo' }
+          ]
+        };
 
-      transporter.sendMail(mailOptions)
-        .then(() => console.log('Email sent successfully to', d.student_email))
-        .catch(emailError => console.error('Error sending email:', emailError));
-      
-    } catch (error) {
-      console.error('Error preparing email:', error);
-    }
+        await transporter.sendMail(mailOptions);
+        console.log('[Enquiry-BG] Email sent successfully to', d.student_email);
+      } catch (err) {
+        console.error('[Enquiry-BG] Background task error:', err.message);
+      }
+    })();
 
-    res.status(201).json({ success: true, message: 'Enquiry submitted successfully', id: result.rows[0].id });
   } catch (error) {
-    await client.query('ROLLBACK');
-    console.error('Error submitting enquiry:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    if (!res.headersSent) {
+      await client.query('ROLLBACK');
+      console.error('Error submitting enquiry:', error);
+      res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    } else {
+      console.error('Captured error after response headers sent:', error.message);
+    }
   } finally {
     client.release();
   }
@@ -331,6 +461,19 @@ app.post('/api/init-db', async (req, res) => {
         cs_marks NUMERIC(5,2),
         bio_marks NUMERIC(5,2),
         ece_marks NUMERIC(5,2),
+        physics_11 NUMERIC(5,2),
+        chemistry_11 NUMERIC(5,2),
+        math_11a NUMERIC(5,2),
+        math_11b NUMERIC(5,2),
+        english_11 NUMERIC(5,2),
+        language_11 NUMERIC(5,2),
+        physics_12_prac NUMERIC(5,2),
+        chemistry_12_prac NUMERIC(5,2),
+        math_12a NUMERIC(5,2),
+        math_12b NUMERIC(5,2),
+        kannada_12 NUMERIC(5,2),
+        english_12 NUMERIC(5,2),
+        other_12 NUMERIC(5,2),
         total_percentage NUMERIC(5,2),
         pcm_percentage NUMERIC(5,2),
         jee_rank VARCHAR(50),
@@ -380,8 +523,6 @@ app.get('/api/enquiry/:id', async (req, res) => {
         email VARCHAR(100),
         date_of_birth DATE,
         gender VARCHAR(30),
-        religion VARCHAR(60),
-        caste_category VARCHAR(60),
         selected_institute VARCHAR(200),
         course_preference VARCHAR(200),
         program_preference VARCHAR(100),
@@ -407,13 +548,6 @@ app.get('/api/enquiry/:id', async (req, res) => {
         mother_mobile VARCHAR(20),
         mother_occupation VARCHAR(100),
         candidate_name_marksheet VARCHAR(100),
-        tenth_institution VARCHAR(150),
-        tenth_board VARCHAR(150),
-        tenth_stream VARCHAR(100),
-        tenth_year_passing VARCHAR(10),
-        tenth_result_status VARCHAR(50),
-        tenth_marking_scheme VARCHAR(50),
-        tenth_percentage VARCHAR(20),
         twelfth_institution VARCHAR(150),
         twelfth_board VARCHAR(150),
         twelfth_stream VARCHAR(100),
@@ -437,12 +571,12 @@ app.get('/api/enquiry/:id', async (req, res) => {
     // Add document columns if they don't exist (safe for existing tables)
     const alterCols = [
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS passport_photo_path VARCHAR(500)",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS tenth_marksheet_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS twelfth_marksheet_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS aadhaar_no VARCHAR(20)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS payment_receipt_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS payment_utr_no VARCHAR(50)",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS sequence_number INTEGER"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS sequence_number INTEGER",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS signature_path VARCHAR(500)"
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -457,7 +591,20 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS address_country VARCHAR(100)",
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS address_pincode VARCHAR(20)",
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS result_status VARCHAR(50)",
-      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS expected_percentage NUMERIC(5,2)"
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS expected_percentage NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS physics_11 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS chemistry_11 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS math_11a NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS math_11b NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS english_11 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS language_11 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS physics_12_prac NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS chemistry_12_prac NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS math_12a NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS math_12b NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS kannada_12 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS english_12 NUMERIC(5,2)",
+      "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS other_12 NUMERIC(5,2)"
     ];
     for (const sql of enquiryAlterCols) await pool.query(sql);
 
@@ -479,7 +626,7 @@ app.get('/api/admissions/next-token', async (req, res) => {
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();
-    res.json({ success: true, token: `ADM/${dd}${mm}${yyyy}/${seq}`, sequence: seq });
+    res.json({ success: true, token: `BE/ADM/${dd}${mm}${yyyy}/${seq}`, sequence: seq });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -511,7 +658,7 @@ app.post('/api/admissions/submit', (req, res) => {
         const ddd = String(dt.getDate()).padStart(2, '0');
         const mmm = String(dt.getMonth() + 1).padStart(2, '0');
         const yyy = dt.getFullYear();
-        v.application_number = `ADM/${ddd}${mmm}${yyy}/${adm_seq}`;
+        v.application_number = `BE/ADM/${ddd}${mmm}${yyy}/${adm_seq}`;
         // make adm_seq available for INSERT below
         v._adm_seq = adm_seq;
       } catch(e) { adm_client.release(); throw e; }
@@ -519,62 +666,64 @@ app.post('/api/admissions/submit', (req, res) => {
 
       // File paths (relative, served via /uploads/...)
       const photoPath    = req.files?.passport_photo?.[0]  ? `/uploads/admissions/${req.files.passport_photo[0].filename}`   : null;
-      const tenth_path   = req.files?.tenth_marksheet?.[0] ? `/uploads/admissions/${req.files.tenth_marksheet[0].filename}`  : null;
       const twelfth_path = req.files?.twelfth_marksheet?.[0] ? `/uploads/admissions/${req.files.twelfth_marksheet[0].filename}` : null;
       const receipt_path = req.files?.payment_receipt?.[0] ? `/uploads/admissions/${req.files.payment_receipt[0].filename}` : null;
+      const signature_path = req.files?.signature_image?.[0] ? `/uploads/admissions/${req.files.signature_image[0].filename}` : null;
 
       const query = `
         INSERT INTO admissions (
           enquiry_id, application_number, sequence_number, application_date,
-          title, student_name, mobile_no, email, date_of_birth, gender, religion, caste_category, aadhaar_no,
-          selected_institute, course_preference, program_preference,
+          title, student_name, mobile_no, email, date_of_birth, gender, aadhaar_no,
           comm_address_line1, comm_address_line2, comm_city, comm_district, comm_state, comm_country, comm_pincode,
           same_as_comm, perm_address_line1, perm_address_line2, perm_city, perm_district, perm_state, perm_country, perm_pincode,
           father_name, father_mobile, father_occupation, mother_name, mother_mobile, mother_occupation,
           candidate_name_marksheet,
-          tenth_institution, tenth_board, tenth_stream, tenth_year_passing, tenth_result_status, tenth_marking_scheme, tenth_percentage,
           twelfth_institution, twelfth_board, twelfth_stream, twelfth_year_passing, twelfth_result_status, twelfth_marking_scheme, twelfth_percentage,
           ug_institution, ug_board, ug_stream, ug_year_passing, ug_result_status, ug_marking_scheme, ug_percentage,
           entrance_exams, declaration_accepted, student_signature,
-          passport_photo_path, tenth_marksheet_path, twelfth_marksheet_path,
-          payment_receipt_path, payment_utr_no
+          passport_photo_path, twelfth_marksheet_path,
+          payment_receipt_path, payment_utr_no, signature_path
         ) VALUES (
           $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
           $24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,
-          $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61,$62,$63,$64,$65,$66,$67
+          $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55
         ) RETURNING id;
       `;
       const values = [
         v.enquiry_id ? parseInt(v.enquiry_id) : null, v.application_number, v._adm_seq, today,
-        v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.religion, v.caste_category, v.aadhaar_no || null,
-        v.selected_institute, v.course_preference, v.program_preference,
+        v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
         v.comm_address_line1, v.comm_address_line2, v.comm_city, v.comm_district, v.comm_state, v.comm_country, v.comm_pincode,
         v.same_as_comm === 'true' || v.same_as_comm === true,
         v.perm_address_line1, v.perm_address_line2, v.perm_city, v.perm_district, v.perm_state, v.perm_country, v.perm_pincode,
         v.father_name, v.father_mobile, v.father_occupation, v.mother_name, v.mother_mobile, v.mother_occupation,
         v.candidate_name_marksheet,
-        v.tenth_institution, v.tenth_board, v.tenth_stream, v.tenth_year_passing, v.tenth_result_status, v.tenth_marking_scheme, v.tenth_percentage,
         v.twelfth_institution, v.twelfth_board, v.twelfth_stream, v.twelfth_year_passing, v.twelfth_result_status, v.twelfth_marking_scheme, v.twelfth_percentage,
         null, null, null, null, null, null, null, // UG not applicable
         v.entrance_exams, v.declaration_accepted === 'true' || v.declaration_accepted === true, v.student_signature || null,
-        photoPath, tenth_path, twelfth_path,
-        receipt_path, v.payment_utr_no || null
+        photoPath, twelfth_path,
+        receipt_path, v.payment_utr_no || null, signature_path
       ];
       const result = await pool.query(query, values);
 
       // ── Send confirmation email with PDF (async – don't block response) ──
-      const emailData = { ...v, application_number: v.application_number };
       setImmediate(async () => {
         try {
+          // Fetch enquiry preferences for the PDF
+          let prefs = [];
+          let remarks = '';
+          if (v.enquiry_id) {
+            const enqRes = await pool.query('SELECT course_preferences, admin_remarks FROM enquiries WHERE id = $1', [v.enquiry_id]);
+            if (enqRes.rows.length) {
+              try {
+                prefs = JSON.parse(enqRes.rows[0].course_preferences || '[]');
+              } catch { prefs = []; }
+              remarks = enqRes.rows[0].admin_remarks || '';
+            }
+          }
+          const emailData = { ...v, application_number: v.application_number, _top_prefs: prefs.slice(0, 4), _admin_remarks: remarks };
           const pdfBuffer = await generateAdmissionPdf(emailData);
 
-          const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
-              pass: process.env.EMAIL_PASS || 'your_app_password'
-            }
-          });
+          const transporter = createTransporter();
 
           await transporter.sendMail({
             from: '"SVCE Admissions" <enquiry.svce@gmail.com>',
@@ -687,6 +836,18 @@ app.get('/api/admin/enquiries', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Update enquiry remarks/follow-up date
+app.put('/api/admin/enquiry/:id/remarks', adminAuth, async (req, res) => {
+  try {
+    const { follow_up_date, admin_remarks } = req.body;
+    await pool.query(
+      'UPDATE enquiries SET follow_up_date = $1, admin_remarks = $2 WHERE id = $3',
+      [follow_up_date || null, admin_remarks || null, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // Single enquiry
 app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   try {
@@ -715,7 +876,13 @@ app.get('/api/admin/admissions', adminAuth, async (req, res) => {
 // Single admission
 app.get('/api/admin/admission/:id', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM admissions WHERE id = $1', [req.params.id]);
+    const query = `
+      SELECT a.*, e.course_preferences, e.admin_remarks
+      FROM admissions a
+      LEFT JOIN enquiries e ON a.enquiry_id = e.id
+      WHERE a.id = $1
+    `;
+    const result = await pool.query(query, [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ row: result.rows[0] });
   } catch (err) { res.status(500).json({ error: err.message }); }

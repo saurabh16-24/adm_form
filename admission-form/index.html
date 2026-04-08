@@ -25,6 +25,7 @@
       <!-- Title -->
       <div style="text-align:center; margin-bottom:14px;">
         <h1 class="adm-title">ADMISSION APPLICATION FORM</h1>
+        <div style="font-weight: 700; color: #1d4ed8; font-size: 1.1rem; margin-top: 4px;">Academic Year: <span id="dynamicYear"></span></div>
         <p class="adm-subtitle">Sri Venkateshwara College of Engineering, Bengaluru &mdash; UG Programs</p>
       </div>
       <!-- App no. + Date row (like token/date in enquiry) -->
@@ -109,31 +110,19 @@
         <span class="section-title"><i class="fas fa-graduation-cap" style="margin-right:6px;opacity:.7"></i>Preference Details</span>
       </div>
       <div class="section-body">
-        <div class="form-grid cols-3">
-
-          <div class="form-group">
-            <label>Course Preference <span class="req">*</span></label>
-            <select id="coursePreference" name="coursePreference" required>
-              <option value="">-- Select Course --</option>
-              <option>BE Computer Science and Engineering</option>
-              <option>BE Computer Science and Engineering (Artificial Intelligence)</option>
-              <option>BE Computer Science and Engineering (Data Science)</option>
-              <option>BE Computer Science and Engineering (Cyber Security)</option>
-              <option>BE Information Science and Engineering</option>
-              <option>BE Electronics and Communication Engineering</option>
-              <option>BE Mechanical Engineering</option>
-              <option>BE Civil Engineering</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Program Preference <span class="req">*</span></label>
-            <select id="programPreference" name="programPreference" required>
-              <option value="">-- Select --</option>
-              <option>UG Programs</option>
-              <option>PG Programs</option>
-              <option>Diploma Programs</option>
-            </select>
-          </div>
+        <div id="prefTableContainer" style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; min-width: 400px; border: 1px solid #e2e8f0; font-size: 0.85rem;">
+            <thead style="background: #f8fafc;">
+              <tr style="text-align: left;">
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">Course Name</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">Fee (Agreed)</th>
+              </tr>
+            </thead>
+            <tbody id="prefBody">
+              <tr><td colspan="3" style="padding: 15px; text-align: center; color: #64748b;">(Auto-filled from enquiry)</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -263,30 +252,16 @@
             <thead>
               <tr>
                 <th></th>
-                <th>10th Details</th>
                 <th>12th Details</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Institution Name</td>
-                <td><input type="text" id="tenth_institution" name="tenth_institution" placeholder="School name"></td>
                 <td><input type="text" id="twelfth_institution" name="twelfth_institution" placeholder="College/School name"></td>
               </tr>
               <tr>
                 <td>Board / University</td>
-                <td>
-                  <select id="tenth_board" name="tenth_board">
-                    <option value="">-- Board --</option>
-                    <option>Central Board Of Secondary Education (CBSE)</option>
-                    <option>Karnataka Board Of The Pre-University Education</option>
-                    <option>Andhra Pradesh Board of Secondary Education</option>
-                    <option>Telangana Board of Secondary Education</option>
-                    <option>Tamil Nadu Board</option>
-                    <option>ICSE / ISC</option>
-                    <option>Other</option>
-                  </select>
-                </td>
                 <td>
                   <select id="twelfth_board" name="twelfth_board">
                     <option value="">-- Board --</option>
@@ -302,7 +277,6 @@
               </tr>
               <tr>
                 <td>Stream</td>
-                <td><input type="text" id="tenth_stream" name="tenth_stream" placeholder="e.g. General"></td>
                 <td>
                   <select id="twelfth_stream" name="twelfth_stream">
                     <option value="">-- Stream --</option>
@@ -312,17 +286,10 @@
               </tr>
               <tr>
                 <td>Year of Passing</td>
-                <td><input type="text" id="tenth_year" name="tenth_year" placeholder="e.g. 2022" maxlength="4"></td>
                 <td><input type="text" id="twelfth_year" name="twelfth_year" placeholder="e.g. 2024" maxlength="4"></td>
               </tr>
               <tr>
                 <td>Result Status</td>
-                <td>
-                  <select id="tenth_result" name="tenth_result">
-                    <option value="">-- Status --</option>
-                    <option>Pass</option><option>Appearing</option><option>Fail</option>
-                  </select>
-                </td>
                 <td>
                   <select id="twelfth_result" name="twelfth_result">
                     <option value="">-- Status --</option>
@@ -332,14 +299,6 @@
               </tr>
               <tr>
                 <td>Marking Scheme</td>
-                <td>
-                  <select id="tenth_scheme" name="tenth_scheme">
-                    <option value="">-- Scheme --</option>
-                    <option>Percentage</option>
-                    <option>CGPA out of 10</option>
-                    <option>CGPA out of 5</option>
-                  </select>
-                </td>
                 <td>
                   <select id="twelfth_scheme" name="twelfth_scheme">
                     <option value="">-- Scheme --</option>
@@ -351,7 +310,6 @@
               </tr>
               <tr>
                 <td>Obtained Percentage / CGPA</td>
-                <td><input type="text" id="tenth_percentage" name="tenth_percentage" placeholder="e.g. 85.5 or 8.5"></td>
                 <td><input type="text" id="twelfth_percentage" name="twelfth_percentage" placeholder="e.g. 90 or 9.0"></td>
               </tr>
             </tbody>
@@ -413,24 +371,7 @@
         </div>
         <div class="doc-upload-grid">
 
-          <!-- 10th Marksheet -->
-          <div class="doc-upload-card" id="tenthCard">
-            <input type="file" id="tenthFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
-            <div class="doc-card-title"><i class="fas fa-graduation-cap" style="margin-right:4px;"></i>10th Marksheet</div>
-            <i class="fas fa-file-alt doc-card-icon" id="tenthIcon"></i>
-            <div class="doc-card-actions">
-              <button type="button" class="upload-btn camera" onclick="document.getElementById('tenthFile').click()">
-                <i class="fas fa-upload"></i> Upload Document
-              </button>
-            </div>
-            <div class="doc-file-info" id="tenthInfo">
-              <i class="fas fa-check-circle"></i>
-              <span class="doc-file-name" id="tenthName"></span>
-              <button type="button" class="doc-file-remove" id="tenthRemove" title="Remove file">
-                <i class="fas fa-times"></i>
-              </button>
-            </div>
-          </div>
+          <!-- Removed 10th Card -->
 
           <!-- 12th Marksheet -->
           <div class="doc-upload-card" id="twelfthCard">
@@ -567,14 +508,14 @@
       </div>
       <div class="section-body">
         <div class="declaration-text">
-          <ol style="margin:0;padding-left:1.4em;line-height:1.8;">
+          <ul style="margin:0;padding-left:1.4em;line-height:1.8;">
             <li>I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
             <li>I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
             <li>I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
             <li>I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
             <li>I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
             <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
-          </ol>
+          </ul>
         </div>
 
         <div class="declaration-check">
@@ -685,7 +626,21 @@
     const setOpt = (id, val) => {
       const el = sel(id);
       if (!el || !val) return;
-      [...el.options].forEach(o => { if (o.text.toLowerCase().includes(val.toLowerCase()) || o.value === val) el.value = o.value; });
+      const lowerVal = val.toLowerCase();
+      // Special mapping for result status
+      let searchVal = lowerVal;
+      if (id === 'twelfth_result') {
+        if (lowerVal.includes('pass')) searchVal = 'pass';
+        if (lowerVal.includes('appear')) searchVal = 'appear';
+        if (lowerVal.includes('await')) searchVal = 'appear';
+      }
+      [...el.options].forEach(o => { 
+        const lowerText = o.text.toLowerCase();
+        const lowerOptVal = o.value.toLowerCase();
+        if (lowerText.includes(searchVal) || lowerOptVal === searchVal) {
+          el.value = o.value;
+        }
+      });
     };
 
     /* ── Date/Time ─────────────────────────────────────────── */
@@ -695,6 +650,12 @@
     const now = new Date();
     sel('appDate').textContent = now.toLocaleDateString('en-GB', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
     sel('declDate').value = fmtDateTime(now);
+
+    // Dynamic Academic Year
+    const currYear = now.getFullYear();
+    const acadYear = `${currYear}-${currYear + 1}`;
+    const dynamicYearEl = sel('dynamicYear');
+    if (dynamicYearEl) dynamicYearEl.textContent = acadYear;
 
     /* ── Application Number ────────────────────────────────── */
     async function loadAppNumber() {
@@ -720,10 +681,9 @@
           // Personal
           if (e.student_name) {
             const parts = e.student_name.trim().split(' ');
-            // detect title prefix
             const titles = ['MR.','MS.','MRS.','DR.'];
             if (titles.includes(parts[0].toUpperCase())) {
-              setOpt('title', parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase());
+              setOpt('title', parts[0]);
               setVal('studentName', parts.slice(1).join(' '));
             } else {
               setVal('studentName', e.student_name);
@@ -738,37 +698,68 @@
           setVal('motherName', e.mother_name || '');
           setVal('motherMobile', e.mother_mobile || '');
 
-          // Address – populate structured fields if available, fallback to combined address
+          // Address
           if (e.address_line1) {
             setVal('commLine1',    e.address_line1 || '');
             setVal('commLine2',    e.address_line2 || '');
             setVal('commCity',     e.address_city  || '');
             setVal('commDistrict', e.address_district || '');
             setOpt('commState',    e.address_state || '');
-            setVal('commCountry',  e.address_country || 'India');
+            setVal('commCountry',  e.address_country || 'INDIA');
             setVal('commPincode',  e.address_pincode || '');
           } else if (e.address) {
-            // Legacy: put combined address string into line 1
             setVal('commLine1', e.address);
           }
 
-          // Course preferences (first preference → coursePreference)
+          // Course preferences
           let prefs = [];
           try { prefs = typeof e.course_preferences === 'string' ? JSON.parse(e.course_preferences) : (e.course_preferences || []); } catch {}
-          if (prefs.length > 0) setOpt('coursePreference', prefs[0]);
-          if (prefs.length > 0) setVal('programPreference', 'UG Programs');
+          if (prefs.length > 0) {
+              const firstPref = typeof prefs[0] === 'object' ? prefs[0].course : prefs[0];
+              setOpt('coursePreference', firstPref);
+              setVal('programPreference', 'UG Programs');
+          }
 
-          // Education board → 12th board
-          if (e.education_board) setOpt('twelfth_board', e.education_board);
-          if (e.total_percentage) setVal('twelfth_percentage', e.total_percentage);
+          // Educational Details
+          setVal('twelfth_institution', e.institution_name || '');
+          setOpt('twelfth_board', e.education_board || '');
+          // If education_qualification is '12th', we can't reliably guess the stream (Science/Commerce/Arts) 
+          // unless we add specific stream selection to the enquiry form. For now, leave it.
+          setOpt('twelfth_stream', e.education_qualification || '');
+          setVal('twelfth_year', e.year_of_passing || '');
+          setOpt('twelfth_result', e.result_status || '');
+          const hasScore = e.total_percentage || e.expected_percentage;
+          if (hasScore) {
+            setOpt('twelfth_scheme', 'Percentage');
+            setVal('twelfth_percentage', hasScore);
+          }
 
           // Entrance exams
-          const exams = [e.jee_rank&&'JEE', e.comedk_rank&&'Comed-K', e.cet_rank&&'CET', e.dcet_rank&&'DCET']
-            .filter(Boolean).join(', ');
-          if (exams) setVal('entranceExams', exams);
+          const examList = [];
+          if (e.jee_rank) examList.push('JEE');
+          if (e.comedk_rank) examList.push('Comed-K');
+          if (e.cet_rank) examList.push('CET');
+          if (e.dcet_rank) examList.push('DCET');
+          if (examList.length > 0) setVal('entranceExams', examList.join(', '));
 
           // Declaration name
           setVal('declName', e.student_name || '');
+
+          // Preferences List
+          try {
+            const top4 = Array.isArray(prefs) ? prefs.slice(0, 4) : [];
+            while (top4.length < 4) top4.push('');
+            const tbody = document.getElementById('prefBody');
+            if (tbody) {
+              tbody.innerHTML = top4.map((p, idx) => `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 10px; font-weight: 600;">${idx + 1}</td>
+                  <td style="padding: 10px;">${typeof p === 'object' ? p.course : (p || '—')}</td>
+                  <td style="padding: 10px;">${typeof p === 'object' && p.fee ? '₹' + p.fee.toLocaleString() : '—'}</td>
+                </tr>
+              `).join('');
+            }
+          } catch (err) { console.error('Prefs list error:', err); }
 
           sel('autofillBanner').style.display = 'block';
         })
@@ -1005,7 +996,6 @@
         card.classList.remove('has-file');
       });
     }
-    setupDocUpload('tenthFile',   'tenthCard',   'tenthName',   'tenthRemove');
     setupDocUpload('twelfthFile', 'twelfthCard', 'twelfthName', 'twelfthRemove');
 
     /* ── Receipt Upload ────────────────────────────────────── */
@@ -1066,8 +1056,6 @@
         email: sel('email')?.value || '',
         date_of_birth: sel('dob')?.value || '',
         gender: sel('gender')?.value || '',
-        religion: sel('religion')?.value || '',
-        caste_category: sel('casteCategory')?.value || '',
         aadhaar_no: sel('aadhaarNo')?.value || '',
         selected_institute: sel('selectedInstitute')?.value || '',
         course_preference: sel('coursePreference')?.value || '',
@@ -1094,13 +1082,6 @@
         mother_mobile: sel('motherMobile')?.value || '',
         mother_occupation: sel('motherOccupation')?.value || '',
         candidate_name_marksheet: sel('candidateNameMarksheet')?.value || '',
-        tenth_institution: sel('tenth_institution')?.value || '',
-        tenth_board: sel('tenth_board')?.value || '',
-        tenth_stream: sel('tenth_stream')?.value || '',
-        tenth_year_passing: sel('tenth_year')?.value || '',
-        tenth_result_status: sel('tenth_result')?.value || '',
-        tenth_marking_scheme: sel('tenth_scheme')?.value || '',
-        tenth_percentage: sel('tenth_percentage')?.value || '',
         twelfth_institution: sel('twelfth_institution')?.value || '',
         twelfth_board: sel('twelfth_board')?.value || '',
         twelfth_stream: sel('twelfth_stream')?.value || '',
@@ -1117,10 +1098,9 @@
 
       // File fields
       if (passportPhotoFile)          fd.append('passport_photo',   passportPhotoFile);
-      const tenthF   = sel('tenthFile').files[0];
+      if (signatureFile)              fd.append('signature_image',  signatureFile);
       const twelfthF = sel('twelfthFile').files[0];
       const receiptF = sel('receiptFile').files[0];
-      if (tenthF)   fd.append('tenth_marksheet',   tenthF);
       if (twelfthF) fd.append('twelfth_marksheet', twelfthF);
       if (receiptF) fd.append('payment_receipt',   receiptF);
 
@@ -1134,10 +1114,10 @@
         sel('successModal').classList.add('open');
         sel('admissionForm').reset();
         clearPhoto();
-        sel('tenthCard').classList.remove('has-file');
-        sel('twelfthCard').classList.remove('has-file');
-        sel('receiptCard').classList.remove('has-file');
-        sel('receiptName').textContent = '';
+        if (sel('tenthCard')) sel('tenthCard').classList.remove('has-file');
+        if (sel('twelfthCard')) sel('twelfthCard').classList.remove('has-file');
+        if (sel('receiptCard')) sel('receiptCard').classList.remove('has-file');
+        if (sel('receiptName')) sel('receiptName').textContent = '';
         // Reset signature upload
         signatureFile = null;
         sel('signatureFile').value = '';
@@ -1162,12 +1142,10 @@
       if (!confirm('Reset all fields?')) return;
       sel('admissionForm').reset();
       clearPhoto();
-      sel('tenthCard').classList.remove('has-file');
-      sel('twelfthCard').classList.remove('has-file');
-      sel('tenthName').textContent = '';
-      sel('twelfthName').textContent = '';
-      sel('receiptCard').classList.remove('has-file');
-      sel('receiptName').textContent = '';
+      if (sel('twelfthCard')) sel('twelfthCard').classList.remove('has-file');
+      if (sel('twelfthName')) sel('twelfthName').textContent = '';
+      if (sel('receiptCard')) sel('receiptCard').classList.remove('has-file');
+      if (sel('receiptName')) sel('receiptName').textContent = '';
       // Reset signature upload
       signatureFile = null;
       sel('signatureFile').value = '';
