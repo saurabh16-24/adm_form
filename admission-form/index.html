@@ -908,6 +908,15 @@
     async function startCamera() {
       // Stop any existing stream
       if (cameraStream) cameraStream.getTracks().forEach(t => t.stop());
+
+      // Check if mediaDevices API is supported (requires HTTPS or Localhost)
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        closeCameraModal();
+        alert('Live camera preview requires an HTTPS connection. Falling back to your native device camera/gallery.');
+        sel('photoFile').click();
+        return;
+      }
+
       try {
         cameraStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } },
