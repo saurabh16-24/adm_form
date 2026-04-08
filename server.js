@@ -15,8 +15,8 @@ const Jimp = require('jimp');  // v0.22 — stable compositing API
 const createTransporter = () => {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for 465, false for 587
+    port: 465,
+    secure: true, // true for port 465
     auth: {
       user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
       pass: process.env.EMAIL_PASS || 'your_app_password'
