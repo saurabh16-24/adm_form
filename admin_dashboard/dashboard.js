@@ -152,18 +152,13 @@ function renderRecentTable(tbodyId, rows, type) {
   }
   tbody.innerHTML = rows.map(r => {
     if (type === 'enquiry') {
-      let prefs = '';
-      try { 
-        const prefsArray = JSON.parse(r.course_preferences || '[]');
-        prefs = Array.isArray(prefsArray) ? prefsArray.map(p => typeof p === 'object' ? p.course : p).join(', ') : (r.course_preferences || '');
-      } catch { prefs = r.course_preferences || ''; }
       return `<tr>
         <td>${r.token_number || '—'}</td>
         <td>${r.student_name || '—'}</td>
         <td>${r.student_email || '—'}</td>
         <td>${r.student_mobile || '—'}</td>
         <td>${formatDate(r.enquiry_date)}</td>
-        <td title="${prefs}">${truncate(prefs, 30)}</td>
+        <td>${r.reference || '—'}</td>
       </tr>`;
     } else {
       return `<tr>
