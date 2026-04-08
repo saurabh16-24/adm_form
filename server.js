@@ -12,17 +12,17 @@ const generateAdmissionPdf = require('./generateAdmissionPdf');
 const Jimp = require('jimp');  // v0.22 — stable compositing API
 
 // ── Email Transporter Shared Configuration ─────────────────────────────────────
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // true for port 465
-    auth: {
-      user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
-      pass: process.env.EMAIL_PASS || 'your_app_password'
-    }
-  });
-};
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
+  pool: true,            // Use pooled connections 
+  maxConnections: 1,     // Limit connections to bypass Gmail ratelimiting/timeouts
+  auth: {
+    user: process.env.EMAIL_USER || 'enquiry.svce@gmail.com',
+    pass: process.env.EMAIL_PASS || 'your_app_password'
+  }
+});
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Branded QR generator (server-side logo compositing) ──────────────────────
@@ -377,7 +377,6 @@ app.post('/api/submit-enquiry', async (req, res) => {
         console.log(`[Enquiry-BG] Preparing email to ${d.student_email}...`);
 
         const qrPngBuffer = await generateBrandedQR(autofillUrl, 300);
-        const transporter = createTransporter();
         const mailOptions = {
           from: '"Admission Team" <enquiry.svce@gmail.com>',
           to: d.student_email,
@@ -722,8 +721,6 @@ app.post('/api/admissions/submit', (req, res) => {
           }
           const emailData = { ...v, application_number: v.application_number, _top_prefs: prefs.slice(0, 4), _admin_remarks: remarks };
           const pdfBuffer = await generateAdmissionPdf(emailData);
-
-          const transporter = createTransporter();
 
           await transporter.sendMail({
             from: '"SVCE Admissions" <enquiry.svce@gmail.com>',
