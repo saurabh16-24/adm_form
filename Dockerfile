@@ -1,8 +1,7 @@
-# ── SVCE Admission Database — Production Dockerfile ──────────────────────────
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
-# Install sharp native dependencies (needed for image processing)
-RUN apk add --no-cache python3 make g++ vips-dev
+# Install dependencies needed for native modules (sharp)
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ libvips-dev && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
