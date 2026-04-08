@@ -246,7 +246,7 @@ function generateAdmissionPdf(data) {
        .text('✔  I accept that fees paid are NON-REFUNDABLE.', M + 10, y + 8, { width: CW - 20, align: 'center' });
     doc.fillColor(GRAY).font('Helvetica').fontSize(7.5)
        .text('This is a system-generated document and does not require a physical signature.', M + 10, y + 22, { width: CW - 20, align: 'center' })
-       .text('For queries: admissions@svce.ac.in  |  +91 99167 75988', M + 10, y + 34, { width: CW - 20, align: 'center' });
+       .text('For queries: enquiry.svce@gmail.com  |  +91 99167 75988', M + 10, y + 34, { width: CW - 20, align: 'center' });
     doc.restore();
     y += 56;
     gap(6);

@@ -746,7 +746,7 @@ app.post('/api/admissions/submit', (req, res) => {
     <p style="margin:0 0 8px;font-size:13px;color:#64748b;">Our admissions team will review your application and contact you within 2&ndash;3 working days.</p>
     <p style="margin:0 0 24px;font-size:13px;color:#64748b;">For any queries, reply to this email or call <strong>+91 99167 75988</strong>.</p>
     <hr style="border:none;border-top:1px solid #e2e8f0;margin-bottom:20px;">
-    <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">SVCE, Mysore Road, Bengaluru &ndash; 562 157 &nbsp;|&nbsp; admissions@svce.ac.in</p>
+    <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">Svce, Vidyanagara Cross, Kenpegowda International Airport Road, Bengaluru-562157 &nbsp;|&nbsp; enquiry.svce@gmail.com</p>
   </div>
 </div>`,
             attachments: [{
