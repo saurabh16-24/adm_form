@@ -725,34 +725,69 @@
                 { name: "BE Mechanical Engineering", fee: 125000 }
             ];
 
+            let coursePreferencesOrder = [];
+
+            window.handleCourseCheckbox = function(cb, index) {
+                if (cb.checked) {
+                    if (coursePreferencesOrder.length >= 8) {
+                        cb.checked = false;
+                        alert('You can select a maximum of 8 preferences.');
+                        return;
+                    }
+                    coursePreferencesOrder.push(cb.value);
+                } else {
+                    coursePreferencesOrder = coursePreferencesOrder.filter(c => c !== cb.value);
+                }
+                
+                courseData.forEach((c, idx) => {
+                    const badge = document.getElementById(`badge-${idx}`);
+                    const orderIndex = coursePreferencesOrder.indexOf(c.name);
+                    if (orderIndex > -1) {
+                        badge.textContent = "Pref " + (orderIndex + 1);
+                        badge.style.display = 'inline-flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                });
+            };
+
             function initializeCoursePreferences() {
                 const container = document.getElementById('preferenceDropdownsContainer');
                 container.innerHTML = '';
+                coursePreferencesOrder = [];
                 
-                for (let i = 1; i <= 8; i++) {
+                courseData.forEach((c, index) => {
                     const row = document.createElement('div');
-                    row.className = 'preference-row';
-                    row.style.display = 'grid';
-                    row.style.gridTemplateColumns = '120px 1fr';
-                    row.style.gap = '15px';
+                    row.className = 'course-pref-row';
+                    row.style.display = 'flex';
                     row.style.alignItems = 'center';
+                    row.style.gap = '15px';
                     row.style.marginBottom = '8px';
                     row.style.background = 'rgba(255, 255, 255, 0.5)';
-                    row.style.padding = '8px';
+                    row.style.padding = '12px';
                     row.style.borderRadius = '8px';
                     row.style.border = '1px solid #e2e8f0';
+                    row.style.cursor = 'pointer';
+                    row.style.userSelect = 'none';
+
+                    row.onclick = function(e) {
+                        if (e.target.tagName !== 'INPUT') {
+                            const cb = document.getElementById(`course-cb-${index}`);
+                            cb.checked = !cb.checked;
+                            handleCourseCheckbox(cb, index);
+                        }
+                    };
                     
                     row.innerHTML = `
-                        <div style="font-weight: 600; color: #475569; font-size: 0.9rem;">Preference ${i}:</div>
-                        <div style="display: flex; gap: 10px; width: 100%;">
-                            <select class="pref-course-select" id="pref-course-${i}" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 500; font-family: inherit;">
-                                <option value="">-- Select Course --</option>
-                                ${courseData.map(c => `<option value="${c.name}">${c.name} - ₹${c.fee.toLocaleString()}</option>`).join('')}
-                            </select>
+                        <input type="checkbox" id="course-cb-${index}" value="${c.name}" class="course-checkbox" style="width: 18px; height: 18px; accent-color: #3b82f6; cursor: pointer;" onchange="handleCourseCheckbox(this, ${index})">
+                        <span id="badge-${index}" style="display: none; align-items: center; justify-content: center; padding: 0 8px; height: 24px; background: #3b82f6; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap;"></span>
+                        <div style="font-weight: 500; color: #334155; flex-grow: 1; display:flex; justify-content:space-between; align-items: center;">
+                            <span>${c.name}</span>
+                            <span style="font-weight:600; font-size: 0.95rem;">₹${c.fee.toLocaleString()}</span>
                         </div>
                     `;
                     container.appendChild(row);
-                }
+                });
             }
 
             initializeCoursePreferences();
@@ -830,12 +865,10 @@
                         jee_rank: document.getElementById('jeeRank').value || null,
                         comedk_rank: document.getElementById('comedk').value || null,
                         cet_rank: document.getElementById('cetRank').value || null,
-                        course_preferences: Array.from(document.querySelectorAll('.pref-course-select')).map(select => {
-                            const courseName = select.value;
-                            if (!courseName) return null;
+                        course_preferences: coursePreferencesOrder.map(courseName => {
                             const matched = courseData.find(c => c.name === courseName);
                             return { course: courseName, fee: matched ? matched.fee : null };
-                        }).filter(item => item !== null),
+                        }),
                         hostel_required: document.getElementById('hostelRequired').checked,
                         transport_required: document.getElementById('transportRequired').checked,
                         hostel_type: document.getElementById('hostelRequired').checked ? document.getElementById('hostelType').value : null,
