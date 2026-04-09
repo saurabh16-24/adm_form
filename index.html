@@ -438,10 +438,6 @@
                         <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block;">Select Hostel Type:</label>
                         <select id="hostelType" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">-- Choose Hostel Accomodation --</option>
-                            <optgroup label="Accommodation Only">
-                                <option value="Hostel with shared toilets (Only Accomm)">Hostel with shared toilets - ₹50,000</option>
-                                <option value="Hostel with attached toilets (Boys only, Only Accomm)">Hostel with attached toilets (Boys only) - ₹75,000</option>
-                            </optgroup>
                             <optgroup label="Accommodation with Food">
                                 <option value="Hostel with shared toilets (With Food)">Hostel with shared toilets - ₹1,10,000</option>
                                 <option value="Hostel with attached toilets (Boys only, With Food)">Hostel with attached toilets (Boys only) - ₹1,30,000</option>
@@ -452,11 +448,15 @@
                     <!-- Hidden Transport Details -->
                     <div id="transportDetailsContainer" style="display: none; border-top: 1px dashed #cbd5e1; margin-top: 5px; padding-top: 15px;">
                         <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block;">Select Transport Route:</label>
-                        <select id="transportRoute" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
+                        <select id="transportRoute" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;" onchange="document.getElementById('otherTransportWrapper').style.display = (this.value === 'Others') ? 'block' : 'none'">
                             <option value="">-- Choose Route --</option>
                             <option value="Chintamani Route">Chintamani Route - ₹45,000</option>
                             <option value="Other Routes">Other Routes - ₹40,000</option>
+                            <option value="Others">Others</option>
                         </select>
+                        <div id="otherTransportWrapper" style="display:none; margin-top:10px;">
+                            <input type="text" id="otherTransportRoute" placeholder="Please specify your route" style="width:100%; padding:10px; border-radius:6px; border:1px solid #cbd5e1;">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -793,8 +793,6 @@
             initializeCoursePreferences();
 
             const hostelFees = {
-                "Hostel with shared toilets (Only Accomm)": 50000,
-                "Hostel with attached toilets (Boys only, Only Accomm)": 75000,
                 "Hostel with shared toilets (With Food)": 110000,
                 "Hostel with attached toilets (Boys only, With Food)": 130000
             };
@@ -873,8 +871,10 @@
                         transport_required: document.getElementById('transportRequired').checked,
                         hostel_type: document.getElementById('hostelRequired').checked ? document.getElementById('hostelType').value : null,
                         hostel_fee: document.getElementById('hostelRequired').checked ? (hostelFees[document.getElementById('hostelType').value] || null) : null,
-                        transport_route: document.getElementById('transportRequired').checked ? document.getElementById('transportRoute').value : null,
-                        transport_fee: document.getElementById('transportRequired').checked ? (transportFees[document.getElementById('transportRoute').value] || null) : null,
+                        transport_route: document.getElementById('transportRequired').checked ? 
+                                         (document.getElementById('transportRoute').value === 'Others' ? document.getElementById('otherTransportRoute').value : document.getElementById('transportRoute').value) 
+                                         : null,
+                        transport_fee: document.getElementById('transportRequired').checked ? (transportFees[document.getElementById('transportRoute').value] || 0) : null,
                         diploma_percentage: parseFloat(document.getElementById('diplomaPercentage').value) || null,
                         dcet_rank: document.getElementById('dcetRank').value || null,
                         institution_name: document.getElementById('institution_name').value,
