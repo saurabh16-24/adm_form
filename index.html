@@ -424,11 +424,11 @@
                 <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
                     <div style="display: flex; flex-wrap: wrap; gap: 30px;">
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="hostelRequired" name="hostelRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="toggleHostelOptions()">
+                            <input type="checkbox" id="hostelRequired" name="hostelRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="handleExclusion('hostel')">
                             <label for="hostelRequired" style="margin: 0; cursor: pointer; color: var(--text-primary); font-weight: 600;">Hostel Required</label>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="transportRequired" name="transportRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="toggleTransportOptions()">
+                            <input type="checkbox" id="transportRequired" name="transportRequired" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;" onchange="handleExclusion('transport')">
                             <label for="transportRequired" style="margin: 0; cursor: pointer; color: var(--text-primary); font-weight: 600;">Transport Required</label>
                         </div>
                     </div>
@@ -801,13 +801,35 @@
                 "Other Routes": 40000
             };
 
+            window.handleExclusion = function(type) {
+                const hostel = document.getElementById('hostelRequired');
+                const transport = document.getElementById('transportRequired');
+                
+                if (type === 'hostel' && hostel.checked) {
+                    transport.checked = false;
+                } else if (type === 'transport' && transport.checked) {
+                    hostel.checked = false;
+                }
+                
+                toggleHostelOptions();
+                toggleTransportOptions();
+            };
+
             window.toggleHostelOptions = function() {
                 const container = document.getElementById('hostelDetailsContainer');
-                container.style.display = document.getElementById('hostelRequired').checked ? 'block' : 'none';
+                const isChecked = document.getElementById('hostelRequired').checked;
+                container.style.display = isChecked ? 'block' : 'none';
+                if (!isChecked) document.getElementById('hostelType').value = '';
             };
             window.toggleTransportOptions = function() {
                 const container = document.getElementById('transportDetailsContainer');
-                container.style.display = document.getElementById('transportRequired').checked ? 'block' : 'none';
+                const isChecked = document.getElementById('transportRequired').checked;
+                container.style.display = isChecked ? 'block' : 'none';
+                if (!isChecked) {
+                    document.getElementById('transportRoute').value = '';
+                    document.getElementById('otherTransportWrapper').style.display = 'none';
+                    document.getElementById('otherTransportRoute').value = '';
+                }
             };
             
             document.getElementById('enquiryForm').addEventListener('submit', async function(e) {
