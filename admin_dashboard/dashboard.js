@@ -462,11 +462,11 @@ async function viewEnquiry(id) {
 
 function performHiddenPrint(htmlContent) {
   const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
+  iframe.style.position = 'absolute';
+  iframe.style.width = '1px';
+  iframe.style.height = '1px';
+  iframe.style.left = '-9999px';
+  iframe.style.top = '-9999px';
   iframe.style.border = '0';
   document.body.appendChild(iframe);
 
@@ -474,11 +474,13 @@ function performHiddenPrint(htmlContent) {
   iframe.contentWindow.document.write(htmlContent);
   iframe.contentWindow.document.close();
 
+  // Give the browser time to render and fetch images
   setTimeout(() => {
     iframe.contentWindow.focus();
     try {
       iframe.contentWindow.print();
     } catch(e) { console.error('Print crash avoided', e); }
+    // Clean up
     setTimeout(() => { document.body.removeChild(iframe); }, 1500);
   }, 1000);
 }
