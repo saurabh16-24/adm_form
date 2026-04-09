@@ -460,13 +460,33 @@ async function viewEnquiry(id) {
   } catch (err) { alert('Failed to load enquiry details'); }
 }
 
+function performHiddenPrint(htmlContent) {
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
+
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(htmlContent);
+  iframe.contentWindow.document.close();
+
+  setTimeout(() => {
+    iframe.contentWindow.focus();
+    try {
+      iframe.contentWindow.print();
+    } catch(e) { console.error('Print crash avoided', e); }
+    setTimeout(() => { document.body.removeChild(iframe); }, 1500);
+  }, 1000);
+}
+
 async function printEnquiry(id) {
   try {
     const data = await apiFetch(`/api/admin/enquiry/${id}`);
     const r = data.row;
-    
-    const printWin = window.open('', '_blank');
-    if (!printWin) return alert('Pop-up blocked. Please allow pop-ups for this site.');
 
     const logoUrl = window.location.origin + '/image copy.png';
     let prefsArray = [];
@@ -659,17 +679,11 @@ async function printEnquiry(id) {
           <div class="office-box"></div>
         </div>
 
-        <script>
-          window.onload = function() {
-            setTimeout(() => { window.print(); }, 500);
-          };
-        </script>
       </body>
       </html>
     `;
     
-    printWin.document.write(html);
-    printWin.document.close();
+    performHiddenPrint(html);
 
   } catch (err) { alert('Failed to generate print view'); console.error(err); }
 }
@@ -795,10 +809,6 @@ async function printAdmission(id) {
   try {
     const data = await apiFetch(`/api/admin/admission/${id}`);
     const r = data.row;
-    
-    // Create print window
-    const printWin = window.open('', '_blank');
-    if (!printWin) return alert('Pop-up blocked. Please allow pop-ups for this site.');
 
     const logoUrl = window.location.origin + '/image copy.png';
     const photoUrl = r.passport_photo_path ? window.location.origin + r.passport_photo_path : '';
@@ -958,20 +968,11 @@ async function printAdmission(id) {
           </div>
         </div>
 
-        <script>
-          window.onload = function() {
-            setTimeout(function() { 
-              window.print();
-              // window.close(); 
-            }, 800);
-          };
-        </script>
       </body>
       </html>
     `;
     
-    printWin.document.write(html);
-    printWin.document.close();
+    performHiddenPrint(html);
 
   } catch (err) { alert('Failed to generate print view'); console.error(err); }
 }
