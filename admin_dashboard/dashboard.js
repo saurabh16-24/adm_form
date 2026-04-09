@@ -468,7 +468,7 @@ async function printEnquiry(id) {
     const printWin = window.open('', '_blank');
     if (!printWin) return alert('Pop-up blocked. Please allow pop-ups for this site.');
 
-    const logoUrl = '../image copy.png';
+    const logoUrl = window.location.origin + '/image copy.png';
     let prefsArray = [];
     if (typeof r.course_preferences === 'string') {
         try { prefsArray = JSON.parse(r.course_preferences || '[]'); } catch { prefsArray = []; }
@@ -800,9 +800,9 @@ async function printAdmission(id) {
     const printWin = window.open('', '_blank');
     if (!printWin) return alert('Pop-up blocked. Please allow pop-ups for this site.');
 
-    const logoUrl = '../image copy.png';
-    const photoUrl = r.passport_photo_path ? `..${r.passport_photo_path}` : '';
-    const signUrl = r.signature_path ? `..${r.signature_path}` : '';
+    const logoUrl = window.location.origin + '/image copy.png';
+    const photoUrl = r.passport_photo_path ? window.location.origin + r.passport_photo_path : '';
+    const signUrl = r.signature_path ? window.location.origin + r.signature_path : '';
     
     // Fetch enquiry preferences (from joined field)
     let prefsArray = [];
