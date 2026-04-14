@@ -1341,10 +1341,9 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
       return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB'); 
     };
 
-    const origin = req.headers.origin || (req.protocol + '://' + req.get('host'));
-    const logoUrl = origin + '/image copy.png';
-    const photoUrl = r.passport_photo_path ? origin + r.passport_photo_path : '';
-    const signUrl = r.signature_path ? origin + r.signature_path : '';
+    const logoUrl = '/image copy.png';
+    const photoUrl = r.passport_photo_path ? r.passport_photo_path : '';
+    const signUrl = r.signature_path ? r.signature_path : '';
 
     let prefsArray = [];
     if (typeof r.course_preferences === 'string') {
