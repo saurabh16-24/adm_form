@@ -865,7 +865,7 @@ async function viewAdmission(id) {
 
 async function printAdmission(id) {
   const token = sessionStorage.getItem('admin_token');
-  window.open(`${API}/api/admin/admission/${id}/print-pdf?token=${encodeURIComponent(token)}`, '_blank');
+  window.open(`${API}/api/admin/admission/${id}/print?token=${encodeURIComponent(token)}`, '_blank');
 }
 
 async function openManagementFormEditor(id) {
