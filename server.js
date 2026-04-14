@@ -1038,6 +1038,213 @@ app.delete('/api/admin/management-form/:id', adminAuth, async (req, res) => {
 });
 
 
+// ── Print Endpoints (token via query param for window.open compatibility) ──
+
+// Auth helper for query-param token
+function adminAuthQuery(req, res, next) {
+  const token = req.query.token;
+  if (!verifyToken(token)) return res.status(401).send('<h2>Unauthorized. Please log in to the admin dashboard.</h2>');
+  next();
+}
+
+// GET /api/admin/enquiry/:id/print  — returns a printable HTML page
+app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM enquiries WHERE id = $1', [req.params.id]);
+    if (!result.rows.length) return res.status(404).send('Enquiry not found');
+    const r = result.rows[0];
+
+    let prefsArray = [];
+    try {
+      prefsArray = typeof r.course_preferences === 'string'
+        ? JSON.parse(r.course_preferences || '[]')
+        : (r.course_preferences || []);
+      if (!Array.isArray(prefsArray)) prefsArray = [];
+    } catch { prefsArray = []; }
+
+    const val = (v) => (v === null || v === undefined || v === '') ? 'N/A' : v;
+    const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' - ') : 'N/A';
+    const fmtTime = (d) => d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
+    const origin = `${req.protocol}://${req.get('host')}`;
+
+    const hostelText = r.hostel_required
+      ? ((r.hostel_type || '').replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (₹' + (r.hostel_fee || 0) + ')')
+      : 'NO';
+    const transportText = r.transport_required
+      ? ((r.transport_route || '') + ' (₹' + (r.transport_fee || 0) + ')')
+      : 'NO';
+
+    const prefsRows = prefsArray.map((p, i) => `
+      <tr>
+        <td class="pref-num">${i + 1}.</td>
+        <td style="white-space:normal">${typeof p === 'object' ? p.course : p}</td>
+        <td style="text-align:center">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+        ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background:#fff"></td>` : ''}
+      </tr>`).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Enquiry Form - ${r.student_name}</title>
+  <style>
+    @page { size: A4; margin: 4mm 8mm; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; }
+    .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+    .qr-box { text-align: center; }
+    .qr-box img { width: 80px; height: 80px; }
+    .qr-box p { margin: 1px 0 0; font-size: 6.5px; color: #555; font-weight: 600; }
+    .meta-right-block { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding-top: 5px; }
+    .token-val { font-weight: 700; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 1px; }
+    .date-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-weight: 600; font-size: 11px; }
+    .created-at { font-size: 7.5px; color: #888; margin-top: 1px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+    th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; }
+    .section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10.5px; }
+    .label { font-weight: 500; width: 18%; background: #f8fafc; }
+    .value { font-weight: 500; width: 32%; }
+    .sub-section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; }
+    .pref-table td { border-top: none; border-bottom: 1px solid #64748b; }
+    .pref-num { width: 25px; text-align: center; }
+    .office-section { margin-top: 5px; }
+    .office-title { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; padding: 4px 8px; border: 1px solid #64748b; border-bottom: none; }
+    .office-box { border: 1px solid #64748b; min-height: 210px; }
+    .print-hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 14px; margin-bottom: 10px; font-size: 12px; color: #1d4ed8; text-align: center; }
+    @media print { .print-hint { display: none; } body { -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="print-hint">📄 Press <strong>Ctrl+P</strong> (or Cmd+P on Mac) to print this form.</div>
+
+  <div class="top-bar">
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
+      <p>Scan for Application Form</p>
+    </div>
+    <div class="meta-right-block">
+      <div>Token No.: <span class="token-val">${val(r.token_number)}</span></div>
+      <div>Date: <span class="date-box">${fmtDate(r.enquiry_date)}</span></div>
+      <div class="created-at">Created At: ${fmtTime(r.created_at)}</div>
+    </div>
+  </div>
+
+  <div style="text-align:center; margin:-5px 0 8px; border-bottom:2px solid #1e3a5f; padding-bottom:5px;">
+    <div style="font-weight:800; font-size:13.5px; color:#1e3a5f; letter-spacing:0.5px;">ADMISSION ENQUIRY FORM</div>
+    <div style="font-size:11px; font-weight:700; color:#3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
+  </div>
+
+  <table>
+    <tr class="section-header"><th colspan="2">Personal Details</th><th colspan="2">Contact Details</th></tr>
+    <tr><td class="label">Full Name:</td><td class="value">${val(r.student_name)}</td><td class="label">Student Email:</td><td class="value">${val(r.student_email)}</td></tr>
+    <tr><td class="label">Father's Name:</td><td class="value">${val(r.father_name)}</td><td class="label">Student Mobile:</td><td class="value">${val(r.student_mobile)}</td></tr>
+    <tr><td class="label">Mother's Name:</td><td class="value">${val(r.mother_name)}</td><td class="label">Education Qualification:</td><td class="value">${val(r.education_qualification)}</td></tr>
+    <tr>
+      <td class="label" rowspan="3">Address:</td>
+      <td class="value" rowspan="3">${val(r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '))}</td>
+      <td class="label">Father's Mobile:</td><td class="value">${val(r.father_mobile)}</td>
+    </tr>
+    <tr><td class="label">Mother's Mobile:</td><td class="value">${val(r.mother_mobile)}</td></tr>
+    <tr><td class="label">Reference:</td><td class="value">${val(r.reference)}</td></tr>
+  </table>
+
+  <table>
+    <tr class="sub-section-header"><th colspan="6">11th Standard Details (For AP/Telangana students only)</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;"><th>Physics (Theory)</th><th>Chemistry (Theory)</th><th>Mathematics (A)</th><th>Mathematics (B)</th><th>English</th><th>Language</th></tr>
+    <tr><td>${val(r.physics_11)}</td><td>${val(r.chemistry_11)}</td><td>${val(r.math_11a)}</td><td>${val(r.math_11b)}</td><td>${val(r.english_11)}</td><td>${val(r.language_11)}</td></tr>
+  </table>
+
+  <table>
+    <tr class="sub-section-header"><th colspan="6">12th Standard Details</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;"><th>Physics (Theory)</th><th>Physics (Practical)</th><th>Chemistry (Theory)</th><th>Chemistry (Practical)</th><th>Mathematics (A)</th><th>Mathematics (B)</th></tr>
+    <tr><td>${val(r.physics_marks)}</td><td>${val(r.physics_12_prac)}</td><td>${val(r.chemistry_marks)}</td><td>${val(r.chemistry_12_prac)}</td><td>${val(r.math_12a)}</td><td>${val(r.math_12b)}</td></tr>
+  </table>
+
+  <table>
+    <tr class="sub-section-header"><th colspan="3">Kannada, English, Other Subjects (Optional)</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;"><th>Kannada/Telugu/Sanskrit</th><th>English</th><th>Other Subject Marks</th></tr>
+    <tr><td>${val(r.kannada_12)}</td><td>${val(r.english_12)}</td><td>${val(r.other_12)}</td></tr>
+  </table>
+
+  <table>
+    <tr class="sub-section-header"><th colspan="2">Percentage Details</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;"><th>Total Percentage</th><th>PCM Percentage</th></tr>
+    <tr><td>${val(r.total_percentage)}${r.total_percentage ? '%' : ''}</td><td>${val(r.pcm_percentage)}${r.pcm_percentage ? '%' : ''}</td></tr>
+  </table>
+
+  <table>
+    <tr class="sub-section-header"><th colspan="3">Entrance Exam Detail</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;"><th>JEE Rank</th><th>COMEDK Rank</th><th>CET Rank</th></tr>
+    <tr><td>${val(r.jee_rank)}</td><td>${val(r.comedk_rank)}</td><td>${val(r.cet_rank)}</td></tr>
+  </table>
+
+  <table class="pref-table">
+    <tr class="sub-section-header"><th colspan="4">Course Preference Order &amp; Fees</th></tr>
+    <tr style="background:#f8fafc; font-weight:600;">
+      <th style="width:25px; text-align:center;">#</th><th>Course Name</th><th style="width:80px;">Fee (Agreed)</th><th style="width:150px;">Remarks</th>
+    </tr>
+    ${prefsRows}
+    <tr style="background:#f8fafc; font-weight:700; font-size:10px;">
+      <td style="text-align:right; padding:4px; border-right:none;">Hostel:</td>
+      <td style="padding:4px; border-left:none; border-right:none;">${hostelText}</td>
+      <td colspan="2" style="padding:4px; border-left:none;"><span style="font-weight:700">Transport:</span> ${transportText}</td>
+    </tr>
+  </table>
+
+  <div class="office-section">
+    <div class="office-title">For Office Work</div>
+    <div class="office-box"></div>
+  </div>
+
+  <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
+    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
+    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Parent/Guardian Signature</div>
+    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Office Signature</div>
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(html);
+  } catch (err) {
+    console.error('Enquiry print error:', err);
+    res.status(500).send('Error generating print view: ' + err.message);
+  }
+});
+
+// GET /api/admin/admission/:id/print-pdf  — streams a PDF for inline viewing
+app.get('/api/admin/admission/:id/print-pdf', adminAuthQuery, async (req, res) => {
+  try {
+    const query = `
+      SELECT a.*, e.course_preferences, e.admin_remarks, a.id as id
+      FROM admissions a
+      LEFT JOIN enquiries e ON a.enquiry_id = e.id
+      WHERE a.id = $1
+    `;
+    const result = await pool.query(query, [req.params.id]);
+    if (!result.rows.length) return res.status(404).send('Admission not found');
+    const r = result.rows[0];
+
+    let prefs = [];
+    try {
+      prefs = typeof r.course_preferences === 'string'
+        ? JSON.parse(r.course_preferences || '[]')
+        : (r.course_preferences || []);
+      if (!Array.isArray(prefs)) prefs = [];
+    } catch { prefs = []; }
+
+    const pdfData = { ...r, _top_prefs: prefs.slice(0, 4), _admin_remarks: r.admin_remarks || '' };
+    const pdfBuffer = await generateAdmissionPdf(pdfData);
+
+    const safeName = (r.application_number || 'admission').replace(/\//g, '_');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="SVCE_${safeName}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Admission PDF print error:', err);
+    res.status(500).send('Error generating PDF: ' + err.message);
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
   console.log(`Open http://localhost:${port} to see the form.`);

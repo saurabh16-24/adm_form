@@ -522,6 +522,11 @@ function performHiddenPrint(htmlContent) {
 }
 
 async function printEnquiry(id) {
+  const token = sessionStorage.getItem('admin_token');
+  window.open(`${API}/api/admin/enquiry/${id}/print?token=${encodeURIComponent(token)}`, '_blank');
+}
+
+async function _old_printEnquiry_unused(id) {
   try {
     const data = await apiFetch(`/api/admin/enquiry/${id}`);
     const r = data.row;
@@ -732,6 +737,7 @@ async function printEnquiry(id) {
 
   } catch (err) { alert('Failed to generate print view'); console.error(err); }
 }
+// END old printEnquiry
 
 async function deleteEnquiry(id) {
   if (!confirm(`Delete enquiry #${id}? This cannot be undone.`)) return;
@@ -858,182 +864,8 @@ async function viewAdmission(id) {
 }
 
 async function printAdmission(id) {
-  try {
-    const data = await apiFetch(`/api/admin/admission/${id}`);
-    const r = data.row;
-
-    const logoUrl = window.location.origin + '/image copy.png';
-    const photoUrl = r.passport_photo_path ? window.location.origin + r.passport_photo_path : '';
-    const signUrl = r.signature_path ? window.location.origin + r.signature_path : '';
-    
-    // Fetch enquiry preferences (from joined field)
-    let prefsArray = [];
-    if (typeof r.course_preferences === 'string') {
-        try { prefsArray = JSON.parse(r.course_preferences || '[]'); } catch { prefsArray = []; }
-    } else {
-        prefsArray = r.course_preferences || [];
-    }
-    prefsArray = Array.isArray(prefsArray) ? prefsArray.slice(0, 4) : [];
-    while(prefsArray.length < 4) prefsArray.push('');
-    
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Application Print - ${r.student_name}</title>
-        <style>
-          @page { size: A4; margin: 10mm 15mm; }
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 10.5px; line-height: 1.35; color: #111; }
-          
-          .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
-          .logo-img { height: 60px; width: auto; object-fit: contain; }
-          
-          .header-meta-area { position: relative; min-height: 115px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-          .photo-box { position: absolute; right: 0; top: 0; width: 90px; height: 110px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
-          .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-          
-          .app-meta { text-align: center; }
-          .app-meta p { margin: 3px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
-          
-          table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #111; table-layout: fixed; }
-          th, td { border: 1px solid #111; padding: 5px 8px; text-align: left; word-wrap: break-word; }
-          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10.5px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
-          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9.5px; width: 35%; }
-          .value { font-weight: 700; color: #000; font-size: 10px; }
-          
-          .grid-head { background: #f8fafc; font-weight: 700; font-size: 9.5px; text-transform: uppercase; color: #64748b; }
-          .declaration { font-size: 9.5px; text-align: justify; padding: 8px 12px; line-height: 1.5; color: #222; }
-          
-          .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
-          .sign-area { text-align: center; width: 200px; }
-          .sign-placeholder { height: 50px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
-          .signature-img { max-height: 48px; max-width: 180px; object-fit: contain; }
-          .sign-label { font-weight: 810; font-size: 10px; border-top: 1.5px solid #000; padding-top: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
-          
-          @media print { 
-            .no-print { display: none; } 
-            table, tr { page-break-inside: avoid; }
-            body { print-color-adjust: exact; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header" style="margin-bottom:15px;">
-          <img src="${logoUrl}" class="logo-img">
-        </div>
-
-        <div class="header-meta-area">
-          <div class="photo-box">
-            ${photoUrl ? `<img src="${photoUrl}">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
-          </div>
-
-          <div class="app-meta">
-            <p style="font-size:11px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 5px; display:inline-block; margin-bottom:12px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
-            <div style="font-size:15px; font-weight:800; margin-bottom:15px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
-          </div>
-        </div>
-
-        <table>
-          <tr class="section-header"><th colspan="2">Personal Details</th></tr>
-          <tr><td class="label">Name</td><td class="value">${r.title || ''} ${r.student_name}</td></tr>
-          <tr><td class="label">Mobile No.</td><td class="value">${r.mobile_no}</td></tr>
-          <tr><td class="label">Email Address</td><td class="value">${r.email}</td></tr>
-          <tr><td class="label">Date of Birth</td><td class="value">${formatDate(r.date_of_birth)}</td></tr>
-          <tr><td class="label">Gender</td><td class="value">${r.gender}</td></tr>
-          <tr><td class="label">Aadhaar Number</td><td class="value">${r.aadhaar_no || '—'}</td></tr>
-        </table>
-        <table>
-          <tr class="section-header"><th colspan="3">Preference Details (From Enquiry)</th></tr>
-          <tr class="grid-head">
-            <th style="width: 25px; text-align: center;">#</th>
-            <th>Course Name</th>
-            <th style="width: 150px;">Fee (Agreed)</th>
-          </tr>
-          ${prefsArray.map((p, i) => `
-            <tr>
-              <td style="text-align: center; font-weight: 700;">${i + 1}.</td>
-              <td class="value">${typeof p === 'object' ? p.course : p}</td>
-              <td class="value" style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
-            </tr>
-          `).join('')}
-        </table>
-        <table>
-          <tr class="section-header"><th colspan="3">Address Details</th></tr>
-          <tr><td colspan="3" style="font-size: 10px; font-weight: 600; background: #f8fafc; padding: 4px 8px;">Permanent Address Same as Communication Address: <span style="font-weight: 800; color: #1e40af;">${r.same_as_comm ? 'Yes' : 'No'}</span></td></tr>
-          <tr class="grid-head"><th style="width: 26%;">Field</th><th style="width: 37%;">Communication Address</th><th style="width: 37%;">Permanent Address</th></tr>
-          <tr><td class="label">Address Line 1</td><td class="value">${r.comm_address_line1}</td><td class="value">${r.perm_address_line1 || r.comm_address_line1}</td></tr>
-          <tr><td class="label">Address Line 2</td><td class="value">${r.comm_address_line2 || '—'}</td><td class="value">${r.perm_address_line2 || r.comm_address_line2 || '—'}</td></tr>
-          <tr><td class="label">City</td><td class="value">${r.comm_city}</td><td class="value">${r.perm_city || r.comm_city}</td></tr>
-          <tr><td class="label">District</td><td class="value">${r.comm_district || '—'}</td><td class="value">${r.perm_district || r.comm_district || '—'}</td></tr>
-          <tr><td class="label">State</td><td class="value">${r.comm_state}</td><td class="value">${r.perm_state || r.comm_state}</td></tr>
-          <tr><td class="label">Country</td><td class="value">${r.comm_country || 'India'}</td><td class="value">${r.perm_country || r.comm_country || 'India'}</td></tr>
-          <tr><td class="label">Pincode</td><td class="value">${r.comm_pincode}</td><td class="value">${r.perm_pincode || r.comm_pincode}</td></tr>
-        </table>
-        <div style="page-break-after: always;"></div>
-        <table>
-          <tr class="section-header"><th colspan="2">Parent Details</th></tr>
-          <tr><td class="label">Father Name</td><td class="value">${r.father_name}</td></tr>
-          <tr><td class="label">Father's Mobile / Occupation</td><td class="value">${r.father_mobile || '—'} / ${r.father_occupation || '—'}</td></tr>
-          <tr><td class="label">Mother Name</td><td class="value">${r.mother_name}</td></tr>
-          <tr><td class="label">Mother's Mobile / Occupation</td><td class="value">${r.mother_mobile || '—'} / ${r.mother_occupation || '—'}</td></tr>
-        </table>
-        <table>
-          <tr class="section-header"><th colspan="2">Educational Details</th></tr>
-          <tr><td colspan="2" class="label" style="width:100%; background:#f8fafc; font-weight:700;">Qualifying Marksheet Name: <span style="font-weight:800; color:#000;">${r.candidate_name_marksheet}</span></td></tr>
-          <tr class="grid-head"><th>Details</th><th>12th Standard</th></tr>
-          <tr><td class="label">Institution</td><td class="value">${r.twelfth_institution}</td></tr>
-          <tr><td class="label">Board / University</td><td class="value">${r.twelfth_board}</td></tr>
-          <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing} / ${r.twelfth_result_status || '—'}</td></tr>
-          <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || '—'}%</td></tr>
-          <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
-        </table>
-
-        <div style="page-break-inside: avoid;">
-          <table>
-            <tr class="section-header"><th>Declaration</th></tr>
-            <tr>
-              <td class="declaration">
-                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.6;">
-                  <li style="margin-bottom: 8px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
-                  <li style="margin-bottom: 8px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
-                  <li style="margin-bottom: 8px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
-                  <li style="margin-bottom: 8px;">I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
-                  <li style="margin-bottom: 8px;">I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
-                  <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
-                </ul>
-              </td>
-            </tr>
-          </table>
-
-          <div class="footer">
-            <div class="footer-info">
-              <p style="font-weight:900; font-size:13px; color:#1e3a8a;">${r.student_name.toUpperCase()}</p>
-              <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
-              <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
-            </div>
-            <div style="display:flex; gap: 40px;">
-              <div class="sign-area">
-                <div class="sign-placeholder">
-                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
-                </div>
-                <span class="sign-label">Candidate Signature</span>
-              </div>
-              <div class="sign-area">
-                <div class="sign-placeholder"></div>
-                <span class="sign-label">Parent/Guardian Signature</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </body>
-      </html>
-    `;
-    
-    performHiddenPrint(html);
-
-  } catch (err) { alert('Failed to generate print view'); console.error(err); }
+  const token = sessionStorage.getItem('admin_token');
+  window.open(`${API}/api/admin/admission/${id}/print-pdf?token=${encodeURIComponent(token)}`, '_blank');
 }
 
 async function openManagementFormEditor(id) {
