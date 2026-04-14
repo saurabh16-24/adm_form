@@ -462,6 +462,7 @@ body {
 .stat-green .stat-icon  { background: var(--accent-green-glow); color: var(--accent-green); }
 .stat-purple .stat-icon { background: var(--accent-purple-glow); color: var(--accent-purple); }
 .stat-orange .stat-icon { background: var(--accent-orange-glow); color: var(--accent-orange); }
+.stat-indigo .stat-icon { background: #eef2ff; color: #4f46e5; }
 
 .stat-icon .material-icons-round { font-size: 26px; }
 
@@ -853,3 +854,76 @@ body {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+.modal-input {
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all var(--transition);
+}
+.modal-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px var(--accent-blue-glow);
+  outline: none;
+}
+.modal-input[readonly] {
+  background: var(--bg-secondary);
+  cursor: not-allowed;
+}
+
+/* ───── DASHBOARD FOOTER ───── */
+.dashboard-footer {
+  padding: 16px 28px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 40px;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.9;
+}
+
+.footer-info .material-icons-round {
+  font-size: 18px;
+  color: var(--accent-blue);
+}
+
+.footer-info strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ───── TOASTS ───── */
+#toast-container { position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { 
+  background: rgba(255, 255, 255, 0.95); 
+  backdrop-filter: blur(8px); 
+  padding: 12px 20px; 
+  border-radius: 12px; 
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  color: #1e293b; 
+  font-weight: 600; 
+  font-size: 0.9rem;
+  border-left: 5px solid #6366f1;
+  transform: translateX(120%);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+}
+.toast.show { transform: translateX(0); }
+.toast.success { border-left-color: #10b981; }
+.toast.error { border-left-color: #ef4444; }
+.toast span.material-icons-round { font-size: 1.25rem; }
+.toast.success span.material-icons-round { color: #10b981; }
+.toast.error span.material-icons-round { color: #ef4444; }

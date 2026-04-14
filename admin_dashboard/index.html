@@ -76,6 +76,10 @@
           <span class="material-icons-round">how_to_reg</span>
           <span>Admissions</span>
         </a>
+        <a href="#" class="nav-item" data-tab="management" id="nav-management">
+          <span class="material-icons-round">description</span>
+          <span>Management</span>
+        </a>
       </nav>
       <div class="sidebar-footer">
         <button class="logout-btn" onclick="logout()" id="logout-btn">
@@ -125,7 +129,16 @@
               <span class="stat-label">Today's Enquiries</span>
             </div>
           </div>
+          <div class="stat-card stat-indigo">
+            <div class="stat-icon"><span class="material-icons-round">description</span></div>
+            <div class="stat-info">
+              <span class="stat-value" id="stat-management">0</span>
+              <span class="stat-label">Management Forms</span>
+            </div>
+          </div>
           <div class="stat-card stat-orange">
+
+
             <div class="stat-icon"><span class="material-icons-round">event_available</span></div>
             <div class="stat-info">
               <span class="stat-value" id="stat-today-adm">0</span>
@@ -270,6 +283,46 @@
           </div>
         </div>
       </section>
+
+      <!-- ───── TAB: Management ───── -->
+      <section class="tab-content" id="tab-management">
+        <div class="tab-toolbar">
+          <div class="search-box">
+            <span class="material-icons-round">search</span>
+            <input type="text" id="mgt-search" placeholder="Search by name, app no, student info..." oninput="filterManagement()">
+          </div>
+          <div class="toolbar-actions">
+            <button class="btn btn-export" onclick="exportManagementCSV()" id="export-mgt-btn">
+              <span class="material-icons-round">download</span>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table class="data-table" id="management-table">
+              <thead>
+                <tr>
+                  <th>ID</th><th>App No.</th><th>Name</th><th>Branch</th><th>Ac. Year</th><th>Net Payable</th><th>Last Updated</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="management-body"></tbody>
+            </table>
+
+          </div>
+          <div class="table-footer">
+            <span id="mgt-count">0 records</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="dashboard-footer">
+        <div class="footer-info">
+          <span class="material-icons-round">update</span>
+          <span>Last Updated by: <strong id="updater-name">Admin</strong> on <span id="update-date"></span> at <span id="update-time"></span></span>
+        </div>
+      </footer>
     </main>
   </div>
 
@@ -289,6 +342,8 @@
     </div>
   </div>
 
+  <div id="toast-container"></div>
   <script src="dashboard.js?v=3"></script>
 </body>
+
 </html>

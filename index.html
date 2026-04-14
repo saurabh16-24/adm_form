@@ -408,9 +408,9 @@
             </div>
             
             <div class="form-group course-preference">
-                <label><i class="fas fa-list-ol"></i> Course Preference Order & Fee: <span class="required-note">(Choose up to 8 rank-ordered preferences)</span></label>
+                <label><i class="fas fa-list-ol"></i> Course Preference Order: <span class="required-note">(Choose up to 8 rank-ordered preferences)</span></label>
                 <div class="preference-instruction">
-                    <p><i class="fas fa-info-circle"></i> Select your course preferences and enter the agreed fee for each.</p>
+                    <p><i class="fas fa-info-circle"></i> Select your course preferences in order of priority.</p>
                 </div>
                 
                 <div id="course-selection" class="course-selection-list">
@@ -439,8 +439,8 @@
                         <select id="hostelType" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;">
                             <option value="">-- Choose Hostel Accomodation --</option>
                             <optgroup label="Accommodation with Food">
-                                <option value="Hostel with shared washroom (With Food)">Hostel with shared washroom - ₹1,10,000</option>
-                                <option value="Hostel with attached washroom (Boys only, With Food)">Hostel with attached washroom (Boys only) - ₹1,30,000</option>
+                                <option value="Hostel with shared washroom (With Food)">Hostel with shared washroom</option>
+                                <option value="Hostel with attached washroom (Boys only, With Food)">Hostel with attached washroom (Boys only)</option>
                             </optgroup>
                         </select>
                     </div>
@@ -450,8 +450,8 @@
                         <label style="font-size: 0.85rem; color: #64748b; margin-bottom: 5px; display: block;">Select Transport Route:</label>
                         <select id="transportRoute" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1;" onchange="document.getElementById('otherTransportWrapper').style.display = (this.value === 'Others') ? 'block' : 'none'">
                             <option value="">-- Choose Route --</option>
-                            <option value="Chintamani Route">Chintamani Route - ₹45,000</option>
-                            <option value="Other Routes">Other Routes - ₹40,000</option>
+                            <option value="Chintamani Route">Chintamani Route</option>
+                            <option value="Other Routes">Other Routes</option>
                             <option value="Others">Others</option>
                         </select>
                         <div id="otherTransportWrapper" style="display:none; margin-top:10px;">
@@ -725,6 +725,7 @@
                 { name: "BE Mechanical Engineering", fee: 125000 }
             ];
 
+            // Fee data display removed from enquiry form
             let coursePreferencesOrder = [];
 
             window.handleCourseCheckbox = function(cb, index) {
@@ -783,7 +784,6 @@
                         <span id="badge-${index}" style="display: none; align-items: center; justify-content: center; padding: 0 8px; height: 24px; background: #3b82f6; color: white; border-radius: 12px; font-size: 0.75rem; font-weight: bold; white-space: nowrap;"></span>
                         <div style="font-weight: 500; color: #334155; flex-grow: 1; display:flex; justify-content:space-between; align-items: center;">
                             <span>${c.name}</span>
-                            <span style="font-weight:600; font-size: 0.95rem;">₹${c.fee.toLocaleString()}</span>
                         </div>
                     `;
                     container.appendChild(row);
@@ -792,14 +792,9 @@
 
             initializeCoursePreferences();
 
-            const hostelFees = {
-                "Hostel with shared washroom (With Food)": 110000,
-                "Hostel with attached washroom (Boys only, With Food)": 130000
-            };
-            const transportFees = {
-                "Chintamani Route": 45000,
-                "Other Routes": 40000
-            };
+            // Fees removed from enquiry form
+            const hostelFees = {};
+            const transportFees = {};
 
             window.handleExclusion = function(type) {
                 const hostel = document.getElementById('hostelRequired');
@@ -886,8 +881,7 @@
                         comedk_rank: document.getElementById('comedk').value || null,
                         cet_rank: document.getElementById('cetRank').value || null,
                         course_preferences: coursePreferencesOrder.map(courseName => {
-                            const matched = courseData.find(c => c.name === courseName);
-                            return { course: courseName, fee: matched ? matched.fee : null };
+                            return { course: courseName, fee: null };
                         }),
                         hostel_required: document.getElementById('hostelRequired').checked,
                         transport_required: document.getElementById('transportRequired').checked,

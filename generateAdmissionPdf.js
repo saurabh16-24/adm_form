@@ -150,7 +150,6 @@ function generateAdmissionPdf(data) {
     doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5);
     doc.text('#', M + 5, thY + 4);
     doc.text('Course Name', M + 30, thY + 4);
-    doc.text('Fee (Agreed)', M + 300, thY + 4);
     y += 15;
 
     const top4 = data._top_prefs || [];
@@ -162,7 +161,6 @@ function generateAdmissionPdf(data) {
         doc.fillColor(BLACK).font('Helvetica').fontSize(8.5);
         doc.text(String(i + 1), M + 5, rowY + 4);
         doc.text(typeof p === 'object' ? String(p.course) : (p || '—'), M + 30, rowY + 4);
-        doc.text(typeof p === 'object' && p.fee ? '₹' + p.fee : '—', M + 300, rowY + 4);
         doc.rect(M, rowY, CW, 15).stroke();
         y += 15;
     }

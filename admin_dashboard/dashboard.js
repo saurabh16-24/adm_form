@@ -5,6 +5,7 @@
 const API = window.location.origin; // same origin
 let allEnquiries  = [];
 let allAdmissions = [];
+let allManagement = [];
 
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -27,6 +28,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (data.success) {
       sessionStorage.setItem('admin_token', data.token);
+      sessionStorage.setItem('admin_name', data.username || 'Admin');
       showDashboard();
     } else {
       errEl.textContent = data.message || 'Invalid credentials';
@@ -61,6 +63,7 @@ function showDashboard() {
   loadOverview();
   updateClock();
   setInterval(updateClock, 1000);
+  updateLastRefreshInfo();
 }
 
 // Auto-login if token exists
@@ -75,6 +78,22 @@ function updateClock() {
     hour: '2-digit', minute: '2-digit', second: '2-digit'
   });
 }
+
+function updateLastRefreshInfo() {
+  const nameEl = document.getElementById('updater-name');
+  const dateEl = document.getElementById('update-date');
+  const timeEl = document.getElementById('update-time');
+  
+  if (!nameEl || !dateEl || !timeEl) return;
+  
+  const now = new Date();
+  const savedName = sessionStorage.getItem('admin_name') || 'Admin';
+  
+  nameEl.textContent = savedName;
+  dateEl.textContent = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  timeEl.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
 
 // ═══════════════ SIDEBAR / TABS ═══════════════
 function toggleSidebar() {
@@ -101,7 +120,8 @@ function switchTab(tab) {
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
     enquiries:  ['Enquiries', 'Manage student enquiry records'],
-    admissions: ['Admissions', 'Manage admission applications']
+    admissions: ['Admissions', 'Manage admission applications'],
+    management: ['Management', 'Generated Management Admission Forms']
   };
   document.getElementById('page-title').textContent = titles[tab][0];
   document.getElementById('page-subtitle').textContent = titles[tab][1];
@@ -109,6 +129,7 @@ function switchTab(tab) {
   if (tab === 'overview')   loadOverview();
   if (tab === 'enquiries')  loadEnquiries();
   if (tab === 'admissions') loadAdmissions();
+  if (tab === 'management') loadManagementStatus();
 }
 
 // ═══════════════ API HELPERS ═══════════════
@@ -135,12 +156,18 @@ async function loadOverview() {
     const stats = await apiFetch('/api/admin/stats');
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
+    // Update a placeholder if it exists or just keep code clean
+    if (document.getElementById('stat-management')) {
+      document.getElementById('stat-management').textContent = stats.total_management || 0;
+    }
     document.getElementById('stat-today-enq').textContent    = stats.today_enquiries    || 0;
+
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
 
     // Recent tables
     renderRecentTable('recent-enquiries-body', stats.recent_enquiries || [], 'enquiry');
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
+    updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
 
@@ -179,6 +206,7 @@ async function loadEnquiries() {
     const data = await apiFetch('/api/admin/enquiries');
     allEnquiries = data.rows || [];
     renderEnquiries(allEnquiries);
+    updateLastRefreshInfo();
   } catch (err) { console.error('Enquiries load error:', err); }
 }
 
@@ -681,6 +709,13 @@ async function printEnquiry(id) {
           <div class="office-box"></div>
         </div>
 
+        <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Parent/Guardian Signature</div>
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Office Signature</div>
+        </div>
+
+
       </body>
       </html>
     `;
@@ -704,6 +739,7 @@ async function loadAdmissions() {
     const data = await apiFetch('/api/admin/admissions');
     allAdmissions = data.rows || [];
     renderAdmissions(allAdmissions);
+    updateLastRefreshInfo();
   } catch (err) { console.error('Admissions load error:', err); }
 }
 
@@ -729,7 +765,8 @@ function renderAdmissions(rows) {
     <td>${formatDate(r.application_date)}</td>
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
-      <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Application"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      <button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>
       <button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`).join('');
@@ -771,9 +808,14 @@ async function viewAdmission(id) {
       <div style="display:flex; align-items:center; gap:12px; width:100%;">
         <span class="material-icons-round" style="color:var(--accent);">assignment</span>
         <span>Admission #${r.id} — ${r.student_name}</span>
-        <button class="btn btn-print" style="margin-left:auto; padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="printAdmission(${r.id})">
-          <span class="material-icons-round" style="font-size:16px;">print</span> Print
-        </button>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="printAdmission(${r.id})">
+            <span class="material-icons-round" style="font-size:16px;">print</span> Print Confirmation
+          </button>
+          <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px; background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})">
+            <span class="material-icons-round" style="font-size:16px;">description</span> Management Form
+          </button>
+        </div>
       </div>`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
@@ -961,13 +1003,20 @@ async function printAdmission(id) {
               <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
               <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
             </div>
-            <div class="sign-area">
-              <div class="sign-placeholder">
-                ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
+            <div style="display:flex; gap: 40px;">
+              <div class="sign-area">
+                <div class="sign-placeholder">
+                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
+                </div>
+                <span class="sign-label">Candidate Signature</span>
               </div>
-              <span class="sign-label">Candidate Signature</span>
+              <div class="sign-area">
+                <div class="sign-placeholder"></div>
+                <span class="sign-label">Parent/Guardian Signature</span>
+              </div>
             </div>
           </div>
+
         </div>
 
       </body>
@@ -977,6 +1026,367 @@ async function printAdmission(id) {
     performHiddenPrint(html);
 
   } catch (err) { alert('Failed to generate print view'); console.error(err); }
+}
+
+async function openManagementFormEditor(id) {
+  try {
+    const data = await apiFetch(`/api/admin/admission/${id}`);
+    const r = data.row;
+
+    // Helper to format values
+    const val = (v) => (v === null || v === undefined || v === '') ? '' : v;
+    
+    // Calculate default annual fee
+    let defaultFee = 0;
+    try {
+      const prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
+      const match = prefs.find(p => (typeof p === 'object' ? p.course : p) === r.course_preference);
+      if (match && typeof match === 'object' && match.fee) {
+        defaultFee = parseFloat(match.fee);
+      }
+    } catch(e) {}
+
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/');
+    const currentYear = new Date().getFullYear();
+    const nextYear = currentYear + 1;
+    const yearBoxes = (currentYear.toString().slice(-2) + nextYear.toString().slice(-2)).split('');
+
+    document.getElementById('modal-title').textContent = 'Full Management Form Editor';
+    document.getElementById('modal-body').innerHTML = `
+      <style>
+        .editor-form { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000; padding: 10px; max-height: 75vh; overflow-y: auto; }
+        .editor-form table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1.5px solid #000; }
+        .editor-form td { border: 1px solid #000; padding: 4px 8px; vertical-align: middle; }
+        .editor-form .label { background: #f1f5f9; font-weight: 700; width: 25%; font-size: 11px; }
+        .editor-form input { width: 100%; border: none; padding: 4px; font-weight: 700; font-size: 11.5px; background: transparent; outline: none; }
+        .editor-form input:focus { background: #eef2ff; }
+        .editor-form .section-header { text-align: center; border: 2px solid #000; padding: 4px; font-weight: 800; margin-bottom: 10px; background: #e2e8f0; text-transform: uppercase; }
+        .editor-form .meta-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 700; font-size: 11px; }
+        .editor-form .meta-input { border: 1.5px solid #000; padding: 2px 8px; min-width: 60px; font-weight: 800; }
+        .entrance-table th { background: #f1f5f9; font-size: 10px; border: 1px solid #000; padding: 4px; }
+        .action-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid #e2e8f0; padding-top: 15px; margin-top: 15px; }
+        .btn-save-print { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .btn-save-print:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .btn-cancel { background: #f1f5f9; color: #475569; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700; }
+      </style>
+
+      <div class="editor-form">
+        <div class="section-header">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+
+        
+        <div class="meta-row">
+          <div>App No: <input type="text" id="ed-app-no" value="${r.application_number}" class="meta-input" style="width:140px; display:inline-block;"></div>
+          <div>Academic Year: 20<input type="text" id="ed-y1" value="${yearBoxes[0]}${yearBoxes[1]}" class="meta-input" style="width:40px; display:inline-block;">-20<input type="text" id="ed-y2" value="${yearBoxes[2]}${yearBoxes[3]}" class="meta-input" style="width:40px; display:inline-block;"></div>
+          <div>Date: <input type="text" id="ed-date" value="${today}" class="meta-input" style="width:100px; display:inline-block;"></div>
+        </div>
+
+        <table>
+          <tr>
+            <td class="label">Student Name</td><td><input type="text" id="ed-student-name" value="${r.student_name}"></td>
+            <td class="label">Phone No.</td><td><input type="text" id="ed-mobile" value="${r.student_mobile || r.mobile_no}"></td>
+          </tr>
+          <tr>
+            <td class="label">Father/Mother Name</td><td><input type="text" id="ed-parent-name" value="${r.father_name || r.mother_name}"></td>
+            <td class="label">Parent Mobile</td><td><input type="text" id="ed-parent-mobile" value="${r.father_mobile || r.mother_mobile}"></td>
+          </tr>
+          <tr>
+            <td class="label">Branch Selected</td><td><input type="text" id="ed-branch" value="${r.course_preference}"></td>
+            <td class="label">State</td><td><input type="text" id="ed-state" value="${r.perm_state || 'Karnataka'}"></td>
+          </tr>
+          <tr>
+            <td class="label">Email</td><td><input type="text" id="ed-email" value="${r.student_email || r.email}"></td>
+            <td class="label">Actual Fee (₹)</td><td><input type="number" id="ed-actual-fee" value="${defaultFee}" oninput="updateEdNet()"></td>
+          </tr>
+          <tr>
+            <td class="label">PUC/+2 Board</td><td><input type="text" id="ed-board" value="${r.education_board || r.twelfth_board}"></td>
+            <td class="label">Scholarship (₹)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
+          </tr>
+          <tr>
+            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value="${r.payment_utr_no ? '1250' : ''}"></td>
+            <td class="label">Net Payable (₹)</td><td><input type="text" id="ed-net-payable" value="${defaultFee.toLocaleString()}" readonly style="color:#10b981;"></td>
+          </tr>
+        </table>
+
+        <div style="font-weight: 700; font-size: 11px; margin-bottom: 5px;">Reference: <input type="text" id="ed-reference" value="${val(r.reference || r.admin_remarks || 'Direct')}" style="border-bottom: 1px solid #000; width: 300px; display:inline-block;"></div>
+        
+        <table class="entrance-table">
+          <thead>
+            <tr>
+              <th>Physics + Math + ... %</th>
+              <th>Overall %</th>
+              <th>CET Rank</th>
+              <th>COMEDK Rank</th>
+              <th>JEE Rank</th>
+              <th>CET No</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="text" id="ed-pcm" value="${val(r.pcm_percentage || '')}"></td>
+              <td><input type="text" id="ed-total" value="${val(r.twelfth_percentage || r.total_percentage || '')}"></td>
+              <td><input type="text" id="ed-cet" value="${val(r.cet_rank || '')}"></td>
+              <td><input type="text" id="ed-comedk" value="${val(r.comedk_rank || '')}"></td>
+              <td><input type="text" id="ed-jee" value="${val(r.jee_rank || '')}"></td>
+              <td><input type="text" id="ed-cet-no" value=""></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="border: 1px solid #000; padding: 5px; margin-bottom: 10px;">
+          <div style="font-weight: 800; font-size: 10px;">Address:</div>
+          <textarea id="ed-address" style="width:100%; border:none; font-weight:700; font-size:11px; outline:none; font-family:inherit; resize:none;" rows="2">${val([r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', ')) || val([r.address_line1, r.address_line2, r.address_city, r.address_state, r.address_pincode].filter(Boolean).join(', '))}</textarea>
+        </div>
+
+        <div style="border: 1px solid #000; padding: 5px; margin-bottom: 5px;">
+          <div style="font-weight: 800; font-size: 10px;">Remarks:</div>
+          <input type="text" id="ed-remarks" value="">
+        </div>
+
+        <div class="action-footer">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-save-print" onclick="saveAndPrintManagementForm(${r.id})">
+            <span class="material-icons-round">print</span>
+            SAVE RECORD & GENERATE PRINT
+          </button>
+        </div>
+      </div>
+    `;
+
+
+    
+    window.updateEdNet = () => {
+      const actual = parseFloat(document.getElementById('ed-actual-fee').value) || 0;
+      const scholarship = parseFloat(document.getElementById('ed-scholarship').value) || 0;
+      document.getElementById('ed-net-payable').value = (actual - scholarship).toLocaleString();
+    };
+
+    document.getElementById('detail-modal').classList.add('open');
+  } catch (err) { alert('Failed to open management editor'); console.error(err); }
+}
+
+async function finalPrintManagementForm() {
+  try {
+    const get = (id) => document.getElementById(id)?.value || '';
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Management Form - ${get('ed-student-name')}</title>
+        <style>
+          @page { size: A4; margin: 8mm 12mm; }
+          * { box-sizing: border-box; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
+          
+          /* ───── NEW OFFICIAL HEADER ───── */
+          .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
+          
+          .header-left-wrap {
+            background: #000;
+            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%);
+            flex: 1.4;
+            padding-right: 3px; /* This creates the black slanted line */
+          }
+          
+          .header-left { 
+            background: #cbd5e1; 
+            padding: 10px 30px 10px 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            height: 100%;
+            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); 
+          }
+          .header-left img { height: 65px; width: auto; }
+          .college-info { line-height: 1.1; }
+          .college-name { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+          .college-name span { font-weight: 400; font-size: 14px; margin-left: 10px; border-left: 2px solid #94a3b8; padding-left: 10px; display: inline-block; vertical-align: middle; }
+          .sub-name { font-size: 11px; font-weight: 800; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; }
+          .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
+
+          .header-right { 
+            flex: 1; 
+            padding: 8px 0 8px 15px; 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #334155; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+          }
+          .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
+          .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
+          .contact-label { width: 45px; font-weight: 700; color: #64748b; }
+          .contact-sep { width: 10px; text-align: center; }
+
+          /* ─────────────────────────────── */
+
+          .form-title { text-align: center; background: #fff; padding: 4px; font-size: 14px; font-weight: 810; border: 2px solid #000; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.8px; }
+          
+          .meta-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; align-items: center; width: 100%; }
+          .box-input { border: 1.5px solid #000; padding: 2px 8px; display: inline-block; min-width: 100px; background: #fff; }
+          .year-boxes { display: inline-flex; align-items: center; gap: 2px; }
+          .year-boxes span { border: 1.5px solid #000; padding: 0px 4px; font-family: monospace; font-size: 11px; font-weight: 800; min-width: 16px; text-align: center; }
+
+          table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1.5px solid #000; table-layout: fixed; }
+          th, td { border: 1.2px solid #000; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
+          .label { font-weight: 700; width: 28%; background: #f8fafc; font-size: 10px; }
+          .value { width: 22%; font-weight: 800; font-size: 10.5px; }
+
+          .entrance-table th { background: #f8fafc; font-size: 8.5px; padding: 3px; text-align: center; font-weight: 800; line-height: 1.1; height: 28px; }
+          .entrance-table td { text-align: center; padding: 3px; height: 24px; font-weight: 800; }
+
+          .section-table { margin-bottom: 12px; }
+          .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
+          .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
+
+          .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+          .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+          .guidelines ol { padding-left: 15px; margin: 0; }
+          .guidelines li { margin-bottom: 2px; }
+
+          .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
+          .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
+
+          @media print {
+            body { -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+
+        <div class="official-header">
+          <div class="header-left-wrap">
+            <div class="header-left">
+              <img src="${window.location.origin}/image copy 2.png" alt="SVCE Logo">
+              <div class="college-info">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
+                  <div style="width:2.5px; height:35px; background:#475569;"></div>
+                  <div style="line-height: 1.1;">
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
+                  </div>
+                </div>
+                <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <table class="contact-table">
+              <tr><td class="contact-label">Phone</td><td class="contact-sep">:</td><td>+91 9916775988, +91 9740202345</td></tr>
+              <tr><td class="contact-label">Website</td><td class="contact-sep">:</td><td>https://svcengg.edu.in/</td></tr>
+              <tr><td class="contact-label">Email ID</td><td class="contact-sep">:</td><td>admissions@svceengg.edu.in</td></tr>
+              <tr><td class="contact-label" style="vertical-align:top">Address</td><td class="contact-sep" style="vertical-align:top">:</td><td>Kempegowda International Airport Road,<br>Vidya Nagar, Bengaluru - 562 157<br>Karnataka State</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="form-title">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+
+
+        <div class="meta-info">
+          <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:170px">${get('ed-app-no')}</span></div>
+          <div style="flex: 1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${get('ed-y1')[0] || ''}</span><span>${get('ed-y1')[1] || ''}</span></span> 20<span class="year-boxes"><span>${get('ed-y2')[0] || ''}</span><span>${get('ed-y2')[1] || ''}</span></span></div>
+          <div style="flex: 0.8; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${get('ed-date')}</span></div>
+        </div>
+
+        <table>
+          <tr>
+            <td class="label">Student Name</td><td class="value">${get('ed-student-name')}</td>
+            <td class="label">Student Phone No.</td><td class="value">${get('ed-mobile')}</td>
+          </tr>
+          <tr>
+            <td class="label">Father/Mother/Guardian Name</td><td class="value">${get('ed-parent-name')}</td>
+            <td class="label">Father /Mother/Guardian Mobile No.</td><td class="value">${get('ed-parent-mobile')}</td>
+          </tr>
+          <tr>
+            <td class="label">Branch Selected</td><td class="value">${get('ed-branch')}</td>
+            <td class="label">State</td><td class="value">${get('ed-state')}</td>
+          </tr>
+          <tr>
+            <td class="label">Email</td><td class="value">${get('ed-email')}</td>
+            <td class="label">Actual Annual Fee</td><td class="value">₹ ${parseFloat(get('ed-actual-fee')).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td class="label">PUC/+2 Exam Board</td><td class="value">${get('ed-board')}</td>
+            <td class="label">Scholarship Attained</td><td class="value">₹ ${parseFloat(get('ed-scholarship')).toLocaleString()}</td>
+          </tr>
+          <tr>
+            <td class="label">Seat Booking Fee</td><td class="value">₹ ${parseFloat(get('ed-booking-fee') || 0).toLocaleString()}</td>
+            <td class="label">Net Payable Fee</td><td class="value" style="background: #f8fafc;">₹ ${get('ed-net-payable')}</td>
+          </tr>
+        </table>
+
+        <div style="font-weight: 800; margin-bottom: 6px; font-size:11px;">Reference Name: <span style="text-decoration: underline;">${get('ed-reference')}</span></div>
+
+        <table class="entrance-table">
+          <thead>
+            <tr>
+              <th style="width:20%">Physics + Math +<br>Chem/Bio/CS %</th>
+              <th style="width:20%">Overall PUC/+2<br>/Inter %</th>
+              <th style="width:15%">CET Rank</th>
+              <th style="width:15%">COMEDK Rank</th>
+              <th style="width:15%">JEE Rank</th>
+              <th style="width:15%">CET No</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>${get('ed-pcm')}${get('ed-pcm') ? '%' : ''}</td>
+              <td>${get('ed-total') || '—'}${get('ed-total') ? '%' : ''}</td>
+              <td>${get('ed-cet') || '—'}</td>
+              <td>${get('ed-comedk') || '—'}</td>
+              <td>${get('ed-jee') || '—'}</td>
+              <td>${get('ed-cet-no') || '—'}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table class="section-table">
+          <tr>
+            <td>
+              <span class="section-label">Student Address:</span>
+              <div style="font-weight: 800; line-height: 1.4; font-size:10px; padding-top:4px;">
+                ${get('ed-address').replace(/\n/g, '<br>')}
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <table class="section-table" style="height: 135px;">
+          <tr>
+            <td>
+              <span class="section-label">Remarks:</span>
+              <div style="font-style: italic; color: #333; font-weight: 800; padding-top:4px;">${get('ed-remarks')}</div>
+            </td>
+          </tr>
+        </table>
+
+        <div class="guidelines" style="margin-bottom:15px;">
+          <h3>Admissions Guidelines:</h3>
+          <ol>
+            <li>Hostel, transportation, skill development, exam and uniform fees are not included in net fees.</li>
+            <li>Blocked seat amount is non-refundable in case of cancellation for any reason.</li>
+            <li>Final admission confirmed upon submission of original documents and university approval.</li>
+            <li>Entrance exam appearance (KCET/COMEDK/JEE) is mandatory for eligibility else approval fees are applicable.</li>
+          </ol>
+        </div>
+
+
+        <div class="footer-signs">
+          <div class="sign-col">Student Signature</div>
+          <div class="sign-col">Parents/Guardian Signature</div>
+          <div class="sign-col">Admissions Team Signature</div>
+        </div>
+
+      </body>
+      </html>
+    `;
+    
+    performHiddenPrint(html);
+
+  } catch (err) { alert('Failed to generate management form'); console.error(err); }
 }
 async function deleteAdmission(id) {
   if (!confirm(`Delete admission #${id}? This cannot be undone.`)) return;
@@ -1070,3 +1480,319 @@ document.getElementById('detail-modal').addEventListener('click', (e) => {
 
 // Close modal on Esc
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+function showToast(msg, type = 'success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span class="material-icons-round">${type === 'success' ? 'check_circle' : 'error'}</span>
+    <span>${msg}</span>
+  `;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 3000);
+}
+
+// ═══════════════ MANAGEMENT FUNCTIONS ═══════════════
+
+
+async function loadManagementStatus() {
+  try {
+    const data = await apiFetch('/api/admin/management-forms');
+    allManagement = data.rows || [];
+    renderManagement(allManagement);
+    updateLastRefreshInfo();
+  } catch (err) { console.error('Management load error:', err); }
+}
+
+function renderManagement(rows) {
+  const tbody = document.getElementById('management-body');
+  document.getElementById('mgt-count').textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''}`;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="material-icons-round">description</span><p>No management forms saved</p></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.id}</td>
+    <td>${r.app_no || '—'}</td>
+    <td>${r.student_name || '—'}</td>
+    <td>${r.branch || '—'}</td>
+    <td>${r.academic_year || '—'}</td>
+    <td>₹${parseFloat(r.net_payable).toLocaleString()}</td>
+    <td>
+      <div style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">${formatDate(r.updated_at)}</div>
+      <div style="font-size:0.7rem; color:var(--text-muted);">by ${r.updated_by || 'Admin'}</div>
+    </td>
+    <td class="action-btns">
+      <button class="btn btn-view" onclick="viewManagementForm(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
+      <button class="btn btn-print" onclick="printManagementFromRecord(${r.id})" title="Print Form"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      <button class="btn btn-delete" onclick="deleteManagement(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+    </td>
+  </tr>`).join('');
+}
+
+async function saveAndPrintManagementForm(admissionId) {
+  const get = (id) => document.getElementById(id).value;
+  try {
+    const payload = {
+      admission_id: admissionId,
+      app_no: get('ed-app-no'),
+      academic_year: get('ed-y1') + '-' + get('ed-y2'),
+      form_date: get('ed-date'),
+      student_name: get('ed-student-name'),
+      mobile_no: get('ed-mobile'),
+      parent_name: get('ed-parent-name'),
+      parent_mobile: get('ed-parent-mobile'),
+      branch: get('ed-branch'),
+      state: get('ed-state'),
+      email: get('ed-email'),
+      actual_fee: parseFloat(get('ed-actual-fee')) || 0,
+      scholarship: parseFloat(get('ed-scholarship')) || 0,
+      booking_fee: get('ed-booking-fee'),
+      net_payable: parseFloat(get('ed-net-payable').replace(/,/g, '')) || 0,
+      reference_name: get('ed-reference'),
+      pcm_percentage: get('ed-pcm'),
+      overall_percentage: get('ed-total'),
+      cet_rank: get('ed-cet'),
+      comedk_rank: get('ed-comedk'),
+      jee_rank: get('ed-jee'),
+      cet_no: get('ed-cet-no'),
+      updated_by: sessionStorage.getItem('admin_name') || 'Admin'
+    };
+
+    const res = await apiFetch('/api/admin/management-form', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    if (res.success) {
+      showToast('Record saved to Dashboard');
+      // Now print
+      finalPrintManagementForm();
+      closeModal();
+      if (allManagement.length > 0) loadManagementStatus(); // refresh if tab active
+    }
+  } catch (err) {
+    alert('Failed to save record: ' + err.message);
+  }
+}
+
+async function viewManagementForm(id) {
+    try {
+        const data = await apiFetch(`/api/admin/management-form/${id}`);
+        const r = data.row;
+        document.getElementById('modal-title').textContent = `Management Form #${r.id} — ${r.student_name}`;
+        document.getElementById('modal-body').innerHTML = `
+          <div class="detail-grid">
+            ${detailItem('App No.', r.app_no)}
+            ${detailItem('Academic Year', r.academic_year)}
+            ${detailItem('Form Date', r.form_date)}
+            ${detailItem('Student Name', r.student_name)}
+            ${detailItem('Branch', r.branch)}
+            ${detailItem('Actual Fee', '₹' + parseFloat(r.actual_fee).toLocaleString())}
+            ${detailItem('Scholarship', '₹' + parseFloat(r.scholarship).toLocaleString())}
+            ${detailItem('Net Payable', '₹' + parseFloat(r.net_payable).toLocaleString())}
+            ${detailItem('Booking Fee', r.booking_fee)}
+            ${detailItem('Reference', r.reference_name)}
+            ${detailItem('PCM %', r.pcm_percentage)}
+            ${detailItem('Overall %', r.overall_percentage)}
+            ${detailItem('CET Rank', r.cet_rank)}
+            ${detailItem('COMEDK Rank', r.comedk_rank)}
+            ${detailItem('JEE Rank', r.jee_rank)}
+            ${detailItem('CET No', r.cet_no)}
+            ${detailHeader('Audit Log')}
+            ${detailItem('Created At', formatDate(r.created_at))}
+            ${detailItem('Last Updated', `${formatDate(r.updated_at)} by ${r.updated_by || 'Admin'}`, true)}
+          </div>`;
+        document.getElementById('detail-modal').classList.add('open');
+    } catch (err) { alert('Failed to load management details'); }
+}
+
+async function printManagementFromRecord(id) {
+    try {
+        const mData = await apiFetch(`/api/admin/management-form/${id}`);
+        const m = mData.row;
+        // We need original admission for secondary info if not in mgt_form
+        const admData = await apiFetch(`/api/admin/admission/${m.admission_id}`);
+        const r = admData.row;
+        
+        const yr = (m.academic_year || '24-25').split('-');
+        const y1 = yr[0] || '';
+        const y2 = yr[1] || '';
+
+        const val = (v) => v || '—';
+
+        const html = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Management Form - ${m.student_name}</title>
+            <style>
+              @page { size: A4; margin: 8mm 12mm; }
+              * { box-sizing: border-box; }
+              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
+              
+              .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
+              .header-left-wrap { background: #000; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); flex: 1.4; padding-right: 3px; }
+              .header-left { background: #cbd5e1; padding: 10px 30px 10px 15px; display: flex; align-items: center; gap: 15px; height: 100%; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); }
+              .header-left img { height: 65px; width: auto; }
+              .college-info { line-height: 1.1; }
+              .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
+              .header-right { flex: 1; padding: 8px 0 8px 15px; font-size: 9px; font-weight: 600; color: #334155; display: flex; flex-direction: column; justify-content: center; }
+              .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
+              .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
+              .contact-label { width: 45px; font-weight: 700; color: #64748b; }
+              .contact-sep { width: 10px; text-align: center; }
+
+              .form-title { text-align: center; background: #fff; padding: 4px; font-size: 14px; font-weight: 810; border: 2px solid #000; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.8px; }
+              .meta-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; align-items: center; width: 100%; }
+              .box-input { border: 1.5px solid #000; padding: 2px 8px; display: inline-block; min-width: 100px; background: #fff; }
+              .year-boxes { display: inline-flex; align-items: center; gap: 2px; }
+              .year-boxes span { border: 1.5px solid #000; padding: 0px 4px; font-family: monospace; font-size: 11px; font-weight: 800; min-width: 16px; text-align: center; }
+
+              table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1.5px solid #000; table-layout: fixed; }
+              th, td { border: 1.2px solid #000; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
+              .label { font-weight: 700; width: 28%; background: #f8fafc; font-size: 10px; }
+              .value { width: 22%; font-weight: 800; font-size: 10.5px; }
+
+              .entrance-table th { background: #f8fafc; font-size: 8.5px; padding: 3px; text-align: center; font-weight: 800; line-height: 1.1; height: 28px; }
+              .entrance-table td { text-align: center; padding: 3px; height: 24px; font-weight: 800; }
+              
+              .section-table { margin-bottom: 12px; }
+              .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
+              .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
+
+              .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+              .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+              .guidelines ol { padding-left: 15px; margin: 0; }
+              .guidelines li { margin-bottom: 2px; }
+
+              .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
+              .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
+
+              @media print { body { -webkit-print-color-adjust: exact; } }
+            </style>
+          </head>
+          <body>
+            <div class="official-header">
+              <div class="header-left-wrap"><div class="header-left">
+                <img src="${window.location.origin}/image copy 2.png" alt="SVCE Logo">
+                <div class="college-info">
+                  <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
+                    <div style="width:2.5px; height:35px; background:#475569;"></div>
+                    <div style="line-height: 1.1;">
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
+                    </div>
+                  </div>
+                  <div class="estd">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
+                </div>
+              </div></div>
+              <div class="header-right">
+                <table class="contact-table">
+                  <tr><td class="contact-label">Phone</td><td class="contact-sep">:</td><td>+91 9916775988, +91 9740202345</td></tr>
+                  <tr><td class="contact-label">Website</td><td class="contact-sep">:</td><td>https://svcengg.edu.in/</td></tr>
+                  <tr><td class="contact-label">Email ID</td><td class="contact-sep">:</td><td>admissions@svceengg.edu.in</td></tr>
+                  <tr><td class="contact-label" style="vertical-align:top">Address</td><td class="contact-sep" style="vertical-align:top">:</td><td>Kempegowda Int. Airport Road, Vidya Nagar, B'luru - 562157</td></tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="form-title">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+
+
+            <div class="meta-info">
+              <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:170px">${val(m.app_no)}</span></div>
+              <div style="flex: 1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${(y1[0]||'')}</span><span>${(y1[1]||'')}</span></span> 20<span class="year-boxes"><span>${(y2[0]||'')}</span><span>${(y2[1]||'')}</span></span></div>
+              <div style="flex: 0.8; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${val(m.form_date)}</span></div>
+            </div>
+
+            <table>
+              <tr><td class="label">Student Name</td><td class="value">${val(m.student_name)}</td><td class="label">Phone No.</td><td class="value">${val(m.mobile_no)}</td></tr>
+              <tr><td class="label">Parent/Guardian</td><td class="value">${val(m.parent_name)}</td><td class="label">Parent Mobile</td><td class="value">${val(m.parent_mobile)}</td></tr>
+              <tr><td class="label">Branch Selected</td><td class="val">${val(m.branch)}</td><td class="label">State</td><td class="val">${val(m.state)}</td></tr>
+              <tr><td class="label">Email</td><td class="val">${val(m.email)}</td><td class="label">Actual Annual Fee</td><td class="val">₹ ${parseFloat(m.actual_fee || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">PUC/+2 Board</td><td class="val">${val(r.education_board || r.twelfth_board)}</td><td class="label">Scholarship</td><td class="val">₹ ${parseFloat(m.scholarship || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">Booking Fee</td><td class="val">₹ ${parseFloat(m.booking_fee || 0).toLocaleString()}</td><td class="label">Net Payable</td><td class="val" style="background:#f8fafc">₹ ${parseFloat(m.net_payable || 0).toLocaleString()}</td></tr>
+            </table>
+
+            <div style="font-weight: 800; margin-bottom: 6px; font-size:11px;">Reference Name: <span style="text-decoration: underline;">${val(m.reference_name)}</span></div>
+
+            <table class="entrance-table">
+              <thead><tr><th>Physics + Math +<br>Chem/Bio/CS %</th><th>Overall %</th><th>CET Rank</th><th>COMEDK Rank</th><th>JEE Rank</th><th>CET No</th></tr></thead>
+              <tbody><tr>
+                <td>${val(m.pcm_percentage)}${m.pcm_percentage?'%':''}</td>
+                <td>${val(m.overall_percentage)}${m.overall_percentage?'%':''}</td>
+                <td>${val(m.cet_rank)}</td><td>${val(m.comedk_rank)}</td><td>${val(m.jee_rank)}</td><td>${val(m.cet_no)}</td>
+              </tr></tbody>
+            </table>
+
+            <table class="section-table"><tr><td><span class="section-label">Student Address:</span><div style="font-weight: 800; line-height: 1.4; font-size:10px; padding-top:4px;">
+              ${val([r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', ')) || val([r.address_line1, r.address_line2, r.address_city, r.address_state, r.address_pincode].filter(Boolean).join(', '))}
+            </div></td></tr></table>
+
+            <table class="section-table" style="height: 120px;"><tr><td><span class="section-label">Remarks:</span><div style="font-style:italic; font-weight:800; padding-top:4px;">${val(r.admin_remarks)}</div></td></tr></table>
+
+            <div class="guidelines">
+              <h3>Admissions Guidelines:</h3>
+              <ol>
+                <li>Hostel, transportation, skill development, exam and uniform fees are not included in net fees.</li>
+                <li>Blocked seat amount is non-refundable in case of cancellation for any reason.</li>
+                <li>Final admission confirmed upon submission of original documents and university approval.</li>
+                <li>Entrance exam appearance (KCET/COMEDK/JEE) is mandatory for eligibility else approval fees are applicable.</li>
+              </ol>
+            </div>
+
+
+            <div class="footer-signs">
+              <div class="sign-col">Student Signature</div>
+              <div class="sign-col">Parents/Guardian Signature</div>
+              <div class="sign-col">Admissions Team Signature</div>
+            </div>
+            <div style="margin-top:15px; font-size:8px; color:#94a3b8; text-align:center;">* Re-printed from Dashboard record #${m.id} on ${new Date().toLocaleString()}</div>
+          </body>
+          </html>
+        `;
+        performHiddenPrint(html);
+    } catch (err) { alert('Print failed: ' + err.message); console.error(err); }
+}
+
+
+async function deleteManagement(id) {
+  if (!confirm(`Delete management record #${id}?`)) return;
+  try {
+    await apiFetch(`/api/admin/management-form/${id}`, { method: 'DELETE' });
+    loadManagementStatus();
+  } catch (err) { alert('Delete failed'); }
+}
+
+function filterManagement() {
+  const search = document.getElementById('mgt-search').value.toLowerCase();
+  let filtered = allManagement;
+  if (search) {
+    filtered = filtered.filter(r => 
+      (r.student_name || '').toLowerCase().includes(search) ||
+      (r.app_no || '').toLowerCase().includes(search) ||
+      (r.branch || '').toLowerCase().includes(search)
+    );
+  }
+  renderManagement(filtered);
+}
+
+function exportManagementCSV() {
+  const headers = ['ID','App No','Name','Branch','Ac. Year','Actual Fee','Scholarship','Net Payable','Date'];
+  const rows = allManagement.map(r => [
+    r.id, r.app_no, r.student_name, r.branch, r.academic_year,
+    r.actual_fee, r.scholarship, r.net_payable, formatDate(r.created_at)
+  ]);
+  downloadCSV('management_export.csv', headers, rows);
+}
+

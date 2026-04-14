@@ -579,7 +579,72 @@ app.get('/api/enquiry/:id', async (req, res) => {
     ];
     for (const sql of alterCols) await pool.query(sql);
 
+    // Create management_forms table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS management_forms (
+        id SERIAL PRIMARY KEY,
+        admission_id INTEGER REFERENCES admissions(id) ON DELETE CASCADE,
+        app_no VARCHAR(50),
+        academic_year VARCHAR(50),
+        form_date VARCHAR(50),
+        student_name VARCHAR(150),
+        mobile_no VARCHAR(20),
+        parent_name VARCHAR(150),
+        parent_mobile VARCHAR(20),
+        branch VARCHAR(150),
+        state VARCHAR(100),
+        email VARCHAR(150),
+        actual_fee NUMERIC(15,2),
+        scholarship NUMERIC(15,2),
+        booking_fee VARCHAR(50),
+        net_payable NUMERIC(15,2),
+        reference_name VARCHAR(200),
+        pcm_percentage VARCHAR(20),
+        overall_percentage VARCHAR(20),
+        cet_rank VARCHAR(50),
+        comedk_rank VARCHAR(50),
+        jee_rank VARCHAR(50),
+        cet_no VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_by VARCHAR(100)
+      );
+    `);
+
+
+
+    // Alter management_forms to add audit columns if missing
+    const mgtAlter = [
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS admission_id INTEGER REFERENCES admissions(id) ON DELETE CASCADE",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS app_no VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS academic_year VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS form_date VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS student_name VARCHAR(150)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS mobile_no VARCHAR(20)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS parent_name VARCHAR(150)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS parent_mobile VARCHAR(20)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS branch VARCHAR(150)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS state VARCHAR(100)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS email VARCHAR(150)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS actual_fee NUMERIC(15,2)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS scholarship NUMERIC(15,2)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS booking_fee VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS net_payable NUMERIC(15,2)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS reference_name VARCHAR(200)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS pcm_percentage VARCHAR(20)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS overall_percentage VARCHAR(20)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS cet_rank VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS comedk_rank VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS jee_rank VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS cet_no VARCHAR(50)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100)"
+    ];
+    for (const sql of mgtAlter) await pool.query(sql);
+
+
     // Also ensure enquiries has sequence_number + structured address columns
+
     const enquiryAlterCols = [
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS sequence_number INTEGER",
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS address_line1 TEXT",
@@ -799,7 +864,7 @@ function adminAuth(req, res, next) {
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true, token: generateToken() });
+    return res.json({ success: true, token: generateToken(), username: ADMIN_USER });
   }
   res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
@@ -810,6 +875,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     const totalEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries');
     const totalAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions');
+    const totalMgt  = await pool.query('SELECT COUNT(*) AS c FROM management_forms');
     const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
     const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
     const recentEnq = await pool.query('SELECT * FROM enquiries  ORDER BY id DESC LIMIT 5');
@@ -817,11 +883,13 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
       total_admissions:  parseInt(totalAdm.rows[0].c),
+      total_management:  parseInt(totalMgt.rows[0].c),
       today_enquiries:   parseInt(todayEnq.rows[0].c),
       today_admissions:  parseInt(todayAdm.rows[0].c),
       recent_enquiries:  recentEnq.rows,
       recent_admissions: recentAdm.rows
     });
+
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -874,7 +942,7 @@ app.get('/api/admin/admissions', adminAuth, async (req, res) => {
 app.get('/api/admin/admission/:id', adminAuth, async (req, res) => {
   try {
     const query = `
-      SELECT a.*, e.course_preferences, e.admin_remarks
+      SELECT a.*, e.*, a.id as id
       FROM admissions a
       LEFT JOIN enquiries e ON a.enquiry_id = e.id
       WHERE a.id = $1
@@ -892,6 +960,83 @@ app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+// Management Forms
+app.post('/api/admin/management-form', adminAuth, async (req, res) => {
+  try {
+    const v = req.body;
+    const updater = v.updated_by || 'Admin';
+    
+    // Check if exists
+    const existing = await pool.query('SELECT id FROM management_forms WHERE admission_id = $1', [v.admission_id]);
+    
+    if (existing.rows.length > 0) {
+      // Update
+      const query = `
+        UPDATE management_forms SET
+          app_no = $1, academic_year = $2, form_date = $3, student_name = $4, mobile_no = $5,
+          parent_name = $6, parent_mobile = $7, branch = $8, state = $9, email = $10,
+          actual_fee = $11, scholarship = $12, booking_fee = $13, net_payable = $14, reference_name = $15,
+          pcm_percentage = $16, overall_percentage = $17, cet_rank = $18, comedk_rank = $19, jee_rank = $20, cet_no = $21,
+          updated_at = CURRENT_TIMESTAMP, updated_by = $22
+        WHERE admission_id = $23
+        RETURNING id
+      `;
+      const result = await pool.query(query, [
+        v.app_no, v.academic_year, v.form_date, v.student_name, v.mobile_no,
+        v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
+        v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
+        v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
+        updater, v.admission_id
+      ]);
+      res.json({ success: true, id: result.rows[0].id, type: 'update' });
+    } else {
+      // Insert
+      const query = `
+        INSERT INTO management_forms (
+          admission_id, app_no, academic_year, form_date, student_name, mobile_no,
+          parent_name, parent_mobile, branch, state, email,
+          actual_fee, scholarship, booking_fee, net_payable, reference_name,
+          pcm_percentage, overall_percentage, cet_rank, comedk_rank, jee_rank, cet_no,
+          updated_by
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+        RETURNING id
+      `;
+      const result = await pool.query(query, [
+        v.admission_id, v.app_no, v.academic_year, v.form_date, v.student_name, v.mobile_no,
+        v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
+        v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
+        v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
+        updater
+      ]);
+      res.json({ success: true, id: result.rows[0].id, type: 'insert' });
+    }
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+
+app.get('/api/admin/management-forms', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM management_forms ORDER BY id DESC');
+    res.json({ rows: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM management_forms WHERE id = $1', [req.params.id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.delete('/api/admin/management-form/:id', adminAuth, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM management_forms WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
