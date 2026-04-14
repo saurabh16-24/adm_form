@@ -489,28 +489,36 @@ async function viewEnquiry(id) {
 }
 
 function performHiddenPrint(htmlContent) {
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'absolute';
-  iframe.style.width = '1px';
-  iframe.style.height = '1px';
-  iframe.style.left = '-9999px';
-  iframe.style.top = '-9999px';
-  iframe.style.border = '0';
-  document.body.appendChild(iframe);
+  // Use window.open() instead of a hidden iframe.
+  // Iframes are blocked by browsers on deployed servers due to X-Frame-Options
+  // and Content-Security-Policy headers set by Nginx, causing "Print Failed".
+  const printWin = window.open('', '_blank', 'width=900,height=700');
+  if (!printWin) {
+    alert('Print popup was blocked. Please allow popups for this site and try again.');
+    return;
+  }
 
-  iframe.contentWindow.document.open();
-  iframe.contentWindow.document.write(htmlContent);
-  iframe.contentWindow.document.close();
+  printWin.document.open();
+  printWin.document.write(htmlContent);
+  printWin.document.close();
 
-  // Give the browser time to render and fetch images
+  // Wait for all images and styles to load before printing
+  printWin.onload = function () {
+    setTimeout(() => {
+      printWin.focus();
+      printWin.print();
+      // Auto-close the print window after the dialog is dismissed
+      printWin.onafterprint = function () { printWin.close(); };
+    }, 500);
+  };
+
+  // Fallback: if onload doesn't fire (e.g. some browsers), trigger after 1.5s
   setTimeout(() => {
-    iframe.contentWindow.focus();
-    try {
-      iframe.contentWindow.print();
-    } catch(e) { console.error('Print crash avoided', e); }
-    // Clean up
-    setTimeout(() => { document.body.removeChild(iframe); }, 1500);
-  }, 1000);
+    if (!printWin.closed) {
+      printWin.focus();
+      try { printWin.print(); } catch(e) { console.error('Print error:', e); }
+    }
+  }, 1500);
 }
 
 async function printEnquiry(id) {
