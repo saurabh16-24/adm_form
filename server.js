@@ -1065,7 +1065,16 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
     const val = (v) => (v === null || v === undefined || v === '') ? 'N/A' : v;
     const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' - ') : 'N/A';
     const fmtTime = (d) => d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'N/A';
-    const origin = `${req.protocol}://${req.get('host')}`;
+    const origin = req.headers.origin || (`${req.protocol}://${req.get('host')}`);
+    
+    // Generate inline base64 QR code to prevent Chrome print spooler crashes
+    // Chrome often fails to print when it encounters external <img> URLs.
+    const formUrl = origin + '/admission-form/?enquiry_id=' + r.id;
+    const qrDataUrl = await QRCode.toDataURL(formUrl, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#1e3a5f', light: '#ffffff' }
+    });
 
     const hostelText = r.hostel_required
       ? ((r.hostel_type || '').replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (₹' + (r.hostel_fee || 0) + ')')
@@ -1117,7 +1126,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
   <div class="top-bar">
     <div class="qr-box">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
+      <img src="${qrDataUrl}" alt="Admission QR">
       <p>Scan for Application Form</p>
     </div>
     <div class="meta-right-block">
