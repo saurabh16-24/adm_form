@@ -1091,125 +1091,191 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background:#fff"></td>` : ''}
       </tr>`).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
 
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <title>Enquiry Form - ${r.student_name}</title>
-  <style>
-    @page { size: A4; margin: 4mm 8mm; }
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; }
-    .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
-    .qr-box { text-align: center; }
-    .qr-box img { width: 80px; height: 80px; }
-    .qr-box p { margin: 1px 0 0; font-size: 6.5px; color: #555; font-weight: 600; }
-    .meta-right-block { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding-top: 5px; }
-    .token-val { font-weight: 700; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 1px; }
-    .date-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-weight: 600; font-size: 11px; }
-    .created-at { font-size: 7.5px; color: #888; margin-top: 1px; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-    th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; }
-    .section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10.5px; }
-    .label { font-weight: 500; width: 18%; background: #f8fafc; }
-    .value { font-weight: 500; width: 32%; }
-    .sub-section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; }
-    .pref-table td { border-top: none; border-bottom: 1px solid #64748b; }
-    .pref-num { width: 25px; text-align: center; }
-    .office-section { margin-top: 5px; }
-    .office-title { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; padding: 4px 8px; border: 1px solid #64748b; border-bottom: none; }
-    .office-box { border: 1px solid #64748b; min-height: 210px; }
-    .print-hint { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 14px; margin-bottom: 10px; font-size: 12px; color: #1d4ed8; text-align: center; }
-    @media print { .print-hint { display: none; } body { -webkit-print-color-adjust: exact; } }
-  </style>
-</head>
-<body>
-  <div class="print-hint">📄 Press <strong>Ctrl+P</strong> (or Cmd+P on Mac) to print this form.</div>
+    const html = `      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Enquiry Form - ${r.student_name}</title>
+        <style>
+          @page { size: A4; margin: 4mm 8mm; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; }
+          
+          .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+          .qr-box { text-align: center; }
+          .qr-box img { width: 80px; height: 80px; }
+          .qr-box p { margin: 1px 0 0; font-size: 6.5px; color: #555; font-weight: 600; }
+          .meta-right-block { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; padding-top: 5px; }
+          .token-val { font-weight: 700; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 1px; }
+          .date-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-weight: 600; font-size: 11px; }
+          .created-at { font-size: 7.5px; color: #888; margin-top: 1px; }
+          .logo-banner { height: 45px; margin-bottom: 2px; }
 
-  <div class="top-bar">
-    <div class="qr-box">
-      <img src="${qrDataUrl}" alt="Admission QR">
-      <p>Scan for Application Form</p>
-    </div>
-    <div class="meta-right-block">
-      <div>Token No.: <span class="token-val">${val(r.token_number)}</span></div>
-      <div>Date: <span class="date-box">${fmtDate(r.enquiry_date)}</span></div>
-      <div class="created-at">Created At: ${fmtTime(r.created_at)}</div>
-    </div>
-  </div>
+          table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+          th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; }
+          .section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10.5px; }
+          .label { font-weight: 500; width: 18%; background: #f8fafc; }
+          .value { font-weight: 500; width: 32%; }
+          .sub-section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; }
+          
+          .pref-table td { border-top: none; border-bottom: 1px solid #64748b; }
+          .pref-num { width: 25px; text-align: center; }
 
-  <div style="text-align:center; margin:-5px 0 8px; border-bottom:2px solid #1e3a5f; padding-bottom:5px;">
-    <div style="font-weight:800; font-size:13.5px; color:#1e3a5f; letter-spacing:0.5px;">ADMISSION ENQUIRY FORM</div>
-    <div style="font-size:11px; font-weight:700; color:#3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
-  </div>
+          .office-section { margin-top: 5px; }
+          .office-title { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; padding: 4px 8px; border: 1px solid #64748b; border-bottom: none; }
+          .office-box { border: 1px solid #64748b; min-height: 210px; }
 
-  <table>
-    <tr class="section-header"><th colspan="2">Personal Details</th><th colspan="2">Contact Details</th></tr>
-    <tr><td class="label">Full Name:</td><td class="value">${val(r.student_name)}</td><td class="label">Student Email:</td><td class="value">${val(r.student_email)}</td></tr>
-    <tr><td class="label">Father's Name:</td><td class="value">${val(r.father_name)}</td><td class="label">Student Mobile:</td><td class="value">${val(r.student_mobile)}</td></tr>
-    <tr><td class="label">Mother's Name:</td><td class="value">${val(r.mother_name)}</td><td class="label">Education Qualification:</td><td class="value">${val(r.education_qualification)}</td></tr>
-    <tr>
-      <td class="label" rowspan="3">Address:</td>
-      <td class="value" rowspan="3">${val(r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '))}</td>
-      <td class="label">Father's Mobile:</td><td class="value">${val(r.father_mobile)}</td>
-    </tr>
-    <tr><td class="label">Mother's Mobile:</td><td class="value">${val(r.mother_mobile)}</td></tr>
-    <tr><td class="label">Reference:</td><td class="value">${val(r.reference)}</td></tr>
-  </table>
+          @media print {
+            .no-print { display: none; }
+            body { -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
 
-  <table>
-    <tr class="sub-section-header"><th colspan="6">11th Standard Details (For AP/Telangana students only)</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;"><th>Physics (Theory)</th><th>Chemistry (Theory)</th><th>Mathematics (A)</th><th>Mathematics (B)</th><th>English</th><th>Language</th></tr>
-    <tr><td>${val(r.physics_11)}</td><td>${val(r.chemistry_11)}</td><td>${val(r.math_11a)}</td><td>${val(r.math_11b)}</td><td>${val(r.english_11)}</td><td>${val(r.language_11)}</td></tr>
-  </table>
+        <div class="top-bar">
+          <div class="qr-box">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(window.location.origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
+            <p>Scan for Application Form</p>
+          </div>
+          <div class="meta-right-block">
+            <div>Token No.: <span class="token-val">${val(r.token_number)}</span></div>
+            <div>Date: <span class="date-box">${fmtDate(r.enquiry_date)}</span></div>
+            <div class="created-at">Created At: ${fmtTime(r.created_at)}</div>
+          </div>
+        </div>
 
-  <table>
-    <tr class="sub-section-header"><th colspan="6">12th Standard Details</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;"><th>Physics (Theory)</th><th>Physics (Practical)</th><th>Chemistry (Theory)</th><th>Chemistry (Practical)</th><th>Mathematics (A)</th><th>Mathematics (B)</th></tr>
-    <tr><td>${val(r.physics_marks)}</td><td>${val(r.physics_12_prac)}</td><td>${val(r.chemistry_marks)}</td><td>${val(r.chemistry_12_prac)}</td><td>${val(r.math_12a)}</td><td>${val(r.math_12b)}</td></tr>
-  </table>
+        <div style="text-align: center; margin: -5px 0 8px; border-bottom: 2px solid #1e3a5f; padding-bottom: 5px;">
+           <div style="font-weight: 800; font-size: 13.5px; color: #1e3a5f; letter-spacing: 0.5px;">ADMISSION ENQUIRY FORM</div>
+           <div style="font-size: 11px; font-weight: 700; color: #3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
+        </div>
 
-  <table>
-    <tr class="sub-section-header"><th colspan="3">Kannada, English, Other Subjects (Optional)</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;"><th>Kannada/Telugu/Sanskrit</th><th>English</th><th>Other Subject Marks</th></tr>
-    <tr><td>${val(r.kannada_12)}</td><td>${val(r.english_12)}</td><td>${val(r.other_12)}</td></tr>
-  </table>
+        <table>
+          <tr class="section-header">
+            <th colspan="2">Personal Details</th>
+            <th colspan="2">Contact Details</th>
+          </tr>
+          <tr>
+            <td class="label">Full Name:</td><td class="value">${val(r.student_name)}</td>
+            <td class="label">Student Email:</td><td class="value">${val(r.student_email)}</td>
+          </tr>
+          <tr>
+            <td class="label">Father's Name:</td><td class="value">${val(r.father_name)}</td>
+            <td class="label">Student Mobile:</td><td class="value">${val(r.student_mobile)}</td>
+          </tr>
+          <tr>
+            <td class="label">Mother's Name:</td><td class="value">${val(r.mother_name)}</td>
+            <td class="label">Education Qualification:</td><td class="value">${val(r.education_qualification)}</td>
+          </tr>
+          <tr>
+            <td class="label" rowspan="3">Address:</td><td class="value" rowspan="3">${val(r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '))}</td>
+            <td class="label">Father's Mobile:</td><td class="value">${val(r.father_mobile)}</td>
+          </tr>
+          <tr>
+            <td class="label">Mother's Mobile:</td><td class="value">${val(r.mother_mobile)}</td>
+          </tr>
+          <tr>
+            <td class="label">Reference:</td><td class="value">${val(r.reference)}</td>
+          </tr>
+        </table>
 
-  <table>
-    <tr class="sub-section-header"><th colspan="2">Percentage Details</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;"><th>Total Percentage</th><th>PCM Percentage</th></tr>
-    <tr><td>${val(r.total_percentage)}${r.total_percentage ? '%' : ''}</td><td>${val(r.pcm_percentage)}${r.pcm_percentage ? '%' : ''}</td></tr>
-  </table>
+        <table>
+          <tr class="sub-section-header">
+            <th colspan="6">11th Standard Details (For AP/Telangana students only)</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th>Physics (Theory)</th><th>Chemistry (Theory)</th><th>Mathematics (A)</th><th>Mathematics (B)</th><th>English</th><th>Language</th>
+          </tr>
+          <tr>
+            <td>${val(r.physics_11)}</td><td>${val(r.chemistry_11)}</td><td>${val(r.math_11a)}</td><td>${val(r.math_11b)}</td><td>${val(r.english_11)}</td><td>${val(r.language_11)}</td>
+          </tr>
+        </table>
 
-  <table>
-    <tr class="sub-section-header"><th colspan="3">Entrance Exam Detail</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;"><th>JEE Rank</th><th>COMEDK Rank</th><th>CET Rank</th></tr>
-    <tr><td>${val(r.jee_rank)}</td><td>${val(r.comedk_rank)}</td><td>${val(r.cet_rank)}</td></tr>
-  </table>
+        <table>
+          <tr class="sub-section-header">
+            <th colspan="6">12th Standard Details (For AP/Telangana students only)</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th>Physics (Theory)</th><th>Physics (Practical)</th><th>Chemistry (Theory)</th><th>Chemistry (Practical)</th><th>Mathematics (A)</th><th>Mathematics (B)</th>
+          </tr>
+          <tr>
+            <td>${val(r.physics_marks)}</td><td>${val(r.physics_12_prac)}</td><td>${val(r.chemistry_marks)}</td><td>${val(r.chemistry_12_prac)}</td><td>${val(r.math_12a)}</td><td>${val(r.math_12b)}</td>
+          </tr>
+        </table>
 
-  <table class="pref-table">
-    <tr class="sub-section-header"><th colspan="4">Course Preference Order &amp; Fees</th></tr>
-    <tr style="background:#f8fafc; font-weight:600;">
-      <th style="width:25px; text-align:center;">#</th><th>Course Name</th><th style="width:80px;">Fee (Agreed)</th><th style="width:150px;">Remarks</th>
-    </tr>
-    ${prefsRows}
-    <tr style="background:#f8fafc; font-weight:700; font-size:10px;">
-      <td style="text-align:right; padding:4px; border-right:none;">Hostel:</td>
-      <td style="padding:4px; border-left:none; border-right:none;">${hostelText}</td>
-      <td colspan="2" style="padding:4px; border-left:none;"><span style="font-weight:700">Transport:</span> ${transportText}</td>
-    </tr>
-  </table>
+        <table>
+          <tr class="sub-section-header">
+            <th colspan="3">Kannada, English, Other Subjects (Optional)</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th>Kannada/Telugu/Sanskrit</th><th>English</th><th>Other Subject Marks</th>
+          </tr>
+          <tr>
+            <td>${val(r.kannada_12)}</td><td>${val(r.english_12)}</td><td>${val(r.other_12)}</td>
+          </tr>
+        </table>
 
-  <div class="office-section">
-    <div class="office-title">For Office Work</div>
-    <div class="office-box"></div>
-  </div>
+        <table>
+          <tr class="sub-section-header">
+            <th colspan="2">Percentage Details</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th>Total Percentage</th><th>PCM Percentage</th>
+          </tr>
+          <tr>
+            <td>${val(r.total_percentage)}${r.total_percentage ? '%' : ''}</td><td>${val(r.pcm_percentage)}${r.pcm_percentage ? '%' : ''}</td>
+          </tr>
+        </table>
 
-  <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
-    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
-    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Parent/Guardian Signature</div>
-    <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Office Signature</div>
-  </div>
-</body>
-</html>`;
+        <table>
+          <tr class="sub-section-header">
+            <th colspan="3">Entrance Exam Detail</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th>JEE Rank</th><th>COMEDK Rank</th><th>CET Rank</th>
+          </tr>
+          <tr>
+            <td>${val(r.jee_rank)}</td><td>${val(r.comedk_rank)}</td><td>${val(r.cet_rank)}</td>
+          </tr>
+        </table>
+
+        <table class="pref-table">
+          <tr class="sub-section-header">
+            <th colspan="4">Course Preference Order & Fees</th>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 600;">
+            <th style="width: 25px; text-align: center;">#</th>
+            <th>Course Name</th>
+            <th style="width: 80px;">Fee (Agreed)</th>
+            <th style="width: 150px;">Remarks</th>
+          </tr>
+          ${prefsArray.map((p, i) => `
+            <tr>
+              <td class="pref-num">${i + 1}.</td>
+              <td style="white-space: normal;">${typeof p === 'object' ? p.course : p}</td>
+              <td style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+              ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background: #fff;"></td>` : ''}
+            </tr>
+          `).join('') || '<tr><td colspan="4">No preferences selected</td></tr>'}
+          <tr style="background: #f8fafc; font-weight: 700; font-size: 10px;">
+            <td style="text-align: right; padding: 4px; border-right: none;">Hostel:</td>
+            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? (r.hostel_type.replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (₹' + r.hostel_fee + ')') : 'NO'}</td>
+            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? (r.transport_route + ' (₹' + r.transport_fee + ')') : 'NO'}</td>
+          </tr>
+        </table>
+
+        <div class="office-section">
+          <div class="office-title">For Office Work</div>
+          <div class="office-box"></div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Parent/Guardian Signature</div>
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Office Signature</div>
+        </div>
+
+
+      </body>
+      </html>`;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
@@ -1292,156 +1358,160 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     // Inject print script automatically
     const printHint = "<div style='text-align:center; padding:10px; background:#eff6ff; margin-bottom:10px; font-weight:bold; color:#1d4ed8;' class='no-print'>📄 Press Ctrl+P (or Cmd+P) to print this form.</div>";
 
-    const html = `                     . l o g o - i m g   {   h e i g h t :   6 0 p x ;   w i d t h :   a u t o ;   o b j e c t - f i t :   c o n t a i n ;   }  
-                      
-                     . h e a d e r - m e t a - a r e a   {   p o s i t i o n :   r e l a t i v e ;   m i n - h e i g h t :   1 1 5 p x ;   d i s p l a y :   f l e x ;   a l i g n - i t e m s :   c e n t e r ;   j u s t i f y - c o n t e n t :   c e n t e r ;   m a r g i n - b o t t o m :   8 p x ;   }  
-                     . p h o t o - b o x   {   p o s i t i o n :   a b s o l u t e ;   r i g h t :   0 ;   t o p :   0 ;   w i d t h :   9 0 p x ;   h e i g h t :   1 1 0 p x ;   b o r d e r :   1 . 2 p x   s o l i d   # 1 1 1 ;   d i s p l a y :   f l e x ;   a l i g n - i t e m s :   c e n t e r ;   j u s t i f y - c o n t e n t :   c e n t e r ;   o v e r f l o w :   h i d d e n ;   b a c k g r o u n d :   # f f f ;   z - i n d e x :   1 0 ;   }  
-                     . p h o t o - b o x   i m g   {   w i d t h :   1 0 0 % ;   h e i g h t :   1 0 0 % ;   o b j e c t - f i t :   c o v e r ;   }  
-                      
-                     . a p p - m e t a   {   t e x t - a l i g n :   c e n t e r ;   }  
-                     . a p p - m e t a   p   {   m a r g i n :   3 p x   0 ;   f o n t - w e i g h t :   7 0 0 ;   t e x t - t r a n s f o r m :   u p p e r c a s e ;   l e t t e r - s p a c i n g :   0 . 5 p x ;   c o l o r :   # 5 5 5 ;   }  
-                      
-                     t a b l e   {   w i d t h :   1 0 0 % ;   b o r d e r - c o l l a p s e :   c o l l a p s e ;   m a r g i n - b o t t o m :   1 2 p x ;   b o r d e r :   1 p x   s o l i d   # 1 1 1 ;   t a b l e - l a y o u t :   f i x e d ;   }  
-                     t h ,   t d   {   b o r d e r :   1 p x   s o l i d   # 1 1 1 ;   p a d d i n g :   5 p x   8 p x ;   t e x t - a l i g n :   l e f t ;   w o r d - w r a p :   b r e a k - w o r d ;   }  
-                     . s e c t i o n - h e a d e r   {   b a c k g r o u n d :   # b a e 6 f d   ! i m p o r t a n t ;   f o n t - w e i g h t :   8 0 0 ;   f o n t - s i z e :   1 0 . 5 p x ;   t e x t - t r a n s f o r m :   u p p e r c a s e ;   c o l o r :   # 0 0 0 ;   l e t t e r - s p a c i n g :   0 . 5 p x ;   f o n t - f a m i l y :   s a n s - s e r i f ;   }  
-                     . l a b e l   {   f o n t - w e i g h t :   6 0 0 ;   b a c k g r o u n d :   # f 8 f a f c ;   c o l o r :   # 4 7 5 5 6 9 ;   f o n t - s i z e :   9 . 5 p x ;   w i d t h :   3 5 % ;   }  
-                     . v a l u e   {   f o n t - w e i g h t :   7 0 0 ;   c o l o r :   # 0 0 0 ;   f o n t - s i z e :   1 0 p x ;   }  
-                      
-                     . g r i d - h e a d   {   b a c k g r o u n d :   # f 8 f a f c ;   f o n t - w e i g h t :   7 0 0 ;   f o n t - s i z e :   9 . 5 p x ;   t e x t - t r a n s f o r m :   u p p e r c a s e ;   c o l o r :   # 6 4 7 4 8 b ;   }  
-                     . d e c l a r a t i o n   {   f o n t - s i z e :   9 . 5 p x ;   t e x t - a l i g n :   j u s t i f y ;   p a d d i n g :   8 p x   1 2 p x ;   l i n e - h e i g h t :   1 . 5 ;   c o l o r :   # 2 2 2 ;   }  
-                      
-                     . f o o t e r   {   d i s p l a y :   f l e x ;   j u s t i f y - c o n t e n t :   s p a c e - b e t w e e n ;   a l i g n - i t e m s :   f l e x - e n d ;   m a r g i n - t o p :   2 0 p x ;   }  
-                     . s i g n - a r e a   {   t e x t - a l i g n :   c e n t e r ;   w i d t h :   2 0 0 p x ;   }  
-                     . s i g n - p l a c e h o l d e r   {   h e i g h t :   5 0 p x ;   m a r g i n - b o t t o m :   4 p x ;   d i s p l a y :   f l e x ;   a l i g n - i t e m s :   f l e x - e n d ;   j u s t i f y - c o n t e n t :   c e n t e r ;   }  
-                     . s i g n a t u r e - i m g   {   m a x - h e i g h t :   4 8 p x ;   m a x - w i d t h :   1 8 0 p x ;   o b j e c t - f i t :   c o n t a i n ;   }  
-                     . s i g n - l a b e l   {   f o n t - w e i g h t :   8 1 0 ;   f o n t - s i z e :   1 0 p x ;   b o r d e r - t o p :   1 . 5 p x   s o l i d   # 0 0 0 ;   p a d d i n g - t o p :   4 p x ;   d i s p l a y :   b l o c k ;   t e x t - t r a n s f o r m :   u p p e r c a s e ;   l e t t e r - s p a c i n g :   0 . 5 p x ;   }  
-                      
-                     @ m e d i a   p r i n t   {    
-                         . n o - p r i n t   {   d i s p l a y :   n o n e ;   }    
-                         t a b l e ,   t r   {   p a g e - b r e a k - i n s i d e :   a v o i d ;   }  
-                         b o d y   {   p r i n t - c o l o r - a d j u s t :   e x a c t ;   }  
-                     }  
-                 < / s t y l e >  
-             < / h e a d >  
-             < b o d y >  
-                 < d i v   c l a s s = " h e a d e r "   s t y l e = " m a r g i n - b o t t o m : 1 5 p x ; " >  
-                     < i m g   s r c = " $ { l o g o U r l } "   c l a s s = " l o g o - i m g " >  
-                 < / d i v >  
-  
-                 < d i v   c l a s s = " h e a d e r - m e t a - a r e a " >  
-                     < d i v   c l a s s = " p h o t o - b o x " >  
-                         $ { p h o t o U r l   ?   \` < i m g   s r c = " $ { p h o t o U r l } " > \`   :   ' < d i v   s t y l e = " f o n t - s i z e : 1 0 p x ;   c o l o r : # 9 9 9 ;   t e x t - a l i g n : c e n t e r ; " > A F F I X < b r > S T U D E N T < b r > P H O T O < / d i v > ' }  
-                     < / d i v >  
-  
-                     < d i v   c l a s s = " a p p - m e t a " >  
-                         < p   s t y l e = " f o n t - s i z e : 1 1 p x ;   c o l o r : # 1 e 4 0 a f ;   b o r d e r - b o t t o m :   1 . 5 p x   s o l i d   # b a e 6 f d ;   p a d d i n g - b o t t o m :   5 p x ;   d i s p l a y : i n l i n e - b l o c k ;   m a r g i n - b o t t o m : 1 2 p x ;   f o n t - w e i g h t : 8 0 0 ; " > A P P L I C A T I O N   F O R M   ( A C A D E M I C   Y E A R   $ { n e w   D a t e ( ) . g e t F u l l Y e a r ( ) } - $ { n e w   D a t e ( ) . g e t F u l l Y e a r ( )   +   1 } ) < / p >  
-                         < d i v   s t y l e = " f o n t - s i z e : 1 5 p x ;   f o n t - w e i g h t : 8 0 0 ;   m a r g i n - b o t t o m : 1 5 p x ; " > A p p l i c a t i o n   F o r m   N o :   < s p a n   s t y l e = " c o l o r : # 0 0 0 ; " > $ { r . a p p l i c a t i o n _ n u m b e r } < / s p a n > < / d i v >  
-                     < / d i v >  
-                 < / d i v >  
-  
-                 < t a b l e >  
-                     < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h   c o l s p a n = " 2 " > P e r s o n a l   D e t a i l s < / t h > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > N a m e < / t d > < t d   c l a s s = " v a l u e " > $ { r . t i t l e   | |   ' ' }   $ { r . s t u d e n t _ n a m e } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > M o b i l e   N o . < / t d > < t d   c l a s s = " v a l u e " > $ { r . m o b i l e _ n o } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > E m a i l   A d d r e s s < / t d > < t d   c l a s s = " v a l u e " > $ { r . e m a i l } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > D a t e   o f   B i r t h < / t d > < t d   c l a s s = " v a l u e " > $ { f o r m a t D a t e ( r . d a t e _ o f _ b i r t h ) } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > G e n d e r < / t d > < t d   c l a s s = " v a l u e " > $ { r . g e n d e r } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > A a d h a a r   N u m b e r < / t d > < t d   c l a s s = " v a l u e " > $ { r . a a d h a a r _ n o   | |   ' �� � ' } < / t d > < / t r >  
-                 < / t a b l e >  
-                 < t a b l e >  
-                     < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h   c o l s p a n = " 3 " > P r e f e r e n c e   D e t a i l s   ( F r o m   E n q u i r y ) < / t h > < / t r >  
-                     < t r   c l a s s = " g r i d - h e a d " >  
-                         < t h   s t y l e = " w i d t h :   2 5 p x ;   t e x t - a l i g n :   c e n t e r ; " > # < / t h >  
-                         < t h > C o u r s e   N a m e < / t h >  
-                         < t h   s t y l e = " w i d t h :   1 5 0 p x ; " > F e e   ( A g r e e d ) < / t h >  
-                     < / t r >  
-                     $ { p r e f s A r r a y . m a p ( ( p ,   i )   = >   \`  
-                         < t r >  
-                             < t d   s t y l e = " t e x t - a l i g n :   c e n t e r ;   f o n t - w e i g h t :   7 0 0 ; " > $ { i   +   1 } . < / t d >  
-                             < t d   c l a s s = " v a l u e " > $ { t y p e o f   p   = = =   ' o b j e c t '   ?   p . c o u r s e   :   p } < / t d >  
-                             < t d   c l a s s = " v a l u e "   s t y l e = " t e x t - a l i g n :   c e n t e r ; " > $ { t y p e o f   p   = = =   ' o b j e c t '   & &   p . f e e   ?   ' �� c%'   +   p . f e e   :   ' �� � ' } < / t d >  
-                         < / t r >  
-                     \` ) . j o i n ( ' ' ) }  
-                 < / t a b l e >  
-                 < t a b l e >  
-                     < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h   c o l s p a n = " 3 " > A d d r e s s   D e t a i l s < / t h > < / t r >  
-                     < t r > < t d   c o l s p a n = " 3 "   s t y l e = " f o n t - s i z e :   1 0 p x ;   f o n t - w e i g h t :   6 0 0 ;   b a c k g r o u n d :   # f 8 f a f c ;   p a d d i n g :   4 p x   8 p x ; " > P e r m a n e n t   A d d r e s s   S a m e   a s   C o m m u n i c a t i o n   A d d r e s s :   < s p a n   s t y l e = " f o n t - w e i g h t :   8 0 0 ;   c o l o r :   # 1 e 4 0 a f ; " > $ { r . s a m e _ a s _ c o m m   ?   ' Y e s '   :   ' N o ' } < / s p a n > < / t d > < / t r >  
-                     < t r   c l a s s = " g r i d - h e a d " > < t h   s t y l e = " w i d t h :   2 6 % ; " > F i e l d < / t h > < t h   s t y l e = " w i d t h :   3 7 % ; " > C o m m u n i c a t i o n   A d d r e s s < / t h > < t h   s t y l e = " w i d t h :   3 7 % ; " > P e r m a n e n t   A d d r e s s < / t h > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > A d d r e s s   L i n e   1 < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ a d d r e s s _ l i n e 1 } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ a d d r e s s _ l i n e 1   | |   r . c o m m _ a d d r e s s _ l i n e 1 } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > A d d r e s s   L i n e   2 < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ a d d r e s s _ l i n e 2   | |   ' �� � ' } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ a d d r e s s _ l i n e 2   | |   r . c o m m _ a d d r e s s _ l i n e 2   | |   ' �� � ' } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > C i t y < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ c i t y } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ c i t y   | |   r . c o m m _ c i t y } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > D i s t r i c t < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ d i s t r i c t   | |   ' �� � ' } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ d i s t r i c t   | |   r . c o m m _ d i s t r i c t   | |   ' �� � ' } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > S t a t e < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ s t a t e } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ s t a t e   | |   r . c o m m _ s t a t e } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > C o u n t r y < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ c o u n t r y   | |   ' I n d i a ' } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ c o u n t r y   | |   r . c o m m _ c o u n t r y   | |   ' I n d i a ' } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > P i n c o d e < / t d > < t d   c l a s s = " v a l u e " > $ { r . c o m m _ p i n c o d e } < / t d > < t d   c l a s s = " v a l u e " > $ { r . p e r m _ p i n c o d e   | |   r . c o m m _ p i n c o d e } < / t d > < / t r >  
-                 < / t a b l e >  
-                 < d i v   s t y l e = " p a g e - b r e a k - a f t e r :   a l w a y s ; " > < / d i v >  
-                 < t a b l e >  
-                     < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h   c o l s p a n = " 2 " > P a r e n t   D e t a i l s < / t h > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > F a t h e r   N a m e < / t d > < t d   c l a s s = " v a l u e " > $ { r . f a t h e r _ n a m e } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > F a t h e r ' s   M o b i l e   /   O c c u p a t i o n < / t d > < t d   c l a s s = " v a l u e " > $ { r . f a t h e r _ m o b i l e   | |   ' �� � ' }   /   $ { r . f a t h e r _ o c c u p a t i o n   | |   ' �� � ' } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > M o t h e r   N a m e < / t d > < t d   c l a s s = " v a l u e " > $ { r . m o t h e r _ n a m e } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > M o t h e r ' s   M o b i l e   /   O c c u p a t i o n < / t d > < t d   c l a s s = " v a l u e " > $ { r . m o t h e r _ m o b i l e   | |   ' �� � ' }   /   $ { r . m o t h e r _ o c c u p a t i o n   | |   ' �� � ' } < / t d > < / t r >  
-                 < / t a b l e >  
-                 < t a b l e >  
-                     < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h   c o l s p a n = " 2 " > E d u c a t i o n a l   D e t a i l s < / t h > < / t r >  
-                     < t r > < t d   c o l s p a n = " 2 "   c l a s s = " l a b e l "   s t y l e = " w i d t h : 1 0 0 % ;   b a c k g r o u n d : # f 8 f a f c ;   f o n t - w e i g h t : 7 0 0 ; " > Q u a l i f y i n g   M a r k s h e e t   N a m e :   < s p a n   s t y l e = " f o n t - w e i g h t : 8 0 0 ;   c o l o r : # 0 0 0 ; " > $ { r . c a n d i d a t e _ n a m e _ m a r k s h e e t } < / s p a n > < / t d > < / t r >  
-                     < t r   c l a s s = " g r i d - h e a d " > < t h > D e t a i l s < / t h > < t h > 1 2 t h   S t a n d a r d < / t h > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > I n s t i t u t i o n < / t d > < t d   c l a s s = " v a l u e " > $ { r . t w e l f t h _ i n s t i t u t i o n } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > B o a r d   /   U n i v e r s i t y < / t d > < t d   c l a s s = " v a l u e " > $ { r . t w e l f t h _ b o a r d } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > Y e a r   /   R e s u l t   S t a t u s < / t d > < t d   c l a s s = " v a l u e " > $ { r . t w e l f t h _ y e a r _ p a s s i n g }   /   $ { r . t w e l f t h _ r e s u l t _ s t a t u s   | |   ' �� � ' } < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > O b t a i n e d   P e r c e n t a g e   /   C G P A < / t d > < t d   c l a s s = " v a l u e " > $ { r . t w e l f t h _ p e r c e n t a g e   | |   ' �� � ' } % < / t d > < / t r >  
-                     < t r > < t d   c l a s s = " l a b e l " > E n t r a n c e   E x a m i n a t i o n ( s ) < / t d > < t d   c l a s s = " v a l u e " > $ { r . e n t r a n c e _ e x a m s   | |   ' N o n e   /   N o t   A p p l i c a b l e ' } < / t d > < / t r >  
-                 < / t a b l e >  
-  
-                 < d i v   s t y l e = " p a g e - b r e a k - i n s i d e :   a v o i d ; " >  
-                     < t a b l e >  
-                         < t r   c l a s s = " s e c t i o n - h e a d e r " > < t h > D e c l a r a t i o n < / t h > < / t r >  
-                         < t r >  
-                             < t d   c l a s s = " d e c l a r a t i o n " >  
-                                 < u l   s t y l e = " m a r g i n :   0 ;   p a d d i n g - l e f t :   1 . 2 r e m ;   l i n e - h e i g h t :   1 . 6 ; " >  
-                                     < l i   s t y l e = " m a r g i n - b o t t o m :   8 p x ; " > I   h e r e b y   d e c l a r e   t h a t   a l l   t h e   i n f o r m a t i o n   p r o v i d e d   b y   m e   i n   t h i s   a p p l i c a t i o n   f o r m   i s   t r u e ,   c o m p l e t e ,   a n d   c o r r e c t   t o   t h e   b e s t   o f   m y   k n o w l e d g e   a n d   b e l i e f .   I   u n d e r s t a n d   t h a t   i f   a n y   i n f o r m a t i o n   f u r n i s h e d   b y   m e   i s   f o u n d   t o   b e   f a l s e ,   i n c o r r e c t ,   i n c o m p l e t e ,   o r   m i s l e a d i n g   a t   a n y   s t a g e ,   m y   a p p l i c a t i o n   i s   l i a b l e   t o   b e   r e j e c t e d   o r   c a n c e l l e d   w i t h o u t   p r i o r   n o t i c e . < / l i >  
-                                     < l i   s t y l e = " m a r g i n - b o t t o m :   8 p x ; " > I   f u r t h e r   c o n f i r m   t h a t   I   h a v e   c a r e f u l l y   r e a d   a n d   u n d e r s t o o d   a l l   t h e   i n s t r u c t i o n s ,   e l i g i b i l i t y   c r i t e r i a ,   a n d   d e t a i l s   m e n t i o n e d   i n   t h e   a d m i s s i o n   n o t i f i c a t i o n   f o r   t h e   r e s p e c t i v e   p r o g r a m .   I   a g r e e   t o   a b i d e   b y   a l l   t h e   r u l e s   a n d   r e g u l a t i o n s   o f   t h e   C o l l e g e   ( S V C E ) ,   a s   a p p l i c a b l e   f r o m   t i m e   t o   t i m e . < / l i >  
-                                     < l i   s t y l e = " m a r g i n - b o t t o m :   8 p x ; " > I   h e r e b y   a u t h o r i z e   t h e   C o l l e g e   ( S V C E )   t o   u s e ,   p r o c e s s ,   s t o r e ,   o r   s h a r e   t h e   i n f o r m a t i o n   p r o v i d e d   b y   m e   f o r   a p p l i c a t i o n   p r o c e s s i n g ,   a c a d e m i c   r e c o r d s ,   a n d   c o m p l i a n c e   w i t h   s t a t u t o r y   o r   r e g u l a t o r y   a u t h o r i t i e s . < / l i >  
-                                     < l i   s t y l e = " m a r g i n - b o t t o m :   8 p x ; " > I   u n d e r s t a n d   t h a t   s u b m i s s i o n   o f   t h i s   a p p l i c a t i o n   d o e s   n o t   g u a r a n t e e   a d m i s s i o n ,   a n d   t h e   a l l o t m e n t   o f   t h e   s e l e c t e d / p r e f e r r e d   c o u r s e   i s   s t r i c t l y   s u b j e c t   t o   t h e   a v a i l a b i l i t y   o f   s e a t s   a n d   f u l f i l l m e n t   o f   e l i g i b i l i t y   c r i t e r i a . < / l i >  
-                                     < l i   s t y l e = " m a r g i n - b o t t o m :   8 p x ; " > I   u n d e r s t a n d   t h a t   t h i s   a p p l i c a t i o n   i s   v a l i d   o n l y   f o r   a   l i m i t e d   p e r i o d   a n d   i s   s u b j e c t   t o   s e a t   a v a i l a b i l i t y   a t   t h e   t i m e   o f   a d m i s s i o n . < / l i >  
-                                     < l i > I   a l s o   u n d e r s t a n d   t h a t   i n   c a s e   I   h a v e   n o t   a p p e a r e d   f o r   a n y   e n t r a n c e   e x a m i n a t i o n   s u c h   a s   C E T   /   C O M E D K   /   J E E   o r   e q u i v a l e n t ,   m y   a d m i s s i o n   ( i f   s e l e c t e d )   s h a l l   b e   s u b j e c t   t o   a p p r o v a l   f r o m   t h e   c o n c e r n e d   a u t h o r i t i e s   s u c h   a s   D T E   /   V T U   o r   a n y   o t h e r   r e g u l a t o r y   b o d y ,   a s   a p p l i c a b l e . < / l i >  
-                                 < / u l >  
-                             < / t d >  
-                         < / t r >  
-                     < / t a b l e >  
-  
-                     < d i v   c l a s s = " f o o t e r " >  
-                         < d i v   c l a s s = " f o o t e r - i n f o " >  
-                             < p   s t y l e = " f o n t - w e i g h t : 9 0 0 ;   f o n t - s i z e : 1 3 p x ;   c o l o r : # 1 e 3 a 8 a ; " > $ { r . s t u d e n t _ n a m e . t o U p p e r C a s e ( ) } < / p >  
-                             < p   s t y l e = " c o l o r : # 6 4 7 4 8 b ; " > G e n e r a t e d   O n :   $ { n e w   D a t e ( ) . t o L o c a l e S t r i n g ( ' e n - I N ' ) } < / p >  
-                             < p   s t y l e = " c o l o r : # 6 4 7 4 8 b ;   f o n t - s i z e : 1 0 p x ; " > S u b m i s s i o n   I D :   $ { r . i d }   |   T i m e s t a m p :   $ { n e w   D a t e ( r . a p p l i c a t i o n _ d a t e ) . t o L o c a l e S t r i n g ( ' e n - I N ' ) } < / p >  
-                         < / d i v >  
-                         < d i v   s t y l e = " d i s p l a y : f l e x ;   g a p :   4 0 p x ; " >  
-                             < d i v   c l a s s = " s i g n - a r e a " >  
-                                 < d i v   c l a s s = " s i g n - p l a c e h o l d e r " >  
-                                     $ { s i g n U r l   ?   \` < i m g   s r c = " $ { s i g n U r l } "   c l a s s = " s i g n a t u r e - i m g "   a l t = " C a n d i d a t e   S i g n a t u r e " > \`   :   r . s t u d e n t _ n a m e }  
-                                 < / d i v >  
-                                 < s p a n   c l a s s = " s i g n - l a b e l " > C a n d i d a t e   S i g n a t u r e < / s p a n >  
-                             < / d i v >  
-                             < d i v   c l a s s = " s i g n - a r e a " >  
-                                 < d i v   c l a s s = " s i g n - p l a c e h o l d e r " > < / d i v >  
-                                 < s p a n   c l a s s = " s i g n - l a b e l " > P a r e n t / G u a r d i a n   S i g n a t u r e < / s p a n >  
-                             < / d i v >  
-                         < / d i v >  
-                     < / d i v >  
-  
-                 < / d i v >  
-  
-             < / b o d y >  
-             < / h t m l >  
-         \` ;  
-          
-         p e r f o r m H i d d e n P r i n t ( h t m l ) ;  
-  
-     }   c a t c h   ( e r r )   {   a l e r t ( ' F a i l e d   t o   g e n e r a t e   p r i n t   v i e w ' ) ;   c o n s o l e . e r r o r ( e r r ) ;   }  
- }  
-  `;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Application Print - ${r.student_name}</title>
+        <style>
+          @page { size: A4; margin: 10mm 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 10.5px; line-height: 1.35; color: #111; }
+          
+          .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
+          .logo-img { height: 60px; width: auto; object-fit: contain; }
+          
+          .header-meta-area { position: relative; min-height: 115px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+          .photo-box { position: absolute; right: 0; top: 0; width: 90px; height: 110px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
+          .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+          
+          .app-meta { text-align: center; }
+          .app-meta p { margin: 3px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+          
+          table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #111; table-layout: fixed; }
+          th, td { border: 1px solid #111; padding: 5px 8px; text-align: left; word-wrap: break-word; }
+          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10.5px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
+          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9.5px; width: 35%; }
+          .value { font-weight: 700; color: #000; font-size: 10px; }
+          
+          .grid-head { background: #f8fafc; font-weight: 700; font-size: 9.5px; text-transform: uppercase; color: #64748b; }
+          .declaration { font-size: 9.5px; text-align: justify; padding: 8px 12px; line-height: 1.5; color: #222; }
+          
+          .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
+          .sign-area { text-align: center; width: 200px; }
+          .sign-placeholder { height: 50px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
+          .signature-img { max-height: 48px; max-width: 180px; object-fit: contain; }
+          .sign-label { font-weight: 810; font-size: 10px; border-top: 1.5px solid #000; padding-top: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+          
+          @media print { 
+            .no-print { display: none; } 
+            table, tr { page-break-inside: avoid; }
+            body { print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header" style="margin-bottom:15px;">
+          <img src="${logoUrl}" class="logo-img">
+        </div>
+
+        <div class="header-meta-area">
+          <div class="photo-box">
+            ${photoUrl ? `<img src="${photoUrl}">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
+          </div>
+
+          <div class="app-meta">
+            <p style="font-size:11px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 5px; display:inline-block; margin-bottom:12px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
+            <div style="font-size:15px; font-weight:800; margin-bottom:15px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
+          </div>
+        </div>
+
+        <table>
+          <tr class="section-header"><th colspan="2">Personal Details</th></tr>
+          <tr><td class="label">Name</td><td class="value">${r.title || ''} ${r.student_name}</td></tr>
+          <tr><td class="label">Mobile No.</td><td class="value">${r.mobile_no}</td></tr>
+          <tr><td class="label">Email Address</td><td class="value">${r.email}</td></tr>
+          <tr><td class="label">Date of Birth</td><td class="value">${formatDate(r.date_of_birth)}</td></tr>
+          <tr><td class="label">Gender</td><td class="value">${r.gender}</td></tr>
+          <tr><td class="label">Aadhaar Number</td><td class="value">${r.aadhaar_no || '—'}</td></tr>
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="3">Preference Details (From Enquiry)</th></tr>
+          <tr class="grid-head">
+            <th style="width: 25px; text-align: center;">#</th>
+            <th>Course Name</th>
+            <th style="width: 150px;">Fee (Agreed)</th>
+          </tr>
+          ${prefsArray.map((p, i) => `
+            <tr>
+              <td style="text-align: center; font-weight: 700;">${i + 1}.</td>
+              <td class="value">${typeof p === 'object' ? p.course : p}</td>
+              <td class="value" style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+            </tr>
+          `).join('')}
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="3">Address Details</th></tr>
+          <tr><td colspan="3" style="font-size: 10px; font-weight: 600; background: #f8fafc; padding: 4px 8px;">Permanent Address Same as Communication Address: <span style="font-weight: 800; color: #1e40af;">${r.same_as_comm ? 'Yes' : 'No'}</span></td></tr>
+          <tr class="grid-head"><th style="width: 26%;">Field</th><th style="width: 37%;">Communication Address</th><th style="width: 37%;">Permanent Address</th></tr>
+          <tr><td class="label">Address Line 1</td><td class="value">${r.comm_address_line1}</td><td class="value">${r.perm_address_line1 || r.comm_address_line1}</td></tr>
+          <tr><td class="label">Address Line 2</td><td class="value">${r.comm_address_line2 || '—'}</td><td class="value">${r.perm_address_line2 || r.comm_address_line2 || '—'}</td></tr>
+          <tr><td class="label">City</td><td class="value">${r.comm_city}</td><td class="value">${r.perm_city || r.comm_city}</td></tr>
+          <tr><td class="label">District</td><td class="value">${r.comm_district || '—'}</td><td class="value">${r.perm_district || r.comm_district || '—'}</td></tr>
+          <tr><td class="label">State</td><td class="value">${r.comm_state}</td><td class="value">${r.perm_state || r.comm_state}</td></tr>
+          <tr><td class="label">Country</td><td class="value">${r.comm_country || 'India'}</td><td class="value">${r.perm_country || r.comm_country || 'India'}</td></tr>
+          <tr><td class="label">Pincode</td><td class="value">${r.comm_pincode}</td><td class="value">${r.perm_pincode || r.comm_pincode}</td></tr>
+        </table>
+        <div style="page-break-after: always;"></div>
+        <table>
+          <tr class="section-header"><th colspan="2">Parent Details</th></tr>
+          <tr><td class="label">Father Name</td><td class="value">${r.father_name}</td></tr>
+          <tr><td class="label">Father's Mobile / Occupation</td><td class="value">${r.father_mobile || '—'} / ${r.father_occupation || '—'}</td></tr>
+          <tr><td class="label">Mother Name</td><td class="value">${r.mother_name}</td></tr>
+          <tr><td class="label">Mother's Mobile / Occupation</td><td class="value">${r.mother_mobile || '—'} / ${r.mother_occupation || '—'}</td></tr>
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="2">Educational Details</th></tr>
+          <tr><td colspan="2" class="label" style="width:100%; background:#f8fafc; font-weight:700;">Qualifying Marksheet Name: <span style="font-weight:800; color:#000;">${r.candidate_name_marksheet}</span></td></tr>
+          <tr class="grid-head"><th>Details</th><th>12th Standard</th></tr>
+          <tr><td class="label">Institution</td><td class="value">${r.twelfth_institution}</td></tr>
+          <tr><td class="label">Board / University</td><td class="value">${r.twelfth_board}</td></tr>
+          <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing} / ${r.twelfth_result_status || '—'}</td></tr>
+          <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || '—'}%</td></tr>
+          <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
+        </table>
+
+        <div style="page-break-inside: avoid;">
+          <table>
+            <tr class="section-header"><th>Declaration</th></tr>
+            <tr>
+              <td class="declaration">
+                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.6;">
+                  <li style="margin-bottom: 8px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
+                  <li style="margin-bottom: 8px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
+                  <li style="margin-bottom: 8px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
+                  <li style="margin-bottom: 8px;">I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
+                  <li style="margin-bottom: 8px;">I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
+                  <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
+                </ul>
+              </td>
+            </tr>
+          </table>
+
+          <div class="footer">
+            <div class="footer-info">
+              <p style="font-weight:900; font-size:13px; color:#1e3a8a;">${r.student_name.toUpperCase()}</p>
+              <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
+              <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
+            </div>
+            <div style="display:flex; gap: 40px;">
+              <div class="sign-area">
+                <div class="sign-placeholder">
+                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
+                </div>
+                <span class="sign-label">Candidate Signature</span>
+              </div>
+              <div class="sign-area">
+                <div class="sign-placeholder"></div>
+                <span class="sign-label">Parent/Guardian Signature</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </body>
+      </html>
+    `;
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(printHint + html);
