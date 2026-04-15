@@ -861,7 +861,8 @@ app.use('/admin_dashboard', express.static(path.join(__dirname, 'admin_dashboard
 
 const ADMIN_USER  = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS  = process.env.ADMIN_PASS || 'admin123';
-const ADMIN_SECRET = crypto.randomBytes(32).toString('hex');
+// Persistent secret for JWT-like tokens (prevents logouts on restart)
+const ADMIN_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update(process.env.ADMIN_PASS || 'svce_default_secret').digest('hex');
 
 function generateToken() {
   const payload = { user: ADMIN_USER, iat: Date.now() };
