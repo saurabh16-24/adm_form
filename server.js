@@ -1451,7 +1451,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 9.8px; line-height: 1.2; color: #111; }
           
           .header { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; }
-          .logo-img { height: 45px; width: auto; object-fit: contain; }
+          .logo-img { height: 75px; width: auto; object-fit: contain; }
           
           .header-meta-area { position: relative; min-height: 98px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
           .photo-box { position: absolute; right: 0; top: 0; width: 75px; height: 95px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
