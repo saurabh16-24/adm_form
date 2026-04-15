@@ -810,7 +810,14 @@ app.post('/api/admissions/submit', (req, res) => {
               remarks = enqRes.rows[0].admin_remarks || '';
             }
           }
-          const emailData = { ...v, application_number: v.application_number, _top_prefs: prefs.slice(0, 4), _admin_remarks: remarks };
+          const emailData = { 
+            ...v, 
+            application_number: v.application_number, 
+            passport_photo_path: photoPath, 
+            signature_path: signature_path,
+            _top_prefs: prefs.slice(0, 4), 
+            _admin_remarks: remarks 
+          };
           const pdfBuffer = await generateAdmissionPdf(emailData);
           const receiptPdfBuffer = await generateReceiptPdf(emailData);
 

@@ -36,13 +36,13 @@ function generateReceiptPdf(data) {
 
     // ── 1. Header ──────────────────────────────────────────────
     if (fs.existsSync(LOGO_PATH)) {
-      doc.image(LOGO_PATH, M, 35, { width: 180 });
+      doc.image(LOGO_PATH, (W - 280) / 2, 20, { width: 280 });
     }
     
     doc.fillColor(GRAY).font('Helvetica').fontSize(8.5)
-       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 75, { width: CW, align: 'right' })
-       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 86, { width: CW, align: 'right' })
-       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 97, { width: CW, align: 'right' });
+       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 75, { width: CW, align: 'center' })
+       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 86, { width: CW, align: 'center' })
+       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 97, { width: CW, align: 'center' });
 
     doc.moveTo(M, 115).lineTo(W - M, 115).lineWidth(1).stroke(BORDER);
 
