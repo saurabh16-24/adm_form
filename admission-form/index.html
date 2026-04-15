@@ -1120,6 +1120,11 @@
         aadhaar_no: sel('aadhaarNo')?.value || '',
         selected_institute: sel('selectedInstitute')?.value || '',
         course_preference: Array.from(document.querySelectorAll('.course-pref-check:checked')).map(c => c.value).join(', '),
+        course_preferences: JSON.stringify(
+          Array.from(document.querySelectorAll('#prefBody tr'))
+            .filter(tr => tr.querySelector('.course-pref-check')?.checked)
+            .map(tr => tr.querySelector('.course-pref-check').value)
+        ),
         program_preference: 'UG Programs',
         comm_address_line1: sel('commLine1')?.value || '',
         comm_address_line2: sel('commLine2')?.value || '',

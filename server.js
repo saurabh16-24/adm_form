@@ -801,7 +801,19 @@ app.post('/api/admissions/submit', (req, res) => {
           // Fetch enquiry preferences for the PDF
           let prefs = [];
           let remarks = '';
-          if (v.enquiry_id) {
+          
+          // Use preferences from request body if provided (reordered by student)
+          if (v.course_preferences) {
+            try {
+              const bodyPrefs = typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences;
+              if (Array.isArray(bodyPrefs)) prefs = bodyPrefs;
+            } catch (e) {
+              console.error('Error parsing body course_preferences:', e);
+            }
+          }
+
+          // Fallback to enquiry table if body prefs are empty
+          if (prefs.length === 0 && v.enquiry_id) {
             const enqRes = await pool.query('SELECT course_preferences, admin_remarks FROM enquiries WHERE id = $1', [v.enquiry_id]);
             if (enqRes.rows.length) {
               try {

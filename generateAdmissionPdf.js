@@ -1,6 +1,6 @@
 /**
  * generateAdmissionPdf.js
- * Generates the Official SVCE Admission Application Form (Fixed Spacing & No Overlap).
+ * Generates the Official SVCE Admission Application Form (Fixed Spacing, Original Declaration).
  */
 
 const PDFDocument = require('pdfkit');
@@ -79,35 +79,29 @@ function generateAdmissionPdf(data) {
 
     // ── Table Logic (Dynamic Height) ───────────────────────────
     function sectionHeader(title) {
-      doc.rect(M, y, CW, 15).fill(SECTION_BG);
+      doc.rect(M, y, CW, 14).fill(SECTION_BG);
       doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5)
-         .text(title.toUpperCase(), M + 8, y + 4);
-      y += 15;
+         .text(title.toUpperCase(), M + 8, y + 3.5);
+      y += 14;
     }
 
     function row2(l1, v1, l2, v2) {
-      const u1 = CW * 0.18; // Label width
-      const u2 = CW * 0.32; // Value width
-      
+      const u1 = CW * 0.18; 
+      const u2 = CW * 0.32; 
       const v1Txt = String(v1 || '—');
       const v2Txt = String(v2 || '—');
-
-      // Calculate height needed
       doc.font('Helvetica-Bold').fontSize(8);
       const h1 = doc.heightOfString(v1Txt, { width: u2 - 8 });
       const h2 = doc.heightOfString(v2Txt, { width: u2 - 8 });
-      const h = Math.max(14, h1 + 6, h2 + 6);
-
-      // Draw
+      const h = Math.max(13, h1 + 5, h2 + 5);
       doc.rect(M, y, u1, h).fill(LABEL_BG).stroke(BORDER);
       doc.rect(M + u1, y, u2, h).stroke(BORDER);
       doc.rect(M + u1 + u2, y, u1, h).fill(LABEL_BG).stroke(BORDER);
       doc.rect(M + u1*2 + u2, y, u2, h).stroke(BORDER);
-
       doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(7.5).text(l1, M + 4, y + 4);
-      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(v1Txt, M + u1 + 4, y + 4, { width: u2 - 8 });
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(v1Txt, M + u1 + 4, y + 3, { width: u2 - 8 });
       doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(7.5).text(l2, M + u1 + u2 + 4, y + 4);
-      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(v2Txt, M + u1*2 + u2 + 4, y + 4, { width: u2 - 8 });
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(v2Txt, M + u1*2 + u2 + 4, y + 3, { width: u2 - 8 });
       y += h;
     }
 
@@ -120,46 +114,43 @@ function generateAdmissionPdf(data) {
     row2('Gender', data.gender, 'Father\'s Occupation', data.father_occupation);
     row2('Aadhaar No.', data.aadhaar_no, 'Mother\'s Occupation', data.mother_occupation);
 
-    y += 5;
+    y += 4;
 
     // ── 3. Course Preferences ──────────────────────────────────
     sectionHeader('Course Preference Details');
     const prefs = data._top_prefs || [];
     const colW = CW / 3;
-    doc.rect(M, y, CW, 18).stroke(BORDER);
-    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5);
-    doc.text('1. ' + (typeof prefs[0] === 'object' ? prefs[0].course : (prefs[0] || '—')), M + 5, y + 6, { width: colW - 8, height: 12, ellipsis: true });
-    doc.text('2. ' + (typeof prefs[1] === 'object' ? prefs[1].course : (prefs[1] || '—')), M + colW + 5, y + 6, { width: colW - 8, height: 12, ellipsis: true });
-    doc.text('3. ' + (typeof prefs[2] === 'object' ? prefs[2].course : (prefs[2] || '—')), M + colW*2 + 5, y + 6, { width: colW - 8, height: 12, ellipsis: true });
-    y += 18;
+    doc.rect(M, y, CW, 16).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.4);
+    doc.text('1. ' + (typeof prefs[0] === 'object' ? prefs[0].course : (prefs[0] || '—')), M + 5, y + 5, { width: colW - 8, height: 11, ellipsis: true });
+    doc.text('2. ' + (typeof prefs[1] === 'object' ? prefs[1].course : (prefs[1] || '—')), M + colW + 5, y + 5, { width: colW - 8, height: 11, ellipsis: true });
+    doc.text('3. ' + (typeof prefs[2] === 'object' ? prefs[2].course : (prefs[2] || '—')), M + colW*2 + 5, y + 5, { width: colW - 8, height: 11, ellipsis: true });
+    y += 16;
 
-    y += 5;
+    y += 4;
 
     // ── 4. Address Details ─────────────────────────────────────
     sectionHeader('Address Details');
-    doc.rect(M, y, CW, 14).fill(LABEL_BG).stroke(BORDER);
-    doc.fillColor(BLACK).font('Helvetica').fontSize(7.5).text('Permanent Address Same as Communication Address: ', M + 6, y + 4);
-    doc.font('Helvetica-Bold').fillColor(NAVY).text(data.same_as_comm ? 'Yes' : 'No', M + 200, y + 4);
-    y += 14;
+    doc.rect(M, y, CW, 13).fill(LABEL_BG).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica').fontSize(7.5).text('Permanent Address Same as Communication Address: ', M + 6, y + 3.5);
+    doc.font('Helvetica-Bold').fillColor(NAVY).text(data.same_as_comm ? 'Yes' : 'No', M + 200, y + 3.5);
+    y += 13;
 
     function addrRow(field, comm, perm) {
       const w1 = CW * 0.18;
       const w2 = CW * 0.41;
       const cTxt = String(comm || '—');
       const pTxt = String(perm || comm || '—');
-
       doc.font('Helvetica-Bold').fontSize(7.5);
       const hC = doc.heightOfString(cTxt, { width: w2 - 8 });
       const hP = doc.heightOfString(pTxt, { width: w2 - 8 });
-      const h = Math.max(16, hC + 6, hP + 6);
-
+      const h = Math.max(14, hC + 5, hP + 5);
       doc.rect(M, y, w1, h).fill(LABEL_BG).stroke(BORDER);
       doc.rect(M + w1, y, w2, h).stroke(BORDER);
       doc.rect(M + w1 + w2, y, w2, h).stroke(BORDER);
-      
-      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(7.5).text(field, M + 4, y + 5);
-      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text(cTxt, M + w1 + 4, y + 5, { width: w2 - 8 });
-      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text(pTxt, M + w1 + w2 + 4, y + 5, { width: w2 - 8 });
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(7.5).text(field, M + 4, y + 4);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text(cTxt, M + w1 + 4, y + 3.5, { width: w2 - 8 });
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text(pTxt, M + w1 + w2 + 4, y + 3.5, { width: w2 - 8 });
       y += h;
     }
     addrRow('Address 1', data.comm_address_line1, data.perm_address_line1);
@@ -167,7 +158,7 @@ function generateAdmissionPdf(data) {
     addrRow('City/Dist', (data.comm_city || '') + ' / ' + (data.comm_district || ''), (data.perm_city || '') + ' / ' + (data.perm_district || ''));
     addrRow('State/ZP', (data.comm_state || '') + ' - ' + (data.comm_pincode || ''), (data.perm_state || '') + ' - ' + (data.perm_pincode || ''));
 
-    y += 5;
+    y += 4;
 
     // ── 5. Educational Details ─────────────────────────────────
     sectionHeader('Educational Details');
@@ -176,12 +167,11 @@ function generateAdmissionPdf(data) {
       const w2 = CW * 0.65;
       const vTxt = String(val || '—');
       doc.font('Helvetica-Bold').fontSize(8);
-      const h = Math.max(15, doc.heightOfString(vTxt, { width: w2 - 10 }) + 6);
-
+      const h = Math.max(14, doc.heightOfString(vTxt, { width: w2 - 10 }) + 5);
       doc.rect(M, y, w1, h).fill(LABEL_BG).stroke(BORDER);
       doc.rect(M + w1, y, w2, h).stroke(BORDER);
-      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(8).text(label, M + 8, y + 5);
-      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5).text(vTxt, M + w1 + 8, y + 5, { width: w2 - 10 });
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(8).text(label, M + 8, y + 4);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5).text(vTxt, M + w1 + 8, y + 3, { width: w2 - 10 });
       y += h;
     }
     eduRow('Board / University', data.twelfth_board);
@@ -189,18 +179,23 @@ function generateAdmissionPdf(data) {
     eduRow('Percentage / CGPA', (data.twelfth_percentage || '—') + '%');
     eduRow('Entrance Exams', data.entrance_exams);
 
-    y += 8;
+    y += 5;
 
-    // ── 6. Declaration ─────────────────────────────────────────
+    // ── 6. Declaration (Original Full Text) ─────────────────────
     sectionHeader('Declaration');
-    doc.rect(M, y, CW, 60).stroke(BORDER);
-    doc.fillColor('#222').font('Helvetica').fontSize(7.8);
-    const declText = "• I hereby declare that all information provided is true and correct. I understand that false info leads to rejection.\n" +
-      "• I agree to abide by all rules of SVCE as applicable from time to time. I authorize SVCE to process my data.\n" +
-      "• Submission doesn't guarantee admission; seats are subject to availability and eligibility.\n" +
-      "• Admission is subject to regulatory approval (DTE/VTU).";
-    doc.text(declText, M + 10, y + 8, { width: CW - 20, lineGap: 2 });
-    y += 65;
+    const declText = 
+      "I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.\n\n" +
+      "I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.\n\n" +
+      "I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.\n\n" +
+      "I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.\n\n" +
+      "I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.\n\n" +
+      "I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.";
+
+    doc.font('Helvetica').fontSize(6.5);
+    const declH = doc.heightOfString(declText, { width: CW - 20, lineGap: 0.5 });
+    doc.rect(M, y, CW, declH + 10).stroke(BORDER);
+    doc.fillColor('#222').text(declText, M + 10, y + 5, { width: CW - 20, lineGap: 0.5 });
+    y += declH + 15;
 
     // ── 7. Footer & Signatures ─────────────────────────────────
     doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(10).text((data.student_name || '').toUpperCase(), M, y);
@@ -208,7 +203,7 @@ function generateAdmissionPdf(data) {
     doc.text('Submission ID: ' + (data.id || '—'), M, y+21);
 
     y += 30;
-    const signBoxH = 35;
+    const signBoxH = 34;
     const signBoxW = 110;
     const signGap = (CW - (signBoxW * 3)) / 2;
 
@@ -225,9 +220,7 @@ function generateAdmissionPdf(data) {
     signBox('OFFLINE SIGNATURE', M + signBoxW + signGap, null);
     signBox('PARENT SIGNATURE', M + (signBoxW + signGap) * 2, null);
 
-    // Page Border
     doc.rect(12, 12, W - 24, doc.page.height - 24).lineWidth(0.5).stroke('#cbd5e1');
-
     doc.end();
   });
 }
