@@ -952,7 +952,21 @@ async function openManagementFormEditor(id) {
             <td class="label">Parent Mobile</td><td><input type="text" id="ed-parent-mobile" value="${r.father_mobile || r.mother_mobile}"></td>
           </tr>
           <tr>
-            <td class="label">Branch Selected</td><td><input type="text" id="ed-branch" value="${r.course_preference}"></td>
+            <td class="label">Branch Selected</td><td>
+              <select id="ed-branch" style="width:100%; border:none; padding:4px; font-weight:700; font-size:11px; background:transparent; outline:none; text-overflow: ellipsis;" onchange="updateActualFeeByBranch()">
+                <option value="">-- Select Branch --</option>
+                ${[
+                  "BE Computer Science and Engineering",
+                  "BE Computer Science and Engineering (Artificial Intelligence)",
+                  "BE Computer Science and Engineering (Data Science)",
+                  "BE Computer Science and Engineering (Cyber Security)",
+                  "BE Information Science and Engineering",
+                  "BE Electronics and Communication Engineering",
+                  "BE Mechanical Engineering",
+                  "BE Civil Engineering"
+                ].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </td>
             <td class="label">State</td><td><input type="text" id="ed-state" value="${r.perm_state || 'Karnataka'}"></td>
           </tr>
           <tr>
@@ -1020,6 +1034,25 @@ async function openManagementFormEditor(id) {
       const actual = parseFloat(document.getElementById('ed-actual-fee').value) || 0;
       const scholarship = parseFloat(document.getElementById('ed-scholarship').value) || 0;
       document.getElementById('ed-net-payable').value = (actual - scholarship).toLocaleString();
+    };
+
+    window.updateActualFeeByBranch = () => {
+      const branchSel = document.getElementById('ed-branch');
+      const bVal = branchSel.value;
+      const feeMap = {
+        "BE Computer Science and Engineering": 400000,
+        "BE Computer Science and Engineering (Artificial Intelligence)": 400000,
+        "BE Computer Science and Engineering (Data Science)": 400000,
+        "BE Computer Science and Engineering (Cyber Security)": 400000,
+        "BE Information Science and Engineering": 350000,
+        "BE Electronics and Communication Engineering": 300000,
+        "BE Mechanical Engineering": 200000,
+        "BE Civil Engineering": 200000
+      };
+      if (feeMap[bVal] !== undefined) {
+        document.getElementById('ed-actual-fee').value = feeMap[bVal];
+        window.updateEdNet();
+      }
     };
 
     document.getElementById('detail-modal').classList.add('open');
