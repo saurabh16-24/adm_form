@@ -1278,14 +1278,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
             <th style="width: 80px;">Fee (Agreed)</th>
             <th style="width: 150px;">Remarks</th>
           </tr>
-          ${prefsArray.map((p, i) => `
-            <tr>
-              <td class="pref-num">${i + 1}.</td>
-              <td style="white-space: normal;">${typeof p === 'object' ? p.course : p}</td>
-              <td style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
-              ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background: #fff;"></td>` : ''}
-            </tr>
-          `).join('') || '<tr><td colspan="4">No preferences selected</td></tr>'}
+          ${prefsRows}
           <tr style="background: #f8fafc; font-weight: 700; font-size: 10px;">
             <td style="text-align: right; padding: 4px; border-right: none;">Hostel:</td>
             <td style="padding: 4px; border-left: none; border-right: none;">${(() => {
