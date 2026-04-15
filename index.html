@@ -792,9 +792,18 @@
 
             initializeCoursePreferences();
 
-            // Fees removed from enquiry form
-            const hostelFees = {};
-            const transportFees = {};
+            // Fee structure (Management quota, Academic Year 2025-26)
+            const hostelFees = {
+              'Hostel with shared washroom (With Food)': 110000,
+              'Hostel with attached washroom (Boys only, With Food)': 130000,
+              'Hostel with shared washroom (Only Accomm)': 50000,
+              'Hostel with attached washroom (Boys only, Only Accomm)': 75000
+            };
+            const transportFees = {
+              'Chintamani Route': 45000,
+              'Other Routes': 40000,
+              'Others': 40000
+            };
 
             window.handleExclusion = function(type) {
                 const hostel = document.getElementById('hostelRequired');
@@ -881,7 +890,8 @@
                         comedk_rank: document.getElementById('comedk').value || null,
                         cet_rank: document.getElementById('cetRank').value || null,
                         course_preferences: coursePreferencesOrder.map(courseName => {
-                            return { course: courseName, fee: null };
+                            const match = courseData.find(c => c.name === courseName);
+                            return { course: courseName, fee: match ? match.fee : null };
                         }),
                         hostel_required: document.getElementById('hostelRequired').checked,
                         transport_required: document.getElementById('transportRequired').checked,

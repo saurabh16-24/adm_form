@@ -1098,6 +1098,17 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       'BE Civil Engineering': 125000,
       'BE Mechanical Engineering': 125000
     };
+    const HOSTEL_FEES = {
+      'Hostel with shared washroom (With Food)': 110000,
+      'Hostel with attached washroom (Boys only, With Food)': 130000,
+      'Hostel with shared washroom (Only Accomm)': 50000,
+      'Hostel with attached washroom (Boys only, Only Accomm)': 75000
+    };
+    const TRANSPORT_FEES = {
+      'Chintamani Route': 45000,
+      'Other Routes': 40000,
+      'Others': 40000
+    };
 
     const prefsRows = prefsArray.map((p, i) => {
       const courseName = typeof p === 'object' ? p.course : p;
@@ -1277,8 +1288,18 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           `).join('') || '<tr><td colspan="4">No preferences selected</td></tr>'}
           <tr style="background: #f8fafc; font-weight: 700; font-size: 10px;">
             <td style="text-align: right; padding: 4px; border-right: none;">Hostel:</td>
-            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? ((r.hostel_type || '').replace('(Only Accomm)', '').replace('(With Food)', '').trim() + (r.hostel_fee ? ' (₹' + Number(r.hostel_fee).toLocaleString('en-IN') + ')' : '')) : 'NO'}</td>
-            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? ((r.transport_route || '') + (r.transport_fee ? ' (₹' + Number(r.transport_fee).toLocaleString('en-IN') + ')' : '')) : 'NO'}</td>
+            <td style="padding: 4px; border-left: none; border-right: none;">${(() => {
+              if (!r.hostel_required) return 'NO';
+              const label = (r.hostel_type || '').replace('(Only Accomm)', '').replace('(With Food)', '').trim();
+              const fee = r.hostel_fee || HOSTEL_FEES[r.hostel_type] || null;
+              return label + (fee ? ' (₹' + Number(fee).toLocaleString('en-IN') + ')' : '');
+            })()}</td>
+            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${(() => {
+              if (!r.transport_required) return 'NO';
+              const route = r.transport_route || '';
+              const fee = r.transport_fee || TRANSPORT_FEES[r.transport_route] || null;
+              return route + (fee ? ' (₹' + Number(fee).toLocaleString('en-IN') + ')' : '');
+            })()}</td>
           </tr>
         </table>
 
