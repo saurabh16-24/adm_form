@@ -1564,7 +1564,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             <tr class="section-header"><th>Declaration</th></tr>
             <tr>
               <td class="declaration">
-                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.25; font-size: 8.2px;">
+                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.25; font-size: 9.4px;">
                   <li style="margin-bottom: 3px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
                   <li style="margin-bottom: 3px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
                   <li style="margin-bottom: 3px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
