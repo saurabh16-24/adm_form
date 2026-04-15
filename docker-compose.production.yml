@@ -5,8 +5,7 @@ services:
     image: nginx:alpine
     container_name: svce_nginx
     ports:
-      # Changed port to 5001 since 5000 is taken
-      - "5001:80"
+      - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
