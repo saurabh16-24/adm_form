@@ -1,6 +1,6 @@
 /**
  * generateAdmissionPdf.js
- * Generates a beautiful PDF for the SVCE Admission Application Confirmation.
+ * Generates the Official SVCE Admission Application Form (matching Admin Print layout).
  */
 
 const PDFDocument = require('pdfkit');
@@ -8,251 +8,250 @@ const path = require('path');
 const fs = require('fs');
 
 // Colours
-const BLUE   = '#1d4ed8';
-const LBLUE  = '#dbeafe';
-const GREEN  = '#059669';
-const LGREEN = '#d1fae5';
-const GRAY   = '#64748b';
-const DARK   = '#1e293b';
-const BLACK  = '#000000';
-const WHITE  = '#ffffff';
-const BORDER = '#e2e8f0';
+const NAVY    = '#1e3a8a';
+const BORDER  = '#111111';
+const GRAY    = '#475569';
+const BLACK   = '#000000';
+const WHITE   = '#ffffff';
+const SECTION_BG = '#bae6fd';
+const LABEL_BG   = '#f8fafc';
 
 const LOGO_PATH = path.join(__dirname, 'svce-logo.png');
 
 /**
- * @param {object} data  – all submission fields
+ * Helper to download/convert image path to buffer
+ */
+function getImageBuffer(p) {
+  if (!p) return null;
+  const fullPath = path.isAbsolute(p) ? p : path.join(__dirname, p);
+  if (fs.existsSync(fullPath)) return fs.readFileSync(fullPath);
+  return null;
+}
+
+/**
+ * @param {object} data  – admission data
  * @returns {Buffer}     – PDF buffer
  */
 function generateAdmissionPdf(data) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    const doc = new PDFDocument({ size: 'A4', margin: 0, bufferPages: true });
+    // 6mm 10mm margins = approx 17pt, 28pt
+    const doc = new PDFDocument({ size: 'A4', margin: 30 });
 
     doc.on('data', c => chunks.push(c));
     doc.on('end',  () => resolve(Buffer.concat(chunks)));
     doc.on('error', reject);
 
-    const W = doc.page.width;   // 595
-    const M = 40;               // side margin
-    const CW = W - M * 2;      // content width 515
+    const W = doc.page.width;
+    const M = 30;
+    const CW = W - M * 2;
 
-    // ── 1. Header band ──────────────────────────────────────────
-    doc.rect(0, 0, W, 130).fill(BLUE);
+    const formatDate = (dateString) => {
+      if (!dateString) return '—';
+      const d = new Date(dateString);
+      return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB'); 
+    };
 
-    // Logo (white box so black logo shows on blue)
+    // ── 1. Header ──────────────────────────────────────────────
     if (fs.existsSync(LOGO_PATH)) {
-      doc.save();
-      const LX = M, LY = 18, LW = 200, LH = 55;
-      doc.roundedRect(LX, LY, LW, LH, 6).fill(WHITE);
-      doc.image(LOGO_PATH, LX + 4, LY + 4, { width: LW - 8, height: LH - 8, fit: [LW - 8, LH - 8], align: 'center', valign: 'center' });
-      doc.restore();
+      doc.image(LOGO_PATH, (W - 220) / 2, 35, { width: 220 });
     }
+    
+    doc.moveTo(M, 85).lineTo(W - M, 85).lineWidth(1.5).stroke(NAVY);
+    
+    let y = 100;
 
-    // Right side – doc title
-    const currentYear = new Date().getFullYear();
-    const academicYear = `${currentYear}-${currentYear + 1}`;
-    doc.fillColor(WHITE)
-       .font('Helvetica-Bold').fontSize(17)
-       .text('ADMISSION CONFIRMATION', M, 26, { width: CW, align: 'right' });
-    doc.fillColor('#bfdbfe').font('Helvetica-Bold').fontSize(11)
-       .text(`Academic Year: ${academicYear}`, M, 46, { width: CW, align: 'right' });
-    doc.font('Helvetica').fontSize(9).fillColor('#bfdbfe')
-       .text('Sri Venkateshwara College of Engineering, Bengaluru', M, 62, { width: CW, align: 'right' })
-       .text('Estd. 2001 · Autonomous Institute · AICTE Approved', M, 75, { width: CW, align: 'right' });
-
-    // Application number pill
-    const appNum = data.application_number || 'ADM/------';
+    // Student Photo (Top Right)
+    const photoBuffer = getImageBuffer(data.passport_photo_path);
     doc.save();
-    doc.roundedRect(W - M - 200, 82, 200, 28, 6).fill(LGREEN);
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(10)
-       .text('Application No: ' + appNum, W - M - 196, 90, { width: 192, align: 'center' });
+    doc.rect(W - M - 75, y, 75, 95).stroke(BORDER);
+    if (photoBuffer) {
+      doc.image(photoBuffer, W - M - 74, y + 1, { width: 73, height: 93, fit: [73, 93], align: 'center', valign: 'center' });
+    } else {
+      doc.fillColor('#999').fontSize(8).text('AFFIX\nSTUDENT\nPHOTO', W - M - 75, y + 35, { width: 75, align: 'center' });
+    }
     doc.restore();
 
-    // Date pill
-    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
-    doc.save();
-    doc.roundedRect(W - M - 200, 115, 200, 20, 5).fill('rgba(255,255,255,0.15)');
-    doc.fillColor(WHITE).font('Helvetica').fontSize(8.5)
-       .text('Date: ' + dateStr, W - M - 200, 120, { width: 200, align: 'center' });
-    doc.restore();
+    // App Meta
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(10)
+       .text(`APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})`, M, y + 15, { width: CW - 85, align: 'center' });
+    
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(12)
+       .text('Application Form No: ' + (data.application_number || '—'), M, y + 35, { width: CW - 85, align: 'center' });
 
-    let y = 148;
+    y = 205;
 
-    // ── Helper: Section title ────────────────────────────────────
-    function sectionTitle(title, icon = '') {
-      doc.save();
-      doc.rect(M, y, CW, 26).fill(BLUE);
-      doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(10)
-         .text((icon ? icon + '  ' : '') + title.toUpperCase(), M + 10, y + 8, { width: CW - 20 });
-      doc.restore();
-      y += 30;
+    // ── Table Helpers ──────────────────────────────────────────
+    function sectionHeader(title) {
+      doc.rect(M, y, CW, 18).fill(SECTION_BG);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(9)
+         .text(title.toUpperCase(), M + 10, y + 5);
+      y += 18;
     }
 
-    // ── Helper: Two-column row ───────────────────────────────────
-    function row(label, value, shade = false) {
-      const rowH = 20;
-      if (shade) doc.rect(M, y, CW, rowH).fill('#f8fafc');
-      doc.rect(M, y, CW, rowH).stroke(BORDER);
+    function row2(l1, v1, l2, v2, w1=16, w2=34) {
+      const h = 16;
+      const u1 = (CW * w1) / 100;
+      const u2 = (CW * w2) / 100;
 
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5)
-         .text(label, M + 8, y + 5, { width: 180 });
-      doc.fillColor(DARK).font('Helvetica-Bold').fontSize(8.5)
-         .text(value || '—', M + 195, y + 5, { width: CW - 203 });
-      y += rowH;
+      // Draw Cells
+      doc.rect(M, y, u1, h).fill(LABEL_BG).stroke(BORDER);
+      doc.rect(M + u1, y, u2, h).stroke(BORDER);
+      doc.rect(M + u1 + u2, y, u1, h).fill(LABEL_BG).stroke(BORDER);
+      doc.rect(M + u1*2 + u2, y, u2, h).stroke(BORDER);
+
+      // Text
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(8).text(l1, M + 5, y + 5);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5).text(String(v1 || '—'), M + u1 + 5, y + 4.5, { width: u2 - 8 });
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(8).text(l2, M + u1 + u2 + 5, y + 5);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5).text(String(v2 || '—'), M + u1*2 + u2 + 5, y + 4.5, { width: u2 - 8 });
+      y += h;
     }
 
-    // ── Helper: Full-width row ───────────────────────────────────
-    function fullRow(label, value, shade = false) {
-      const rowH = 20;
-      if (shade) doc.rect(M, y, CW, rowH).fill('#f8fafc');
-      doc.rect(M, y, CW, rowH).stroke(BORDER);
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5)
-         .text(label, M + 8, y + 5, { width: 140 });
-      doc.fillColor(DARK).font('Helvetica-Bold').fontSize(8.5)
-         .text(value || '—', M + 155, y + 5, { width: CW - 163 });
-      y += rowH;
+    // ── 2. Personal Details ────────────────────────────────────
+    sectionHeader('Personal Details');
+    row2('Name', (data.title ? data.title + ' ' : '') + (data.student_name || ''), 'Father\'s Name', data.father_name);
+    row2('Mobile No.', data.mobile_no, 'Father\'s Mobile', data.father_mobile);
+    row2('Email Address', data.email, 'Mother\'s Name', data.mother_name);
+    row2('Date of Birth', formatDate(data.date_of_birth), 'Mother\'s Mobile', data.mother_mobile);
+    row2('Gender', data.gender, 'Father\'s Occupation', data.father_occupation);
+    row2('Aadhaar No.', data.aadhaar_no, 'Mother\'s Occupation', data.mother_occupation);
+
+    y += 6;
+
+    // ── 3. Course Preferences ──────────────────────────────────
+    sectionHeader('Course Preference Details');
+    const prefs = data._top_prefs || [];
+    const colW = CW / 2;
+    doc.rect(M, y, colW, 20).stroke(BORDER);
+    doc.rect(M + colW, y, colW, 20).stroke(BORDER);
+    
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8);
+    // Row 1 & 2 side by side
+    doc.text('1. ' + (typeof prefs[0] === 'object' ? prefs[0].course : (prefs[0] || '—')), M + 5, y + 6, { width: colW - 10 });
+    doc.text('2. ' + (typeof prefs[1] === 'object' ? prefs[1].course : (prefs[1] || '—')), M + colW + 5, y + 6, { width: colW - 10 });
+    y += 20;
+    // Row 3 & 4 side by side
+    doc.rect(M, y, colW, 20).stroke(BORDER);
+    doc.rect(M + colW, y, colW, 20).stroke(BORDER);
+    doc.text('3. ' + (typeof prefs[2] === 'object' ? prefs[2].course : (prefs[2] || '—')), M + 5, y + 6, { width: colW - 10 });
+    doc.text('4. ' + (typeof prefs[3] === 'object' ? prefs[3].course : (prefs[3] || '—')), M + colW + 5, y + 6, { width: colW - 10 });
+    y += 20;
+
+    y += 6;
+
+    // ── 4. Address Details ─────────────────────────────────────
+    sectionHeader('Address Details');
+    doc.rect(M, y, CW, 14).fill(LABEL_BG).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica').fontSize(8).text('Permanent Address Same as Communication Address: ', M + 8, y + 3.5);
+    doc.font('Helvetica-Bold').fillColor(NAVY).text(data.same_as_comm ? 'Yes' : 'No', M + 210, y + 3.5);
+    y += 14;
+
+    function addrRow(field, comm, perm) {
+      const h = 15;
+      const w1 = CW * 0.26;
+      const w2 = CW * 0.37;
+      doc.rect(M, y, w1, h).fill(LABEL_BG).stroke(BORDER);
+      doc.rect(M + w1, y, w2, h).stroke(BORDER);
+      doc.rect(M + w1 + w2, y, w2, h).stroke(BORDER);
+      
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(7.5).text(field, M + 5, y + 4.5);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(comm || '—', M + w1 + 5, y + 4, { width: w2 - 8 });
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(perm || comm || '—', M + w1 + w2 + 5, y + 4, { width: w2 - 8 });
+      y += h;
+    }
+    doc.rect(M, y, CW * 0.26, 12).fill(LABEL_BG).stroke(BORDER);
+    doc.rect(M + CW * 0.26, y, CW * 0.37, 12).fill(LABEL_BG).stroke(BORDER);
+    doc.rect(M + CW * 0.63, y, CW * 0.37, 12).fill(LABEL_BG).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text('Field', M + 5, y+3).text('Communication Address', M + CW*0.26 + 5, y+3).text('Permanent Address', M + CW*0.63 + 5, y+3);
+    y += 12;
+
+    addrRow('Address Line 1', data.comm_address_line1, data.perm_address_line1);
+    addrRow('Address Line 2', data.comm_address_line2, data.perm_address_line2);
+    addrRow('City / District', (data.comm_city || '') + ' / ' + (data.comm_district || ''), (data.perm_city || '') + ' / ' + (data.perm_district || ''));
+    addrRow('State / Pincode', (data.comm_state || '') + ' - ' + (data.comm_pincode || ''), (data.perm_state || '') + ' - ' + (data.perm_pincode || ''));
+
+    y += 6;
+
+    // ── 5. Educational Details ─────────────────────────────────
+    sectionHeader('Educational Details');
+    doc.rect(M, y, CW, 14).fill(LABEL_BG).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica').fontSize(8.5).text('Qualifying Marksheet Name: ', M + 10, y + 3.5);
+    doc.font('Helvetica-Bold').text(data.candidate_name_marksheet || '—', M + 140, y + 3.5);
+    y += 14;
+
+    function eduRow(label, val) {
+      const h = 15;
+      doc.rect(M, y, CW * 0.35, h).fill(LABEL_BG).stroke(BORDER);
+      doc.rect(M + CW * 0.35, y, CW * 0.65, h).stroke(BORDER);
+      doc.fillColor(GRAY).font('Helvetica-Bold').fontSize(8.5).text(label, M + 10, y + 4);
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(9).text(val || '—', M + CW * 0.35 + 10, y + 3.5);
+      y += h;
+    }
+    eduRow('Institution', data.twelfth_institution);
+    eduRow('Board / University', data.twelfth_board);
+    eduRow('Year / Result Status', (data.twelfth_year_passing || '') + ' / ' + (data.twelfth_result_status || '—'));
+    eduRow('Percentage / CGPA', (data.twelfth_percentage || '—') + '%');
+    eduRow('Entrance Exams', data.entrance_exams);
+
+    y += 10;
+
+    // ── 6. APPLICATION FEE RECEIPT (New Payment Section) ───────
+    // Using the style from Screenshot 1
+    doc.rect(M, y, CW, 18).fill('#1e3a5f');
+    doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(10).text('APPLICATION FEE RECEIPT', M, y + 4.5, { align: 'center', characterSpacing: 1 });
+    y += 18;
+
+    const utrVal = data.payment_utr_no || '—';
+    const isCash = utrVal.toLowerCase().includes('cash');
+    const modeText = isCash ? 'Offline / Cash' : 'UPI / Online';
+
+    doc.rect(M, y, CW, 50).stroke(BORDER);
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(10);
+    doc.text('AMOUNT PAID: ₹ 1,250.00', M + 15, y + 10);
+    doc.font('Helvetica').fontSize(9);
+    doc.text('Payment Mode: ' + modeText, M + 15, y + 26);
+    doc.text('Transaction Ref / UTR: ' + utrVal, M + 15, y + 38);
+    
+    // Note for cash
+    doc.fillColor(GRAY).font('Helvetica-Oblique').fontSize(8)
+       .text('* In case of Cash payment, simply type \'Cash\' in the field above.', M + CW - 240, y + 38, { width: 230, align: 'right' });
+
+    y += 58;
+
+    // ── 7. Declaration ─────────────────────────────────────────
+    sectionHeader('Declaration');
+    doc.rect(M, y, CW, 85).stroke(BORDER);
+    doc.fillColor('#222').font('Helvetica').fontSize(8.5);
+    const declText = "• I hereby declare that all information provided is true and correct. I understand that false info leads to rejection. • I agree to abide by all rules of SVCE. • I authorize SVCE to process my data for admissions. • Submission doesn't guarantee admission; seats are subject to availability and eligibility. • This application is valid for a limited period. • Admissions are subject to approval from DTE/VTU.";
+    doc.text(declText, M + 10, y + 8, { width: CW - 20, align: 'justify', lineGap: 2 });
+    y += 90;
+
+    // ── 8. Footer & Signatures ─────────────────────────────────
+    const footerY = y;
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(11).text((data.student_name || '').toUpperCase(), M, y);
+    doc.fillColor(GRAY).font('Helvetica').fontSize(8).text('Generated On: ' + new Date().toLocaleString('en-IN'), M, y+14);
+    doc.text('Submission ID: ' + (data.id || '—') + ' | Timestamp: ' + (data.application_date ? new Date(data.application_date).toLocaleString('en-IN') : '—'), M, y+24);
+
+    y += 40;
+    const signAreaW = 120;
+    const gap = (CW - (signAreaW * 3)) / 2;
+
+    function signBox(label, x, imgPath) {
+      doc.rect(x, y, signAreaW, 40).stroke(BORDER);
+      const signBuf = getImageBuffer(imgPath);
+      if (signBuf) {
+        doc.image(signBuf, x + 2, y + 2, { width: signAreaW - 4, height: 36, fit: [signAreaW - 4, 36], align: 'center', valign: 'center' });
+      }
+      doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8).text(label, x, y + 45, { width: signAreaW, align: 'center' });
     }
 
-    // ── Helper: Two rows side by side ────────────────────────────
-    function doubleRow(l1, v1, l2, v2, shade = false) {
-      const rowH = 20; const half = CW / 2;
-      if (shade) doc.rect(M, y, CW, rowH).fill('#f8fafc');
-      doc.rect(M, y, half, rowH).stroke(BORDER);
-      doc.rect(M + half, y, half, rowH).stroke(BORDER);
-      // Left
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5).text(l1, M + 8, y + 5, { width: 85 });
-      doc.fillColor(DARK).font('Helvetica-Bold').fontSize(8.5).text(v1 || '—', M + 95, y + 5, { width: half - 103 });
-      // Right
-      doc.fillColor(GRAY).font('Helvetica').fontSize(8.5).text(l2, M + half + 8, y + 5, { width: 85 });
-      doc.fillColor(DARK).font('Helvetica-Bold').fontSize(8.5).text(v2 || '—', M + half + 95, y + 5, { width: half - 103 });
-      y += rowH;
-    }
+    signBox('Online Signature', M, data.signature_path);
+    signBox('Offline Signature', M + signAreaW + gap, null);
+    signBox('Parent Signature', M + (signAreaW + gap) * 2, null);
 
-    // ── Helper: Space gap ────────────────────────────────────────
-    function gap(h = 10) { y += h; }
-
-    // ── 2. Personal Details ──────────────────────────────────────
-    sectionTitle('Personal Details', '👤');
-    doubleRow('Full Name',      (data.title ? data.title + ' ' : '') + (data.student_name || ''),
-              'Date of Birth',  data.date_of_birth || '', false);
-    doubleRow('Mobile No.',     data.mobile_no || '',
-              'Email',          data.email || '', true);
-    doubleRow('Gender',         data.gender || '',
-              'Aadhaar No.',    data.aadhaar_no || '', false);
-
-    gap(8);
-
-    // ── 3. Preference Details (Table) ────────────────────────────
-    sectionTitle('Course Preference Details (First 4 from Enquiry)', '🎓');
-    const thY = y;
-    doc.fillColor('#f8fafc').rect(M, thY, CW, 15).fill();
-    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5);
-    doc.text('#', M + 5, thY + 4);
-    doc.text('Course Name', M + 30, thY + 4);
-    y += 15;
-
-    const top4 = data._top_prefs || [];
-    const tableHeight = 60; // 4 rows x 15px
-
-    for (let i = 0; i < 4; i++) {
-        const p = top4[i] || '';
-        const rowY = y;
-        doc.fillColor(BLACK).font('Helvetica').fontSize(8.5);
-        doc.text(String(i + 1), M + 5, rowY + 4);
-        doc.text(typeof p === 'object' ? String(p.course) : (p || '—'), M + 30, rowY + 4);
-        doc.rect(M, rowY, CW, 15).stroke();
-        y += 15;
-    }
-
-    gap(8);
-
-    // ── 4. Academic Details ──────────────────────────────────────
-    sectionTitle('Academic Details', '📚');
-    doubleRow('12th Institution',   data.twelfth_institution || '',
-              '12th Board',         data.twelfth_board || '', false);
-    doubleRow('12th Year',          data.twelfth_year_passing || '',
-              '12th Percentage',    data.twelfth_percentage ? data.twelfth_percentage + '%' : '', true);
-
-    gap(8);
-
-    // ── 5. Payment Details ────────────────────────────────────────
-    // Green-tinted section
-    doc.save();
-    doc.rect(M, y, CW, 26).fill(GREEN);
-    doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(10)
-       .text('💳  PAYMENT CONFIRMATION', M + 10, y + 8, { width: CW - 20 });
-    doc.restore();
-    y += 30;
-
-    // Payment box
-    doc.save();
-    doc.rect(M, y, CW, 82).fill(LGREEN).stroke(GREEN);
-    doc.restore();
-
-    // Amount
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(24)
-       .text('₹ 1,250', M, y + 10, { width: CW, align: 'center' });
-    doc.fillColor(GRAY).font('Helvetica').fontSize(8)
-       .text('Application Fee Paid', M, y + 38, { width: CW, align: 'center' });
-
-    // UTR + status
-    doc.fillColor(DARK).font('Helvetica-Bold').fontSize(9)
-       .text('UTR / Transaction Ref: ' + (data.payment_utr_no || '—'),
-              M + 10, y + 54, { width: CW - 20, align: 'center' });
-    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(9)
-       .text('✔  PAYMENT SUCCESSFUL  |  Mode: UPI Online  |  Non-Refundable',
-              M + 10, y + 68, { width: CW - 20, align: 'center' });
-
-    y += 92;
-    gap(8);
-
-    // ── 6. Communication Address ─────────────────────────────────
-    sectionTitle('Communication Address', '🏠');
-    const addr = [
-      data.comm_address_line1,
-      data.comm_address_line2,
-      data.comm_city,
-      data.comm_district,
-      data.comm_state,
-      data.comm_pincode
-    ].filter(Boolean).join(', ');
-    fullRow('Address', addr || '—', false);
-
-    gap(8);
-
-    // ── 7. Father / Mother ────────────────────────────────────────
-    sectionTitle("Parent / Guardian Details", '👨‍👩‍👧');
-    doubleRow("Father's Name",    data.father_name || '',
-              "Father's Mobile",  data.father_mobile || '', false);
-    doubleRow("Father's Occupation", data.father_occupation || '',
-              "Mother's Name",    data.mother_name || '', true);
-    doubleRow("Mother's Mobile",  data.mother_mobile || '',
-              "Mother's Occupation", data.mother_occupation || '', false);
-
-    gap(16);
-
-    // ── 8. Footer ─────────────────────────────────────────────────
-    // Divider
-    doc.moveTo(M, y).lineTo(M + CW, y).stroke(BORDER);
-    gap(8);
-
-    // Note
-    doc.save();
-    doc.rect(M, y, CW, 48).roundedRect(M, y, CW, 48, 6).fill(LBLUE);
-    doc.fillColor(BLUE).font('Helvetica-Bold').fontSize(8.5)
-       .text('✔  I accept that fees paid are NON-REFUNDABLE.', M + 10, y + 8, { width: CW - 20, align: 'center' });
-    doc.fillColor(GRAY).font('Helvetica').fontSize(7.5)
-       .text('This is a system-generated document and does not require a physical signature.', M + 10, y + 22, { width: CW - 20, align: 'center' })
-       .text('For queries: enquiry.svce@gmail.com  |  +91 99167 75988', M + 10, y + 34, { width: CW - 20, align: 'center' });
-    doc.restore();
-    y += 56;
-    gap(6);
-
-    // Page border
-    doc.save();
-    doc.rect(10, 10, W - 20, doc.page.height - 20).stroke(BLUE);
-    doc.restore();
+    // Page Border
+    doc.rect(15, 15, W - 30, doc.page.height - 30).lineWidth(0.5).stroke('#cbd5e1');
 
     doc.end();
   });

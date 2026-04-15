@@ -471,9 +471,9 @@
               <input type="text" id="paymentUtr" name="paymentUtr" required
                 placeholder="e.g. 407812345678"
                 style="font-family:'Courier New',monospace;letter-spacing:0.5px;"
-                oninput="this.value=this.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase()">
-              <span style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
-                Found in your UPI app under Payment History / Transaction Details
+                oninput="this.value=this.value.replace(/[^a-zA-Z0-9 ]/g,'')">
+              <span style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;display:block;">
+                Found in your UPI app under History. <strong>In case of Cash payment, simply type 'CASH'.</strong>
               </span>
             </div>
 
