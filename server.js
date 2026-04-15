@@ -1151,8 +1151,12 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       { label: 'Physics (Practical)', val: val(r.physics_12_prac) },
       { label: 'Chemistry (Theory)', val: val(r.chemistry_marks) },
       { label: 'Chemistry (Practical)', val: val(r.chemistry_12_prac) },
+      { label: 'Mathematics', val: val(r.mathematics_marks) },
       { label: 'Mathematics (A)', val: val(r.math_12a) },
       { label: 'Mathematics (B)', val: val(r.math_12b) },
+      { label: 'Computer Science', val: val(r.cs_marks) },
+      { label: 'Biology', val: val(r.bio_marks) },
+      { label: 'Electronics', val: val(r.ece_marks) },
     ].filter(c => c.val !== 'N/A'));
 
     const tableOpt = mkTable('Kannada, English, Other Subjects (Optional)', [
