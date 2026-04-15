@@ -64,7 +64,15 @@ function showDashboard() {
 
   const role = sessionStorage.getItem('admin_role');
   const navMgmt = document.getElementById('nav-management');
-  if (navMgmt) navMgmt.style.display = (role === 'counsellor') ? 'none' : 'flex';
+  const panelTitle = document.getElementById('panel-title-role');
+  
+  if (role === 'counsellor') {
+    if (navMgmt) navMgmt.style.display = 'none';
+    if (panelTitle) panelTitle.textContent = 'Counsellor Panel';
+  } else {
+    if (navMgmt) navMgmt.style.display = 'flex';
+    if (panelTitle) panelTitle.textContent = 'Admin Panel';
+  }
 
   loadOverview();
   updateClock();
