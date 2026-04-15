@@ -1122,6 +1122,14 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       </tr>`;
     }).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
 
+    // Section visibility — only show sections where at least one field has data
+    const hasVal = (v) => v !== null && v !== undefined && v !== '';
+    const has11th = [r.physics_11, r.chemistry_11, r.math_11a, r.math_11b, r.english_11, r.language_11].some(hasVal);
+    const has12th = [r.physics_marks, r.physics_12_prac, r.chemistry_marks, r.chemistry_12_prac, r.math_12a, r.math_12b].some(hasVal);
+    const hasOptional = [r.kannada_12, r.english_12, r.other_12].some(hasVal);
+    const hasPercentage = [r.total_percentage, r.pcm_percentage].some(hasVal);
+    const hasEntrance = [r.jee_rank, r.comedk_rank, r.cet_rank].some(hasVal);
+
     const html = `      <!DOCTYPE html>
       <html>
       <head>
@@ -1208,7 +1216,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           </tr>
         </table>
 
-        <table>
+        ${has11th ? `<table>
           <tr class="sub-section-header">
             <th colspan="6">11th Standard Details</th>
           </tr>
@@ -1218,9 +1226,9 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           <tr>
             <td>${val(r.physics_11)}</td><td>${val(r.chemistry_11)}</td><td>${val(r.math_11a)}</td><td>${val(r.math_11b)}</td><td>${val(r.english_11)}</td><td>${val(r.language_11)}</td>
           </tr>
-        </table>
+        </table>` : ''}
 
-        <table>
+        ${has12th ? `<table>
           <tr class="sub-section-header">
             <th colspan="6">12th Standard Details</th>
           </tr>
@@ -1230,9 +1238,9 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           <tr>
             <td>${val(r.physics_marks)}</td><td>${val(r.physics_12_prac)}</td><td>${val(r.chemistry_marks)}</td><td>${val(r.chemistry_12_prac)}</td><td>${val(r.math_12a)}</td><td>${val(r.math_12b)}</td>
           </tr>
-        </table>
+        </table>` : ''}
 
-        <table>
+        ${hasOptional ? `<table>
           <tr class="sub-section-header">
             <th colspan="3">Kannada, English, Other Subjects (Optional)</th>
           </tr>
@@ -1242,9 +1250,9 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           <tr>
             <td>${val(r.kannada_12)}</td><td>${val(r.english_12)}</td><td>${val(r.other_12)}</td>
           </tr>
-        </table>
+        </table>` : ''}
 
-        <table>
+        ${hasPercentage ? `<table>
           <tr class="sub-section-header">
             <th colspan="2">Percentage Details</th>
           </tr>
@@ -1254,9 +1262,9 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           <tr>
             <td>${val(r.total_percentage)}${r.total_percentage ? '%' : ''}</td><td>${val(r.pcm_percentage)}${r.pcm_percentage ? '%' : ''}</td>
           </tr>
-        </table>
+        </table>` : ''}
 
-        <table>
+        ${hasEntrance ? `<table>
           <tr class="sub-section-header">
             <th colspan="3">Entrance Exam Detail</th>
           </tr>
@@ -1266,7 +1274,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           <tr>
             <td>${val(r.jee_rank)}</td><td>${val(r.comedk_rank)}</td><td>${val(r.cet_rank)}</td>
           </tr>
-        </table>
+        </table>` : ''}
 
         <table class="pref-table">
           <tr class="sub-section-header">
