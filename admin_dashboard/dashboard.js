@@ -374,7 +374,21 @@ async function updateRemarks(id, field, value) {
 function filterEnquiries() {
   const search = document.getElementById('enq-search').value.toLowerCase();
   const dateFilter = document.getElementById('enq-filter-date').value;
-  const followupFilter = document.getElementById('enq-filter-followup')?.value;
+  
+  const followupDropdown = document.getElementById('enq-filter-followup');
+  const followupCustom = document.getElementById('enq-filter-followup-custom');
+  let followupFilter = followupDropdown ? followupDropdown.value : null;
+
+  if (followupDropdown && followupCustom) {
+    if (followupFilter === 'custom') {
+      followupCustom.style.display = 'inline-block';
+      followupFilter = followupCustom.value; 
+    } else {
+      followupCustom.style.display = 'none';
+      followupCustom.value = '';
+    }
+  }
+
   const actionFilter = document.getElementById('enq-filter-action').value;
   const courseFilter = document.getElementById('enq-filter-course').value;
   let filtered = allEnquiries;
@@ -1375,6 +1389,10 @@ function filterByDate(rows, field, filter) {
 
   if (filter === 'past') {
     return rows.filter(r => r[field] && r[field].substring(0, 10) < todayStr);
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(filter)) {
+    return rows.filter(r => r[field] && r[field].substring(0, 10) === filter);
   }
 
   if (filter === 'week') {

@@ -197,7 +197,9 @@
               <option value="tomorrow">Follow-up Tomorrow</option>
               <option value="week">Follow-up This Week</option>
               <option value="past">Past Due (Pending)</option>
+              <option value="custom">Custom Date...</option>
             </select>
+            <input type="date" id="enq-filter-followup-custom" onchange="filterEnquiries()" style="display:none; padding:4px 8px; border:1px solid #cbd5e1; border-radius:6px; font-size:13px; color:#475569; width: 120px;">
             <select id="enq-filter-action" onchange="filterEnquiries()">
               <option value="">All Actions</option>
               <option value="Booking Done">Booking Done</option>
