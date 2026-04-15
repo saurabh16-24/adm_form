@@ -994,6 +994,36 @@ app.delete('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Bulk email to enquiries
+app.post('/api/admin/enquiries/bulk-email', adminAuth, async (req, res) => {
+  try {
+    const { emails, subject, message } = req.body;
+    if (!emails || !emails.length) return res.status(400).json({ error: 'No valid emails provided' });
+
+    // Use nodemailer transporter
+    const mailOptions = {
+      from: '"Admission Team" <enquiry.svce@gmail.com>',
+      bcc: emails.join(','),
+      subject: subject || 'Message from Admission Team, SVCE',
+      html: `<div style="font-family: Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; max-width: 600px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #1e3a8a; margin: 0;">SVCE Admission Team</h2>
+        </div>
+        ${message.replace(/\n/g, '<br>')}
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; text-align: center;">
+          <p style="margin: 0;">Sri Venkateshwara College of Engineering</p>
+          <p style="margin: 4px 0 0;">Vidyanagara Cross, Off International Airport Road, Bengaluru-562157</p>
+        </div>
+      </div>`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, count: emails.length });
+  } catch (err) {
+    console.error('Bulk email error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 // All admissions
 app.get('/api/admin/admissions', adminAuth, async (req, res) => {
   try {

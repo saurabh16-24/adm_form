@@ -223,6 +223,10 @@
               <span class="material-icons-round">download</span>
               Export CSV
             </button>
+            <button class="btn" style="background:#3b82f6;color:white;display:flex;align-items:center;gap:4px;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-weight:600;" onclick="openBulkMailModal()" id="send-mail-enq-btn">
+              <span class="material-icons-round">mail</span>
+              Send Mail
+            </button>
           </div>
         </div>
         <div class="card">
@@ -346,6 +350,44 @@
         </button>
       </div>
       <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ BULK MAIL MODAL ═══════════════ -->
+  <div class="modal-overlay" id="bulk-mail-modal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-brand">
+          <img src="/admin_dashboard/image_copy.png" alt="SVCE Logo" class="modal-logo">
+          <h2>Send Bulk Mail</h2>
+        </div>
+        <button class="modal-close" onclick="closeBulkMailModal()">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 24px;">
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #334155;">To:</label>
+          <div id="bulk-mail-recipients" style="background: #f1f5f9; padding: 10px 12px; border-radius: 6px; font-size: 13px; color: #475569; max-height: 80px; overflow-y: auto; border: 1px solid #cbd5e1;">
+            <!-- Recipients will be injected here -->
+          </div>
+          <p id="bulk-mail-count" style="font-size: 12px; color: #64748b; margin-top: 6px;">0 recipients selected</p>
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #334155;">Subject:</label>
+          <input type="text" id="bulk-mail-subject" placeholder="Enter email subject" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; outline: none;">
+        </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #334155;">Message:</label>
+          <textarea id="bulk-mail-message" placeholder="Type your message here..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; min-height: 180px; resize: vertical; outline: none;"></textarea>
+        </div>
+        <div style="text-align: right;">
+          <button class="btn" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; font-weight: 600; border-radius: 6px; cursor: pointer; margin-right: 10px;" onclick="closeBulkMailModal()">Cancel</button>
+          <button class="btn" id="send-bulk-mail-btn" style="background: #1e40af; border: none; color: white; padding: 10px 24px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="sendBulkMail()">
+            <span class="material-icons-round" style="font-size: 18px;">send</span> Send Mail
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

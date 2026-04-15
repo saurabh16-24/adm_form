@@ -1736,3 +1736,68 @@ function exportManagementCSV() {
   downloadCSV('management_export.csv', headers, rows);
 }
 
+// ═══════════════ BULK MAIL ═══════════════
+let currentBulkEmails = [];
+
+function openBulkMailModal() {
+  if (!lastFilteredEnquiries || lastFilteredEnquiries.length === 0) {
+    return showToast('No records visible to send email to', 'error');
+  }
+
+  // Filter out invalid emails
+  currentBulkEmails = lastFilteredEnquiries
+    .map(r => r.student_email)
+    .filter(e => e && e.trim() !== '' && e.indexOf('@') !== -1);
+
+  if (currentBulkEmails.length === 0) {
+    return showToast('No valid email addresses found in the current filter', 'error');
+  }
+
+  document.getElementById('bulk-mail-count').textContent = `${currentBulkEmails.length} recipient(s) selected`;
+  document.getElementById('bulk-mail-recipients').textContent = currentBulkEmails.join(', ');
+  document.getElementById('bulk-mail-subject').value = '';
+  document.getElementById('bulk-mail-message').value = '';
+  document.getElementById('bulk-mail-modal').classList.add('open');
+}
+
+function closeBulkMailModal() {
+  document.getElementById('bulk-mail-modal').classList.remove('open');
+}
+
+async function sendBulkMail() {
+  const subject = document.getElementById('bulk-mail-subject').value.trim();
+  const message = document.getElementById('bulk-mail-message').value.trim();
+
+  if (!subject || !message) {
+    return showToast('Please enter both subject and message', 'error');
+  }
+
+  const btn = document.getElementById('send-bulk-mail-btn');
+  const ogHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="margin-right: 8px;"></span> Sending...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiFetch('/api/admin/enquiries/bulk-email', {
+      method: 'POST',
+      body: JSON.stringify({
+        emails: currentBulkEmails,
+        subject: subject,
+        message: message
+      })
+    });
+    
+    if (res.success) {
+      showToast(`Successfully sent mail to ${res.count} recipient(s)`);
+      closeBulkMailModal();
+    } else {
+      showToast(res.error || 'Failed to send mail', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to send mail. Server error.', 'error');
+    console.error('Send bulk mail error:', err);
+  } finally {
+    btn.innerHTML = ogHtml;
+    btn.disabled = false;
+  }
+}
