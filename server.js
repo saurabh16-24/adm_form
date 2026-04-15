@@ -1133,7 +1133,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
         <div class="top-bar">
           <div class="qr-box">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(window.location.origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
+            <img src="${qrDataUrl}" alt="Admission QR" style="width:80px;height:80px;">
             <p>Scan for Application Form</p>
           </div>
           <div class="meta-right-block">
