@@ -50,12 +50,17 @@ function generateAdmissionPdf(data) {
 
     // ── 1. Header ──────────────────────────────────────────────
     if (fs.existsSync(LOGO_PATH)) {
-      doc.image(LOGO_PATH, (W - 280) / 2, 20, { width: 280 });
+      doc.image(LOGO_PATH, M, 25, { width: 180 });
     }
     
-    doc.moveTo(M, 100).lineTo(W - M, 100).lineWidth(1.2).stroke(NAVY);
+    doc.fillColor(GRAY).font('Helvetica').fontSize(8)
+       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 30, { width: CW, align: 'right' })
+       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 40, { width: CW, align: 'right' })
+       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 50, { width: CW, align: 'right' });
+
+    doc.moveTo(M, 85).lineTo(W - M, 85).lineWidth(1.2).stroke(NAVY);
     
-    let y = 110;
+    let y = 95;
 
     // Student Photo (Top Right)
     const photoBuffer = getImageBuffer(data.passport_photo_path);
@@ -75,7 +80,7 @@ function generateAdmissionPdf(data) {
     doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(11)
        .text('Application Form No: ' + (data.application_number || '—'), M, y + 25, { width: CW - 70, align: 'center' });
 
-    y = 200;
+    y = 185;
 
     // ── Table Logic (Dynamic Height) ───────────────────────────
     function sectionHeader(title) {

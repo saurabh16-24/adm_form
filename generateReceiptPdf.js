@@ -36,33 +36,32 @@ function generateReceiptPdf(data) {
 
     // ── 1. Header ──────────────────────────────────────────────
     if (fs.existsSync(LOGO_PATH)) {
-      doc.image(LOGO_PATH, (W - 280) / 2, 20, { width: 280 });
+      doc.image(LOGO_PATH, M, 25, { width: 180 });
     }
     
-    // Increased y from 75 to 110 to avoid overlap with enlarged logo
     doc.fillColor(GRAY).font('Helvetica').fontSize(8.5)
-       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 110, { width: CW, align: 'center' })
-       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 121, { width: CW, align: 'center' })
-       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 132, { width: CW, align: 'center' });
+       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 35, { width: CW, align: 'right' })
+       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 46, { width: CW, align: 'right' })
+       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 57, { width: CW, align: 'right' });
 
-    doc.moveTo(M, 150).lineTo(W - M, 150).lineWidth(1).stroke(BORDER);
+    doc.moveTo(M, 85).lineTo(W - M, 85).lineWidth(1).stroke(BORDER);
 
     // ── 2. Receipt Title ─────────────────────────────────────────
     doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
-       .text('APPLICATION FEE RECEIPT', M, 165, { width: CW, align: 'center', characterSpacing: 1 });
+       .text('APPLICATION FEE RECEIPT', M, 100, { width: CW, align: 'center', characterSpacing: 1 });
     
     // Receipt Metadata (ID and Date)
     const receiptNo = 'R' + (data.id || 'TEMP') + '-' + Date.now().toString().slice(-6);
     const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     
     doc.fillColor(DARK).font('Helvetica-Bold').fontSize(9)
-       .text('Receipt No: ' + receiptNo, M, 190)
-       .text('Date: ' + today, M, 190, { width: CW, align: 'right' });
+       .text('Receipt No: ' + receiptNo, M, 125)
+       .text('Date: ' + today, M, 125, { width: CW, align: 'right' });
 
-    doc.moveTo(M, 205).lineTo(W - M, 205).lineWidth(0.5).stroke(BORDER);
+    doc.moveTo(M, 140).lineTo(W - M, 140).lineWidth(0.5).stroke(BORDER);
 
     // ── 3. Billing Details ───────────────────────────────────────
-    let y = 225;
+    let y = 160;
     
     function addRow(label, value, shade = false) {
       if (shade) doc.rect(M, y - 5, CW, 20).fill('#f8fafc');
