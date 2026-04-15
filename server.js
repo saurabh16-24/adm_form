@@ -987,6 +987,7 @@ app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
 
 // Delete enquiry
 app.delete('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
+  if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
     await pool.query('DELETE FROM enquiries WHERE id = $1', [req.params.id]);
     res.json({ success: true });
@@ -1018,6 +1019,7 @@ app.get('/api/admin/admission/:id', adminAuth, async (req, res) => {
 
 // Delete admission
 app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
+  if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
     await pool.query('DELETE FROM admissions WHERE id = $1', [req.params.id]);
     res.json({ success: true });
@@ -1164,6 +1166,7 @@ app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
 });
 
 app.delete('/api/admin/management-form/:id', adminAuth, async (req, res) => {
+  if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
     await pool.query('DELETE FROM management_forms WHERE id = $1', [req.params.id]);
     res.json({ success: true });
