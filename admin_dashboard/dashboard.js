@@ -374,6 +374,7 @@ async function updateRemarks(id, field, value) {
 function filterEnquiries() {
   const search = document.getElementById('enq-search').value.toLowerCase();
   const dateFilter = document.getElementById('enq-filter-date').value;
+  const followupFilter = document.getElementById('enq-filter-followup')?.value;
   const actionFilter = document.getElementById('enq-filter-action').value;
   const courseFilter = document.getElementById('enq-filter-course').value;
   let filtered = allEnquiries;
@@ -391,6 +392,7 @@ function filterEnquiries() {
   }
 
   if (dateFilter) filtered = filterByDate(filtered, 'enquiry_date', dateFilter);
+  if (followupFilter) filtered = filterByDate(filtered, 'follow_up_date', followupFilter);
   if (actionFilter) filtered = filtered.filter(r => (r.admin_remarks || '') === actionFilter);
 
   if (courseFilter) {
@@ -1356,6 +1358,18 @@ function filterByDate(rows, field, filter) {
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
   if (filter === 'today') return rows.filter(r => r[field] && r[field].substring(0, 10) === todayStr);
+
+  if (filter === 'tomorrow') {
+    const tmrw = new Date();
+    tmrw.setDate(tmrw.getDate() + 1);
+    const tmrwStr = tmrw.toISOString().split('T')[0];
+    return rows.filter(r => r[field] && r[field].substring(0, 10) === tmrwStr);
+  }
+
+  if (filter === 'past') {
+    return rows.filter(r => r[field] && r[field].substring(0, 10) < todayStr);
+  }
+
   if (filter === 'week') {
     const weekAgo = new Date(now - 7 * 86400000);
     return rows.filter(r => r[field] && new Date(r[field]) >= weekAgo);

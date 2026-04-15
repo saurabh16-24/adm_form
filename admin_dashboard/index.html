@@ -191,6 +191,13 @@
               <option value="week">This Week</option>
               <option value="month">This Month</option>
             </select>
+            <select id="enq-filter-followup" onchange="filterEnquiries()">
+              <option value="">All Follow-ups</option>
+              <option value="today">Follow-up Today</option>
+              <option value="tomorrow">Follow-up Tomorrow</option>
+              <option value="week">Follow-up This Week</option>
+              <option value="past">Past Due (Pending)</option>
+            </select>
             <select id="enq-filter-action" onchange="filterEnquiries()">
               <option value="">All Actions</option>
               <option value="Booking Done">Booking Done</option>
