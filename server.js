@@ -9,6 +9,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const generateAdmissionPdf = require('./generateAdmissionPdf');
+const generateReceiptPdf = require('./generateReceiptPdf');
 const Jimp = require('jimp');  // v0.22 — stable compositing API
 
 // ── Email Transporter Shared Configuration ─────────────────────────────────────
@@ -811,6 +812,7 @@ app.post('/api/admissions/submit', (req, res) => {
           }
           const emailData = { ...v, application_number: v.application_number, _top_prefs: prefs.slice(0, 4), _admin_remarks: remarks };
           const pdfBuffer = await generateAdmissionPdf(emailData);
+          const receiptPdfBuffer = await generateReceiptPdf(emailData);
 
           await transporter.sendMail({
             from: '"SVCE Admissions" <enquiry.svce@gmail.com>',
@@ -824,7 +826,7 @@ app.post('/api/admissions/submit', (req, res) => {
   </div>
   <div style="padding:28px 32px;">
     <p style="margin:0 0 16px;">Dear <strong>${v.title || ''} ${v.student_name || ''}</strong>,</p>
-    <p style="margin:0 0 16px;">Your admission application has been <strong style="color:#059669;">successfully received</strong>. Please find your application confirmation attached as a PDF.</p>
+    <p style="margin:0 0 16px;">Your admission application has been <strong style="color:#059669;">successfully received</strong>. Please find your <strong>Application Details</strong> and <strong>Official Payment Receipt</strong> attached as PDFs.</p>
     <div style="background:#f0fdf4;border:1px solid #6ee7b7;border-radius:8px;padding:14px 20px;margin-bottom:20px;">
       <p style="margin:0;font-size:14px;"><strong>Application No:</strong> <span style="color:#059669;font-family:monospace;">${v.application_number}</span></p>
       <p style="margin:4px 0 0;font-size:14px;"><strong>Course:</strong> ${v.course_preference || ''} &ndash; ${v.program_preference || ''}</p>
@@ -836,11 +838,18 @@ app.post('/api/admissions/submit', (req, res) => {
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">Svce, Vidyanagara Cross, Kenpegowda International Airport Road, Bengaluru-562157 &nbsp;|&nbsp; enquiry.svce@gmail.com</p>
   </div>
 </div>`,
-            attachments: [{
-              filename: `SVCE_Admission_${v.application_number.replace(/\//g, '_')}.pdf`,
-              content: pdfBuffer,
-              contentType: 'application/pdf'
-            }]
+            attachments: [
+              {
+                filename: `SVCE_Admission_${v.application_number.replace(/\//g, '_')}.pdf`,
+                content: pdfBuffer,
+                contentType: 'application/pdf'
+              },
+              {
+                filename: `SVCE_Payment_Receipt_${v.application_number.replace(/\//g, '_')}.pdf`,
+                content: receiptPdfBuffer,
+                contentType: 'application/pdf'
+              }
+            ]
           });
           console.log(`[Admission PDF] Email sent to ${v.email} (${v.application_number})`);
         } catch (mailErr) {
