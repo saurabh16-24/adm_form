@@ -898,15 +898,21 @@ async function openManagementFormEditor(id) {
     // Helper to format values
     const val = (v) => (v === null || v === undefined || v === '') ? '' : v;
     
-    // Calculate default annual fee
+    // Calculate default annual fee based on preferred course
     let defaultFee = 0;
-    try {
-      const prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
-      const match = prefs.find(p => (typeof p === 'object' ? p.course : p) === r.course_preference);
-      if (match && typeof match === 'object' && match.fee) {
-        defaultFee = parseFloat(match.fee);
-      }
-    } catch(e) {}
+    const initialFeeMap = {
+      "BE Computer Science and Engineering": 375000,
+      "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
+      "BE Computer Science and Engineering (Data Science)": 350000,
+      "BE Computer Science and Engineering (Cyber Security)": 350000,
+      "BE Information Science and Engineering": 350000,
+      "BE Electronics and Communication Engineering": 300000,
+      "BE Mechanical Engineering": 125000,
+      "BE Civil Engineering": 125000
+    };
+    if (r.course_preference && initialFeeMap[r.course_preference]) {
+      defaultFee = initialFeeMap[r.course_preference];
+    }
 
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/');
     const currentYear = new Date().getFullYear();
@@ -1040,14 +1046,14 @@ async function openManagementFormEditor(id) {
       const branchSel = document.getElementById('ed-branch');
       const bVal = branchSel.value;
       const feeMap = {
-        "BE Computer Science and Engineering": 400000,
-        "BE Computer Science and Engineering (Artificial Intelligence)": 400000,
-        "BE Computer Science and Engineering (Data Science)": 400000,
-        "BE Computer Science and Engineering (Cyber Security)": 400000,
+        "BE Computer Science and Engineering": 375000,
+        "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
+        "BE Computer Science and Engineering (Data Science)": 350000,
+        "BE Computer Science and Engineering (Cyber Security)": 350000,
         "BE Information Science and Engineering": 350000,
         "BE Electronics and Communication Engineering": 300000,
-        "BE Mechanical Engineering": 200000,
-        "BE Civil Engineering": 200000
+        "BE Mechanical Engineering": 125000,
+        "BE Civil Engineering": 125000
       };
       if (feeMap[bVal] !== undefined) {
         document.getElementById('ed-actual-fee').value = feeMap[bVal];
