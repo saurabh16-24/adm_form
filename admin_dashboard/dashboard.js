@@ -120,8 +120,8 @@ function switchTab(tab) {
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
     enquiries:  ['Enquiries', 'Manage student enquiry records'],
-    admissions: ['Admissions', 'Manage admission applications'],
-    management: ['Management', 'Generated Management Admission Forms']
+    admissions: ['Applications', 'Manage admission applications'],
+    management: ['Admissions', 'Generated Management Admission Forms']
   };
   document.getElementById('page-title').textContent = titles[tab][0];
   document.getElementById('page-subtitle').textContent = titles[tab][1];
