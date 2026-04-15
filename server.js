@@ -1432,33 +1432,33 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
       <head>
         <title>Application Print - ${r.student_name}</title>
         <style>
-          @page { size: A4; margin: 10mm 15mm; }
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 10.5px; line-height: 1.35; color: #111; }
+          @page { size: A4; margin: 6mm 10mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 9.8px; line-height: 1.2; color: #111; }
           
-          .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
-          .logo-img { height: 60px; width: auto; object-fit: contain; }
+          .header { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; }
+          .logo-img { height: 45px; width: auto; object-fit: contain; }
           
-          .header-meta-area { position: relative; min-height: 115px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-          .photo-box { position: absolute; right: 0; top: 0; width: 90px; height: 110px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
+          .header-meta-area { position: relative; min-height: 85px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+          .photo-box { position: absolute; right: 0; top: 0; width: 75px; height: 90px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
           .photo-box img { width: 100%; height: 100%; object-fit: cover; }
           
           .app-meta { text-align: center; }
-          .app-meta p { margin: 3px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+          .app-meta p { margin: 2px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
           
-          table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #111; table-layout: fixed; }
-          th, td { border: 1px solid #111; padding: 5px 8px; text-align: left; word-wrap: break-word; }
-          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10.5px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
-          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9.5px; width: 35%; }
-          .value { font-weight: 700; color: #000; font-size: 10px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 6px; border: 1px solid #111; table-layout: fixed; }
+          th, td { border: 1px solid #111; padding: 3px 6px; text-align: left; word-wrap: break-word; }
+          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
+          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9px; width: 35%; }
+          .value { font-weight: 700; color: #000; font-size: 9.5px; }
           
-          .grid-head { background: #f8fafc; font-weight: 700; font-size: 9.5px; text-transform: uppercase; color: #64748b; }
-          .declaration { font-size: 9.5px; text-align: justify; padding: 8px 12px; line-height: 1.5; color: #222; }
+          .grid-head { background: #f8fafc; font-weight: 700; font-size: 9px; text-transform: uppercase; color: #64748b; }
+          .declaration { font-size: 8.5px; text-align: justify; padding: 5px 10px; line-height: 1.3; color: #222; }
           
-          .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
-          .sign-area { text-align: center; width: 200px; }
-          .sign-placeholder { height: 50px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
-          .signature-img { max-height: 48px; max-width: 180px; object-fit: contain; }
-          .sign-label { font-weight: 810; font-size: 10px; border-top: 1.5px solid #000; padding-top: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+          .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
+          .sign-area { text-align: center; width: 180px; }
+          .sign-placeholder { height: 35px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
+          .signature-img { max-height: 33px; max-width: 160px; object-fit: contain; }
+          .sign-label { font-weight: 810; font-size: 9px; border-top: 1.5px solid #000; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
           
           @media print { 
             .no-print { display: none; } 
@@ -1468,7 +1468,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         </style>
       </head>
       <body>
-        <div class="header" style="margin-bottom:15px;">
+        <div class="header" style="margin-bottom:8px;">
           <img src="${logoUrl}" class="logo-img">
         </div>
 
@@ -1478,8 +1478,8 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           </div>
 
           <div class="app-meta">
-            <p style="font-size:11px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 5px; display:inline-block; margin-bottom:12px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
-            <div style="font-size:15px; font-weight:800; margin-bottom:15px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
+            <p style="font-size:10px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 3px; display:inline-block; margin-bottom:8px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
+            <div style="font-size:13px; font-weight:800; margin-bottom:10px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
           </div>
         </div>
 
@@ -1525,17 +1525,13 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         </table>
         <table>
           <tr class="section-header"><th colspan="3">Address Details</th></tr>
-          <tr><td colspan="3" style="font-size: 10px; font-weight: 600; background: #f8fafc; padding: 4px 8px;">Permanent Address Same as Communication Address: <span style="font-weight: 800; color: #1e40af;">${r.same_as_comm ? 'Yes' : 'No'}</span></td></tr>
+          <tr><td colspan="3" style="font-size: 8.5px; font-weight: 600; background: #f8fafc; padding: 2px 8px;">Permanent Address Same as Communication Address: <span style="font-weight: 800; color: #1e40af;">${r.same_as_comm ? 'Yes' : 'No'}</span></td></tr>
           <tr class="grid-head"><th style="width: 26%;">Field</th><th style="width: 37%;">Communication Address</th><th style="width: 37%;">Permanent Address</th></tr>
           <tr><td class="label">Address Line 1</td><td class="value">${r.comm_address_line1}</td><td class="value">${r.perm_address_line1 || r.comm_address_line1}</td></tr>
           <tr><td class="label">Address Line 2</td><td class="value">${r.comm_address_line2 || '—'}</td><td class="value">${r.perm_address_line2 || r.comm_address_line2 || '—'}</td></tr>
-          <tr><td class="label">City</td><td class="value">${r.comm_city}</td><td class="value">${r.perm_city || r.comm_city}</td></tr>
-          <tr><td class="label">District</td><td class="value">${r.comm_district || '—'}</td><td class="value">${r.perm_district || r.comm_district || '—'}</td></tr>
-          <tr><td class="label">State</td><td class="value">${r.comm_state}</td><td class="value">${r.perm_state || r.comm_state}</td></tr>
-          <tr><td class="label">Country</td><td class="value">${r.comm_country || 'India'}</td><td class="value">${r.perm_country || r.comm_country || 'India'}</td></tr>
-          <tr><td class="label">Pincode</td><td class="value">${r.comm_pincode}</td><td class="value">${r.perm_pincode || r.comm_pincode}</td></tr>
+          <tr><td class="label">City / District</td><td class="value">${r.comm_city} / ${r.comm_district || '—'}</td><td class="value">${r.perm_city || r.comm_city} / ${r.perm_district || r.comm_district || '—'}</td></tr>
+          <tr><td class="label">State / Pincode</td><td class="value">${r.comm_state} - ${r.comm_pincode}</td><td class="value">${r.perm_state || r.comm_state} - ${r.perm_pincode || r.comm_pincode}</td></tr>
         </table>
-        <div style="page-break-after: always;"></div>
 
         <table>
           <tr class="section-header"><th colspan="2">Educational Details</th></tr>
@@ -1553,13 +1549,12 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             <tr class="section-header"><th>Declaration</th></tr>
             <tr>
               <td class="declaration">
-                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.6;">
-                  <li style="margin-bottom: 8px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
-                  <li style="margin-bottom: 8px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
-                  <li style="margin-bottom: 8px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
-                  <li style="margin-bottom: 8px;">I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
-                  <li style="margin-bottom: 8px;">I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
-                  <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
+                <ul style="margin: 0; padding-left: 1rem; line-height: 1.3;">
+                  <li style="margin-bottom: 3px;">I hereby declare that all information provided is true to the best of my knowledge. Any misinformation may lead to rejection.</li>
+                  <li style="margin-bottom: 3px;">I agree to abide by all rules and regulations of SVCE as applicable.</li>
+                  <li style="margin-bottom: 3px;">I authorize SVCE to process/store my data for academic and regulatory compliance.</li>
+                  <li style="margin-bottom: 3px;">Submission of this form does not guarantee admission; course allotment is subject to seat availability and eligibility.</li>
+                  <li>In absence of entrance exams (CET/COMEDK/JEE), admission is subject to DTE/VTU approval.</li>
                 </ul>
               </td>
             </tr>
