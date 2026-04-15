@@ -1130,6 +1130,48 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
     const hasPercentage = [r.total_percentage, r.pcm_percentage].some(hasVal);
     const hasEntrance = [r.jee_rank, r.comedk_rank, r.cet_rank].some(hasVal);
 
+    // Dynamic column arrays — only columns with actual data
+    const mkTable = (title, cols) => cols.length === 0 ? '' : `<table>
+      <tr class="sub-section-header"><th colspan="${cols.length}">${title}</th></tr>
+      <tr style="background:#f8fafc;font-weight:600;">${cols.map(c => `<th>${c.label}</th>`).join('')}</tr>
+      <tr>${cols.map(c => `<td>${c.val}</td>`).join('')}</tr>
+    </table>`;
+
+    const table11 = mkTable('11th Standard Details', [
+      { label: 'Physics (Theory)', val: val(r.physics_11) },
+      { label: 'Chemistry (Theory)', val: val(r.chemistry_11) },
+      { label: 'Mathematics (A)', val: val(r.math_11a) },
+      { label: 'Mathematics (B)', val: val(r.math_11b) },
+      { label: 'English', val: val(r.english_11) },
+      { label: 'Language', val: val(r.language_11) },
+    ].filter(c => c.val !== 'N/A'));
+
+    const table12 = mkTable('12th Standard Details', [
+      { label: 'Physics (Theory)', val: val(r.physics_marks) },
+      { label: 'Physics (Practical)', val: val(r.physics_12_prac) },
+      { label: 'Chemistry (Theory)', val: val(r.chemistry_marks) },
+      { label: 'Chemistry (Practical)', val: val(r.chemistry_12_prac) },
+      { label: 'Mathematics (A)', val: val(r.math_12a) },
+      { label: 'Mathematics (B)', val: val(r.math_12b) },
+    ].filter(c => c.val !== 'N/A'));
+
+    const tableOpt = mkTable('Kannada, English, Other Subjects (Optional)', [
+      { label: 'Kannada/Telugu/Sanskrit', val: val(r.kannada_12) },
+      { label: 'English', val: val(r.english_12) },
+      { label: 'Other Subject Marks', val: val(r.other_12) },
+    ].filter(c => c.val !== 'N/A'));
+
+    const tablePct = mkTable('Percentage Details', [
+      { label: 'Total Percentage', val: r.total_percentage ? val(r.total_percentage) + '%' : null },
+      { label: 'PCM Percentage', val: r.pcm_percentage ? val(r.pcm_percentage) + '%' : null },
+    ].filter(c => c.val));
+
+    const tableEntrance = mkTable('Entrance Exam Detail', [
+      { label: 'JEE Rank', val: val(r.jee_rank) },
+      { label: 'COMEDK Rank', val: val(r.comedk_rank) },
+      { label: 'CET Rank', val: val(r.cet_rank) },
+    ].filter(c => c.val !== 'N/A'));
+
     const html = `      <!DOCTYPE html>
       <html>
       <head>
@@ -1216,65 +1258,15 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           </tr>
         </table>
 
-        ${has11th ? `<table>
-          <tr class="sub-section-header">
-            <th colspan="6">11th Standard Details</th>
-          </tr>
-          <tr style="background: #f8fafc; font-weight: 600;">
-            <th>Physics (Theory)</th><th>Chemistry (Theory)</th><th>Mathematics (A)</th><th>Mathematics (B)</th><th>English</th><th>Language</th>
-          </tr>
-          <tr>
-            <td>${val(r.physics_11)}</td><td>${val(r.chemistry_11)}</td><td>${val(r.math_11a)}</td><td>${val(r.math_11b)}</td><td>${val(r.english_11)}</td><td>${val(r.language_11)}</td>
-          </tr>
-        </table>` : ''}
+        ${table11}
 
-        ${has12th ? `<table>
-          <tr class="sub-section-header">
-            <th colspan="6">12th Standard Details</th>
-          </tr>
-          <tr style="background: #f8fafc; font-weight: 600;">
-            <th>Physics (Theory)</th><th>Physics (Practical)</th><th>Chemistry (Theory)</th><th>Chemistry (Practical)</th><th>Mathematics (A)</th><th>Mathematics (B)</th>
-          </tr>
-          <tr>
-            <td>${val(r.physics_marks)}</td><td>${val(r.physics_12_prac)}</td><td>${val(r.chemistry_marks)}</td><td>${val(r.chemistry_12_prac)}</td><td>${val(r.math_12a)}</td><td>${val(r.math_12b)}</td>
-          </tr>
-        </table>` : ''}
+        ${table12}
 
-        ${hasOptional ? `<table>
-          <tr class="sub-section-header">
-            <th colspan="3">Kannada, English, Other Subjects (Optional)</th>
-          </tr>
-          <tr style="background: #f8fafc; font-weight: 600;">
-            <th>Kannada/Telugu/Sanskrit</th><th>English</th><th>Other Subject Marks</th>
-          </tr>
-          <tr>
-            <td>${val(r.kannada_12)}</td><td>${val(r.english_12)}</td><td>${val(r.other_12)}</td>
-          </tr>
-        </table>` : ''}
+        ${tableOpt}
 
-        ${hasPercentage ? `<table>
-          <tr class="sub-section-header">
-            <th colspan="2">Percentage Details</th>
-          </tr>
-          <tr style="background: #f8fafc; font-weight: 600;">
-            <th>Total Percentage</th><th>PCM Percentage</th>
-          </tr>
-          <tr>
-            <td>${val(r.total_percentage)}${r.total_percentage ? '%' : ''}</td><td>${val(r.pcm_percentage)}${r.pcm_percentage ? '%' : ''}</td>
-          </tr>
-        </table>` : ''}
+        ${tablePct}
 
-        ${hasEntrance ? `<table>
-          <tr class="sub-section-header">
-            <th colspan="3">Entrance Exam Detail</th>
-          </tr>
-          <tr style="background: #f8fafc; font-weight: 600;">
-            <th>JEE Rank</th><th>COMEDK Rank</th><th>CET Rank</th>
-          </tr>
-          <tr>
-            <td>${val(r.jee_rank)}</td><td>${val(r.comedk_rank)}</td><td>${val(r.cet_rank)}</td>
-          </tr>
-        </table>` : ''}
+        ${tableEntrance}
 
         <table class="pref-table">
           <tr class="sub-section-header">
