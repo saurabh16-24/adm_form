@@ -892,25 +892,31 @@ const ADMIN_PASS  = process.env.ADMIN_PASS || 'admin123';
 // Persistent secret for JWT-like tokens (prevents logouts on restart)
 const ADMIN_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update(process.env.ADMIN_PASS || 'svce_default_secret').digest('hex');
 
-function generateToken() {
-  const payload = { user: ADMIN_USER, iat: Date.now() };
+function generateToken(role = 'admin') {
+  const payload = { user: ADMIN_USER, role: role, iat: Date.now() };
   const data = Buffer.from(JSON.stringify(payload)).toString('base64');
   const sig  = crypto.createHmac('sha256', ADMIN_SECRET).update(data).digest('hex');
   return `${data}.${sig}`;
 }
 
 function verifyToken(token) {
-  if (!token) return false;
+  if (!token) return null;
   const [data, sig] = token.split('.');
-  if (!data || !sig) return false;
+  if (!data || !sig) return null;
   const expected = crypto.createHmac('sha256', ADMIN_SECRET).update(data).digest('hex');
-  return sig === expected;
+  if (sig !== expected) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(data, 'base64').toString('ascii'));
+    return payload.role || 'admin';
+  } catch(e) { return null; }
 }
 
 function adminAuth(req, res, next) {
   const auth = req.headers.authorization;
   const token = auth && auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!verifyToken(token)) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  const userRole = verifyToken(token);
+  if (!userRole) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  req.userRole = userRole;
   next();
 }
 
@@ -918,7 +924,10 @@ function adminAuth(req, res, next) {
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
   if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true, token: generateToken(), username: ADMIN_USER });
+    return res.json({ success: true, token: generateToken('admin'), username: ADMIN_USER, role: 'admin' });
+  }
+  if (username === 'counsellor' && password === 'svce123') {
+    return res.json({ success: true, token: generateToken('counsellor'), username: 'Counsellor', role: 'counsellor' });
   }
   res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
@@ -1017,6 +1026,9 @@ app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
 
 // Management Forms
 app.post('/api/admin/management-form', adminAuth, async (req, res) => {
+  if (req.userRole === 'counsellor') {
+    return res.status(403).json({ error: 'Forbidden: Counsellors cannot generate management forms' });
+  }
   try {
     const v = req.body;
     const updater = v.updated_by || 'Admin';

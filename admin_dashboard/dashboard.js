@@ -29,6 +29,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (data.success) {
       sessionStorage.setItem('admin_token', data.token);
       sessionStorage.setItem('admin_name', data.username || 'Admin');
+      sessionStorage.setItem('admin_role', data.role || 'admin');
       showDashboard();
     } else {
       errEl.textContent = data.message || 'Invalid credentials';
@@ -60,6 +61,11 @@ function logout() {
 function showDashboard() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
+
+  const role = sessionStorage.getItem('admin_role');
+  const navMgmt = document.getElementById('nav-management');
+  if (navMgmt) navMgmt.style.display = (role === 'counsellor') ? 'none' : 'flex';
+
   loadOverview();
   updateClock();
   setInterval(updateClock, 1000);
@@ -766,6 +772,8 @@ function renderAdmissions(rows) {
     return;
   }
 
+  const role = sessionStorage.getItem('admin_role');
+
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.id}</td>
     <td>${r.application_number || '—'}</td>
@@ -780,7 +788,7 @@ function renderAdmissions(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      <button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>
+      ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
       <button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`).join('');
@@ -818,6 +826,7 @@ async function viewAdmission(id) {
   try {
     const data = await apiFetch(`/api/admin/admission/${id}`);
     const r = data.row;
+    const role = sessionStorage.getItem('admin_role');
     document.getElementById('modal-title').innerHTML = `
       <div style="display:flex; align-items:center; gap:12px; width:100%;">
         <span class="material-icons-round" style="color:var(--accent);">assignment</span>
@@ -826,9 +835,11 @@ async function viewAdmission(id) {
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="printAdmission(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">print</span> Print Confirmation
           </button>
+          ${role !== 'counsellor' ? `
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px; background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">description</span> Management Form
           </button>
+          ` : ''}
         </div>
       </div>`;
     document.getElementById('modal-body').innerHTML = `
