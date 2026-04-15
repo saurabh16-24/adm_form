@@ -1165,10 +1165,22 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       { label: 'Other Subject Marks', val: val(r.other_12) },
     ].filter(c => c.val !== 'N/A'));
 
+    // Determine which third subject contributes to PCM% (Physics + Math are fixed, pick highest of the rest)
+    const thirdSubjectCandidates = [
+      { abbr: 'C',   val: parseFloat(r.chemistry_marks) || 0 },
+      { abbr: 'CS',  val: parseFloat(r.cs_marks) || 0 },
+      { abbr: 'B',   val: parseFloat(r.bio_marks) || 0 },
+      { abbr: 'ECE', val: parseFloat(r.ece_marks) || 0 },
+    ].filter(s => s.val > 0).sort((a, b) => b.val - a.val);
+    const pmLabel = thirdSubjectCandidates.length > 0
+      ? `PM+${thirdSubjectCandidates[0].abbr} Percentage`
+      : 'PCM Percentage';
+
     const tablePct = mkTable('Percentage Details', [
       { label: 'Total Percentage', val: r.total_percentage ? val(r.total_percentage) + '%' : null },
-      { label: 'PCM Percentage', val: r.pcm_percentage ? val(r.pcm_percentage) + '%' : null },
+      { label: pmLabel, val: r.pcm_percentage ? val(r.pcm_percentage) + '%' : null },
     ].filter(c => c.val));
+
 
     const tableEntrance = mkTable('Entrance Exam Detail', [
       { label: 'JEE Rank', val: val(r.jee_rank) },
