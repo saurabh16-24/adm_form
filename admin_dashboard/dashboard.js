@@ -1355,14 +1355,21 @@ function detailHeader(title) {
 }
 
 function filterByDate(rows, field, filter) {
+  const getLocalYMD = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = getLocalYMD(now);
+  
   if (filter === 'today') return rows.filter(r => r[field] && r[field].substring(0, 10) === todayStr);
 
   if (filter === 'tomorrow') {
     const tmrw = new Date();
     tmrw.setDate(tmrw.getDate() + 1);
-    const tmrwStr = tmrw.toISOString().split('T')[0];
+    const tmrwStr = getLocalYMD(tmrw);
     return rows.filter(r => r[field] && r[field].substring(0, 10) === tmrwStr);
   }
 
