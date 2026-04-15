@@ -1087,13 +1087,29 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       ? ((r.transport_route || '') + ' (₹' + (r.transport_fee || 0) + ')')
       : 'NO';
 
-    const prefsRows = prefsArray.map((p, i) => `
+    // Server-side course fee lookup (matches enquiry form fee schedule)
+    const COURSE_FEES = {
+      'BE Computer Science and Engineering': 375000,
+      'BE Computer Science and Engineering (Artificial Intelligence)': 375000,
+      'BE Computer Science and Engineering (Data Science)': 350000,
+      'BE Computer Science and Engineering (Cyber Security)': 325000,
+      'BE Information Science and Engineering': 325000,
+      'BE Electronics and Communication Engineering': 275000,
+      'BE Civil Engineering': 125000,
+      'BE Mechanical Engineering': 125000
+    };
+
+    const prefsRows = prefsArray.map((p, i) => {
+      const courseName = typeof p === 'object' ? p.course : p;
+      const fee = (typeof p === 'object' && p.fee) ? p.fee : (COURSE_FEES[courseName] || null);
+      return `
       <tr>
         <td class="pref-num">${i + 1}.</td>
-        <td style="white-space:normal">${typeof p === 'object' ? p.course : p}</td>
-        <td style="text-align:center">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+        <td style="white-space:normal">${courseName}</td>
+        <td style="text-align:center">${fee ? '₹' + Number(fee).toLocaleString('en-IN') : '—'}</td>
         ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background:#fff"></td>` : ''}
-      </tr>`).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
+      </tr>`;
+    }).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
 
     const html = `      <!DOCTYPE html>
       <html>
@@ -1183,7 +1199,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
         <table>
           <tr class="sub-section-header">
-            <th colspan="6">11th Standard Details (For AP/Telangana students only)</th>
+            <th colspan="6">11th Standard Details</th>
           </tr>
           <tr style="background: #f8fafc; font-weight: 600;">
             <th>Physics (Theory)</th><th>Chemistry (Theory)</th><th>Mathematics (A)</th><th>Mathematics (B)</th><th>English</th><th>Language</th>
@@ -1195,7 +1211,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
         <table>
           <tr class="sub-section-header">
-            <th colspan="6">12th Standard Details (For AP/Telangana students only)</th>
+            <th colspan="6">12th Standard Details</th>
           </tr>
           <tr style="background: #f8fafc; font-weight: 600;">
             <th>Physics (Theory)</th><th>Physics (Practical)</th><th>Chemistry (Theory)</th><th>Chemistry (Practical)</th><th>Mathematics (A)</th><th>Mathematics (B)</th>
@@ -1261,8 +1277,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           `).join('') || '<tr><td colspan="4">No preferences selected</td></tr>'}
           <tr style="background: #f8fafc; font-weight: 700; font-size: 10px;">
             <td style="text-align: right; padding: 4px; border-right: none;">Hostel:</td>
-            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? (r.hostel_type.replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (₹' + r.hostel_fee + ')') : 'NO'}</td>
-            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? (r.transport_route + ' (₹' + r.transport_fee + ')') : 'NO'}</td>
+            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? ((r.hostel_type || '').replace('(Only Accomm)', '').replace('(With Food)', '').trim() + (r.hostel_fee ? ' (₹' + Number(r.hostel_fee).toLocaleString('en-IN') + ')' : '')) : 'NO'}</td>
+            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? ((r.transport_route || '') + (r.transport_fee ? ' (₹' + Number(r.transport_fee).toLocaleString('en-IN') + ')' : '')) : 'NO'}</td>
           </tr>
         </table>
 
