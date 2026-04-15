@@ -1000,7 +1000,7 @@ async function openManagementFormEditor(id) {
             <td class="label">Scholarship (₹)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
           </tr>
           <tr>
-            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value="${r.payment_utr_no ? '1250' : ''}"></td>
+            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value=""></td>
             <td class="label">Net Payable (₹)</td><td><input type="text" id="ed-net-payable" value="${defaultFee.toLocaleString()}" readonly style="color:#10b981;"></td>
           </tr>
         </table>
