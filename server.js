@@ -1393,7 +1393,10 @@ app.get('/api/admin/admission/:id/print-pdf', adminAuthQuery, async (req, res) =
 app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
   try {
     const query = `
-      SELECT a.*, e.course_preferences, e.admin_remarks
+      SELECT a.*, 
+             e.course_preferences, e.admin_remarks,
+             e.physics_marks, e.chemistry_marks, e.mathematics_marks, e.cs_marks, e.bio_marks, e.ece_marks,
+             e.pcm_percentage as enq_pcm_percentage
       FROM admissions a
       LEFT JOIN enquiries e ON a.enquiry_id = e.id
       WHERE a.id = $1
@@ -1412,6 +1415,17 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     const logoUrl = '/image copy.png';
     const photoUrl = fileToDataUrl(r.passport_photo_path);
     const signUrl  = fileToDataUrl(r.signature_path);
+
+    // Calculate PM + Max(Third Subject) for the label/value
+    const subjects = [
+      { abbr: 'C',   val: parseFloat(r.chemistry_marks) || 0 },
+      { abbr: 'CS',  val: parseFloat(r.cs_marks) || 0 },
+      { abbr: 'B',   val: parseFloat(r.bio_marks) || 0 },
+      { abbr: 'ECE', val: parseFloat(r.ece_marks) || 0 },
+    ].filter(s => s.val > 0).sort((a, b) => b.val - a.val);
+    
+    const pmXLabel = subjects.length > 0 ? `PM+${subjects[0].abbr} %` : 'PCM %';
+    const pmXValue = r.enq_pcm_percentage || r.twelfth_percentage || '—';
 
 
     let prefsArray = [];
@@ -1455,10 +1469,10 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .declaration { font-size: 8.5px; text-align: justify; padding: 5px 10px; line-height: 1.3; color: #222; }
           
           .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
-          .sign-area { text-align: center; width: 180px; }
-          .sign-placeholder { height: 48px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
-          .signature-img { max-height: 45px; max-width: 160px; object-fit: contain; }
-          .sign-label { font-weight: 810; font-size: 9px; border-top: 1.5px solid #000; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+          .sign-area { text-align: center; width: 140px; }
+          .sign-placeholder { height: 48px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1.2px solid #000; }
+          .signature-img { max-height: 45px; width: 100%; object-fit: contain; }
+          .sign-label { font-weight: 810; font-size: 8.5px; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; border-top:none; }
           
           @media print { 
             .no-print { display: none; } 
@@ -1541,6 +1555,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           <tr><td class="label">Board / University</td><td class="value">${r.twelfth_board}</td></tr>
           <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing} / ${r.twelfth_result_status || '—'}</td></tr>
           <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || '—'}%</td></tr>
+          <tr><td class="label">${pmXLabel}</td><td class="value">${pmXValue}${pmXValue !== '—' ? '%' : ''}</td></tr>
           <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
         </table>
 
@@ -1567,16 +1582,20 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
               <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
               <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
             </div>
-            <div style="display:flex; gap: 40px;">
-              <div class="sign-area">
+            <div style="display:flex; justify-content: space-between; width: 100%; gap: 15px;">
+              <div class="sign-area" style="width: 130px;">
                 <div class="sign-placeholder">
-                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
+                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Digital Signature">` : ''}
                 </div>
-                <span class="sign-label">Candidate Signature</span>
+                <span class="sign-label">Online Signature</span>
               </div>
-              <div class="sign-area">
+              <div class="sign-area" style="width: 130px;">
                 <div class="sign-placeholder"></div>
-                <span class="sign-label">Parent/Guardian Signature</span>
+                <span class="sign-label">Offline Signature</span>
+              </div>
+              <div class="sign-area" style="width: 130px;">
+                <div class="sign-placeholder"></div>
+                <span class="sign-label">Parent Signature</span>
               </div>
             </div>
           </div>
