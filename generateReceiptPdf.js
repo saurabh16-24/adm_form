@@ -1,6 +1,6 @@
 /**
  * generateReceiptPdf.js
- * Generates a professional Payment Receipt for SVCE Admission Fee.
+ * Generates an official Application Fee Receipt for SVCE.
  */
 
 const PDFDocument = require('pdfkit');
@@ -9,7 +9,6 @@ const fs = require('fs');
 
 // Colours
 const NAVY    = '#1e3a5f';
-const BLUE    = '#1d4ed8';
 const DARK    = '#1e293b';
 const GRAY    = '#64748b';
 const BORDER  = '#e2e8f0';
@@ -39,10 +38,6 @@ function generateReceiptPdf(data) {
     if (fs.existsSync(LOGO_PATH)) {
       doc.image(LOGO_PATH, M, 35, { width: 180 });
     }
-
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(14)
-       .text('SRI VENKATESHWARA', M, 40, { width: CW, align: 'right' })
-       .text('COLLEGE OF ENGINEERING', M, 55, { width: CW, align: 'right' });
     
     doc.fillColor(GRAY).font('Helvetica').fontSize(8.5)
        .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 75, { width: CW, align: 'right' })
@@ -53,7 +48,7 @@ function generateReceiptPdf(data) {
 
     // ── 2. Receipt Title ─────────────────────────────────────────
     doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(12)
-       .text('ADMISSION FEE RECEIPT', M, 130, { width: CW, align: 'center', characterSpacing: 1 });
+       .text('APPLICATION FEE RECEIPT', M, 130, { width: CW, align: 'center', characterSpacing: 1 });
     
     // Receipt Metadata (ID and Date)
     const receiptNo = 'R' + (data.id || 'TEMP') + '-' + Date.now().toString().slice(-6);
@@ -77,10 +72,9 @@ function generateReceiptPdf(data) {
 
     addRow('Candidate Name', (data.title ? data.title + ' ' : '') + (data.student_name || ''));
     addRow('Application Number', data.application_number || 'N/A', true);
-    addRow('Course / Branch', data.course_preference || 'N/A');
-    addRow('Mobile Number', data.mobile_no || 'N/A', true);
-    addRow('Email Address', data.email || 'N/A');
-    addRow('Father\'s Name', data.father_name || 'N/A', true);
+    addRow('Mobile Number', data.mobile_no || 'N/A', false);
+    addRow('Email Address', data.email || 'N/A', true);
+    addRow('Father\'s Name', data.father_name || 'N/A', false);
 
     y += 20;
 
@@ -112,12 +106,16 @@ function generateReceiptPdf(data) {
     y += 15;
     doc.rect(M, y, CW, 55, 4).stroke(BORDER);
     
+    const utrVal = data.payment_utr_no || '—';
+    const isCash = utrVal.toLowerCase().includes('cash');
+    const modeText = isCash ? 'Offline / Cash' : 'UPI / Online';
+
     doc.fillColor(DARK).font('Helvetica').fontSize(9);
     doc.text('Payment Mode:', M + 15, y + 12);
-    doc.font('Helvetica-Bold').text('UPI / Online', M + 130, y + 12);
+    doc.font('Helvetica-Bold').text(modeText, M + 130, y + 12);
     
     doc.font('Helvetica').text('Transaction Ref:', M + 15, y + 28);
-    doc.font('Helvetica-Bold').text(data.payment_utr_no || '—', M + 130, y + 28);
+    doc.font('Helvetica-Bold').text(utrVal, M + 130, y + 28);
 
     doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(10);
     doc.text('✔ TRANSACTION SUCCESSFUL', M + 15, y + 43, { width: CW - 30, align: 'right' });

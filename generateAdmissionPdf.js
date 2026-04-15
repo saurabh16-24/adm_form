@@ -196,28 +196,6 @@ function generateAdmissionPdf(data) {
 
     y += 10;
 
-    // ── 6. APPLICATION FEE RECEIPT (New Payment Section) ───────
-    // Using the style from Screenshot 1
-    doc.rect(M, y, CW, 18).fill('#1e3a5f');
-    doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(10).text('APPLICATION FEE RECEIPT', M, y + 4.5, { align: 'center', characterSpacing: 1 });
-    y += 18;
-
-    const utrVal = data.payment_utr_no || '—';
-    const isCash = utrVal.toLowerCase().includes('cash');
-    const modeText = isCash ? 'Offline / Cash' : 'UPI / Online';
-
-    doc.rect(M, y, CW, 50).stroke(BORDER);
-    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(10);
-    doc.text('AMOUNT PAID: ₹ 1,250.00', M + 15, y + 10);
-    doc.font('Helvetica').fontSize(9);
-    doc.text('Payment Mode: ' + modeText, M + 15, y + 26);
-    doc.text('Transaction Ref / UTR: ' + utrVal, M + 15, y + 38);
-    
-    // Note for cash
-    doc.fillColor(GRAY).font('Helvetica-Oblique').fontSize(8)
-       .text('* In case of Cash payment, simply type \'Cash\' in the field above.', M + CW - 240, y + 38, { width: 230, align: 'right' });
-
-    y += 58;
 
     // ── 7. Declaration ─────────────────────────────────────────
     sectionHeader('Declaration');
