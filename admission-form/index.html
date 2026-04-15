@@ -115,12 +115,13 @@
             <thead style="background: #f8fafc;">
               <tr style="text-align: left;">
                 <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 50px;">Select</th>
-                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 50px;">#</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 50px;">Order</th>
                 <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">Course Name</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 90px; text-align: center;">Reorder</th>
               </tr>
             </thead>
             <tbody id="prefBody">
-              <tr><td colspan="3" style="padding: 20px; text-align: center; color: #64748b;">
+              <tr><td colspan="4" style="padding: 20px; text-align: center; color: #64748b;">
                 <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Loading preferences from enquiry...
               </td></tr>
             </tbody>
@@ -722,9 +723,27 @@
             if (!Array.isArray(prefs)) prefs = [];
             
             const tbody = document.getElementById('prefBody');
+            
+            function updateIndices() {
+              tbody.querySelectorAll('tr').forEach((tr, i) => {
+                const idxCell = tr.querySelector('.pref-idx');
+                if (idxCell) idxCell.textContent = i + 1;
+              });
+            }
+
+            function moveRow(btn, direction) {
+              const row = btn.closest('tr');
+              if (direction === -1 && row.previousElementSibling) {
+                tbody.insertBefore(row, row.previousElementSibling);
+              } else if (direction === 1 && row.nextElementSibling) {
+                tbody.insertBefore(row.nextElementSibling, row);
+              }
+              updateIndices();
+            }
+
             if (tbody) {
               if (prefs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="padding:15px; text-align:center;">No preferences found in enquiry.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:15px; text-align:center;">No preferences found in enquiry.</td></tr>';
               } else {
                 tbody.innerHTML = '';
                 prefs.forEach((p, idx) => {
@@ -735,22 +754,33 @@
                     <td style="padding: 10px; text-align: center;">
                       <input type="checkbox" class="course-pref-check" value="${courseName}" ${idx < 3 ? 'checked' : ''}>
                     </td>
-                    <td style="padding: 10px; font-weight: 600;">${idx + 1}</td>
+                    <td class="pref-idx" style="padding: 10px; font-weight: 600;">${idx + 1}</td>
                     <td style="padding: 10px;">${courseName}</td>
+                    <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                      <button type="button" class="move-up-btn" style="padding:4px 8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; margin-right:4px;" title="Move Up"><i class="fas fa-chevron-up"></i></button>
+                      <button type="button" class="move-down-btn" style="padding:4px 8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px;" title="Move Down"><i class="fas fa-chevron-down"></i></button>
+                    </td>
                   `;
                   tbody.appendChild(tr);
                 });
 
-                // Add event listener to limit to 3 selections
-                const checks = tbody.querySelectorAll('.course-pref-check');
-                checks.forEach(ch => {
-                  ch.addEventListener('change', () => {
+                // Selection Limit Logic
+                tbody.addEventListener('change', (e) => {
+                  if (e.target.classList.contains('course-pref-check')) {
                     const checkedCount = tbody.querySelectorAll('.course-pref-check:checked').length;
                     if (checkedCount > 3) {
-                      ch.checked = false;
+                      e.target.checked = false;
                       alert('You can select a maximum of 3 preferences.');
                     }
-                  });
+                  }
+                });
+
+                // Reordering Logic
+                tbody.addEventListener('click', (e) => {
+                  const upBtn = e.target.closest('.move-up-btn');
+                  const downBtn = e.target.closest('.move-down-btn');
+                  if (upBtn) moveRow(upBtn, -1);
+                  if (downBtn) moveRow(downBtn, 1);
                 });
               }
             }
