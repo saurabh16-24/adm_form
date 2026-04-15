@@ -69,6 +69,13 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// ── Admission Form (QR / direct link) ────────────────────────────────────────
+// Serve the admission-form subfolder so /admission-form/ and /admission-form/?enquiry_id=X both work
+app.use('/admission-form', express.static(path.join(__dirname, 'admission-form')));
+app.get('/admission-form', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admission-form', 'index.html'));
+});
+
 // Serve uploaded files
 const UPLOADS_DIR = path.join(__dirname, 'uploads', 'admissions');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
