@@ -1511,27 +1511,17 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           </tr>
         </table>
         <table>
-          <tr class="section-header"><th colspan="4">Preference Details (From Enquiry)</th></tr>
-          <tr class="grid-head">
-            <th style="width:22px; text-align:center;">#</th><th>Course Name</th>
-            <th style="width:22px; text-align:center;">#</th><th>Course Name</th>
+          <tr class="section-header"><th colspan="${prefsArray.filter(p => (typeof p === 'object' ? p.course : p)).length * 2}">COURSE PREFERENCE DETAILS</th></tr>
+          <tr>
+            ${prefsArray.map((p, i) => {
+              const name = typeof p === 'object' ? (p.course || '') : (p || '');
+              if (!name) return '';
+              return `
+                <td style="width:20px; text-align:center; font-weight:700; background:#f8fafc;">${i + 1}.</td>
+                <td class="value" style="font-size:9px;">${name}</td>
+              `;
+            }).join('')}
           </tr>
-          ${(() => {
-            const rows = [];
-            for (let i = 0; i < prefsArray.length; i += 2) {
-              const a = prefsArray[i];
-              const b = prefsArray[i + 1];
-              const aName = typeof a === 'object' ? (a.course || '') : (a || '');
-              const bName = typeof b === 'object' ? (b.course || '') : (b || '');
-              rows.push(`<tr>
-                <td style="text-align:center; font-weight:700;">${i + 1}.</td>
-                <td class="value">${aName || '—'}</td>
-                <td style="text-align:center; font-weight:700;">${bName ? (i + 2) + '.' : ''}</td>
-                <td class="value">${bName || ''}</td>
-              </tr>`);
-            }
-            return rows.join('');
-          })()}
         </table>
         <table>
           <tr class="section-header"><th colspan="3">Address Details</th></tr>
