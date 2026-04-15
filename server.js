@@ -1484,28 +1484,54 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         </div>
 
         <table>
-          <tr class="section-header"><th colspan="2">Personal Details</th></tr>
-          <tr><td class="label">Name</td><td class="value">${r.title || ''} ${r.student_name}</td></tr>
-          <tr><td class="label">Mobile No.</td><td class="value">${r.mobile_no}</td></tr>
-          <tr><td class="label">Email Address</td><td class="value">${r.email}</td></tr>
-          <tr><td class="label">Date of Birth</td><td class="value">${formatDate(r.date_of_birth)}</td></tr>
-          <tr><td class="label">Gender</td><td class="value">${r.gender}</td></tr>
-          <tr><td class="label">Aadhaar Number</td><td class="value">${r.aadhaar_no || '—'}</td></tr>
+          <tr class="section-header"><th colspan="4">Personal Details</th></tr>
+          <tr>
+            <td class="label" style="width:16%">Name</td><td class="value" style="width:34%">${r.title || ''} ${r.student_name}</td>
+            <td class="label" style="width:16%">Father's Name</td><td class="value" style="width:34%">${r.father_name || '—'}</td>
+          </tr>
+          <tr>
+            <td class="label">Mobile No.</td><td class="value">${r.mobile_no}</td>
+            <td class="label">Father's Mobile</td><td class="value">${r.father_mobile || '—'}</td>
+          </tr>
+          <tr>
+            <td class="label">Email Address</td><td class="value">${r.email}</td>
+            <td class="label">Mother's Name</td><td class="value">${r.mother_name || '—'}</td>
+          </tr>
+          <tr>
+            <td class="label">Date of Birth</td><td class="value">${formatDate(r.date_of_birth)}</td>
+            <td class="label">Mother's Mobile</td><td class="value">${r.mother_mobile || '—'}</td>
+          </tr>
+          <tr>
+            <td class="label">Gender</td><td class="value">${r.gender}</td>
+            <td class="label">Father's Occupation</td><td class="value">${r.father_occupation || '—'}</td>
+          </tr>
+          <tr>
+            <td class="label">Aadhaar Number</td><td class="value">${r.aadhaar_no || '—'}</td>
+            <td class="label">Mother's Occupation</td><td class="value">${r.mother_occupation || '—'}</td>
+          </tr>
         </table>
         <table>
-          <tr class="section-header"><th colspan="3">Preference Details (From Enquiry)</th></tr>
+          <tr class="section-header"><th colspan="4">Preference Details (From Enquiry)</th></tr>
           <tr class="grid-head">
-            <th style="width: 25px; text-align: center;">#</th>
-            <th>Course Name</th>
-            <th style="width: 150px;">Fee (Agreed)</th>
+            <th style="width:22px; text-align:center;">#</th><th>Course Name</th>
+            <th style="width:22px; text-align:center;">#</th><th>Course Name</th>
           </tr>
-          ${prefsArray.map((p, i) => `
-            <tr>
-              <td style="text-align: center; font-weight: 700;">${i + 1}.</td>
-              <td class="value">${typeof p === 'object' ? p.course : p}</td>
-              <td class="value" style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
-            </tr>
-          `).join('')}
+          ${(() => {
+            const rows = [];
+            for (let i = 0; i < prefsArray.length; i += 2) {
+              const a = prefsArray[i];
+              const b = prefsArray[i + 1];
+              const aName = typeof a === 'object' ? (a.course || '') : (a || '');
+              const bName = typeof b === 'object' ? (b.course || '') : (b || '');
+              rows.push(`<tr>
+                <td style="text-align:center; font-weight:700;">${i + 1}.</td>
+                <td class="value">${aName || '—'}</td>
+                <td style="text-align:center; font-weight:700;">${bName ? (i + 2) + '.' : ''}</td>
+                <td class="value">${bName || ''}</td>
+              </tr>`);
+            }
+            return rows.join('');
+          })()}
         </table>
         <table>
           <tr class="section-header"><th colspan="3">Address Details</th></tr>
@@ -1520,13 +1546,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           <tr><td class="label">Pincode</td><td class="value">${r.comm_pincode}</td><td class="value">${r.perm_pincode || r.comm_pincode}</td></tr>
         </table>
         <div style="page-break-after: always;"></div>
-        <table>
-          <tr class="section-header"><th colspan="2">Parent Details</th></tr>
-          <tr><td class="label">Father Name</td><td class="value">${r.father_name}</td></tr>
-          <tr><td class="label">Father's Mobile / Occupation</td><td class="value">${r.father_mobile || '—'} / ${r.father_occupation || '—'}</td></tr>
-          <tr><td class="label">Mother Name</td><td class="value">${r.mother_name}</td></tr>
-          <tr><td class="label">Mother's Mobile / Occupation</td><td class="value">${r.mother_mobile || '—'} / ${r.mother_occupation || '—'}</td></tr>
-        </table>
+
         <table>
           <tr class="section-header"><th colspan="2">Educational Details</th></tr>
           <tr><td colspan="2" class="label" style="width:100%; background:#f8fafc; font-weight:700;">Qualifying Marksheet Name: <span style="font-weight:800; color:#000;">${r.candidate_name_marksheet}</span></td></tr>
