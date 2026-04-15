@@ -76,6 +76,24 @@ app.get('/admission-form', (req, res) => {
   res.sendFile(path.join(__dirname, 'admission-form', 'index.html'));
 });
 
+// ── Helper: Convert uploaded file path to base64 data URL for embedded printing ──
+function fileToDataUrl(relativePath) {
+  if (!relativePath) return '';
+  try {
+    const fullPath = path.join(__dirname, relativePath.startsWith('/') ? relativePath.slice(1) : relativePath);
+    if (fs.existsSync(fullPath)) {
+      const data = fs.readFileSync(fullPath);
+      const ext = path.extname(fullPath).toLowerCase().replace('.', '');
+      const mime = ext === 'png' ? 'image/png' : ext === 'gif' ? 'image/gif' : 'image/jpeg';
+      return `data:${mime};base64,${data.toString('base64')}`;
+    }
+  } catch (e) {
+    console.error('[fileToDataUrl] Error reading file:', relativePath, e.message);
+  }
+  return '';
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Serve uploaded files
 const UPLOADS_DIR = path.join(__dirname, 'uploads', 'admissions');
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -1392,8 +1410,9 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     };
 
     const logoUrl = '/image copy.png';
-    const photoUrl = r.passport_photo_path ? r.passport_photo_path : '';
-    const signUrl = r.signature_path ? r.signature_path : '';
+    const photoUrl = fileToDataUrl(r.passport_photo_path);
+    const signUrl  = fileToDataUrl(r.signature_path);
+
 
     let prefsArray = [];
     if (typeof r.course_preferences === 'string') {
