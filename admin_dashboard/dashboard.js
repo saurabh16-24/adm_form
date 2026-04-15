@@ -1181,8 +1181,8 @@ async function finalPrintManagementForm() {
                   <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                   <div style="width:2.5px; height:35px; background:#475569;"></div>
                   <div style="line-height: 1.1;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
                   </div>
                 </div>
                 <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
@@ -1629,8 +1629,8 @@ async function printManagementFromRecord(id) {
                     <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                     <div style="width:2.5px; height:35px; background:#475569;"></div>
                     <div style="line-height: 1.1;">
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
                     </div>
                   </div>
                   <div class="estd">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
