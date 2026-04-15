@@ -1549,12 +1549,13 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             <tr class="section-header"><th>Declaration</th></tr>
             <tr>
               <td class="declaration">
-                <ul style="margin: 0; padding-left: 1rem; line-height: 1.3;">
-                  <li style="margin-bottom: 3px;">I hereby declare that all information provided is true to the best of my knowledge. Any misinformation may lead to rejection.</li>
-                  <li style="margin-bottom: 3px;">I agree to abide by all rules and regulations of SVCE as applicable.</li>
-                  <li style="margin-bottom: 3px;">I authorize SVCE to process/store my data for academic and regulatory compliance.</li>
-                  <li style="margin-bottom: 3px;">Submission of this form does not guarantee admission; course allotment is subject to seat availability and eligibility.</li>
-                  <li>In absence of entrance exams (CET/COMEDK/JEE), admission is subject to DTE/VTU approval.</li>
+                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.25; font-size: 8.2px;">
+                  <li style="margin-bottom: 3px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
+                  <li style="margin-bottom: 3px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
+                  <li style="margin-bottom: 3px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
+                  <li style="margin-bottom: 3px;">I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
+                  <li style="margin-bottom: 3px;">I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
+                  <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
                 </ul>
               </td>
             </tr>
