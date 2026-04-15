@@ -1438,8 +1438,8 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .header { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; }
           .logo-img { height: 45px; width: auto; object-fit: contain; }
           
-          .header-meta-area { position: relative; min-height: 85px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
-          .photo-box { position: absolute; right: 0; top: 0; width: 75px; height: 90px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
+          .header-meta-area { position: relative; min-height: 98px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+          .photo-box { position: absolute; right: 0; top: 0; width: 75px; height: 95px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
           .photo-box img { width: 100%; height: 100%; object-fit: cover; }
           
           .app-meta { text-align: center; }
@@ -1456,8 +1456,8 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           
           .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 10px; }
           .sign-area { text-align: center; width: 180px; }
-          .sign-placeholder { height: 35px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
-          .signature-img { max-height: 33px; max-width: 160px; object-fit: contain; }
+          .sign-placeholder { height: 48px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
+          .signature-img { max-height: 45px; max-width: 160px; object-fit: contain; }
           .sign-label { font-weight: 810; font-size: 9px; border-top: 1.5px solid #000; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
           
           @media print { 
