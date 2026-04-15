@@ -114,14 +114,20 @@
           <table style="width: 100%; border-collapse: collapse; min-width: 400px; border: 1px solid #e2e8f0; font-size: 0.85rem;">
             <thead style="background: #f8fafc;">
               <tr style="text-align: left;">
-                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">#</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 50px;">Select</th>
+                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0; width: 50px;">#</th>
                 <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">Course Name</th>
               </tr>
             </thead>
             <tbody id="prefBody">
-              <tr><td colspan="2" style="padding: 15px; text-align: center; color: #64748b;">(Auto-filled from enquiry)</td></tr>
+              <tr><td colspan="3" style="padding: 20px; text-align: center; color: #64748b;">
+                <i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Loading preferences from enquiry...
+              </td></tr>
             </tbody>
           </table>
+          <p style="font-size:0.75rem; color:#64748b; margin-top:8px;">
+            <i class="fas fa-info-circle"></i> You can select <b>up to 3 preferences</b> from the list above.
+          </p>
         </div>
       </div>
     </section>
@@ -710,14 +716,45 @@
             setVal('commLine1', e.address);
           }
 
-          // Course preferences
-          let prefs = [];
-          try { prefs = typeof e.course_preferences === 'string' ? JSON.parse(e.course_preferences) : (e.course_preferences || []); } catch {}
-          if (prefs.length > 0) {
-              const firstPref = typeof prefs[0] === 'object' ? prefs[0].course : prefs[0];
-              setOpt('coursePreference', firstPref);
-              setVal('programPreference', 'UG Programs');
-          }
+          // Course preferences logic
+          try {
+            let prefs = typeof e.course_preferences === 'string' ? JSON.parse(e.course_preferences) : (e.course_preferences || []);
+            if (!Array.isArray(prefs)) prefs = [];
+            
+            const tbody = document.getElementById('prefBody');
+            if (tbody) {
+              if (prefs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="padding:15px; text-align:center;">No preferences found in enquiry.</td></tr>';
+              } else {
+                tbody.innerHTML = '';
+                prefs.forEach((p, idx) => {
+                  const courseName = typeof p === 'object' ? p.course : p;
+                  const tr = document.createElement('tr');
+                  tr.style.borderBottom = '1px solid #f1f5f9';
+                  tr.innerHTML = `
+                    <td style="padding: 10px; text-align: center;">
+                      <input type="checkbox" class="course-pref-check" value="${courseName}" ${idx < 3 ? 'checked' : ''}>
+                    </td>
+                    <td style="padding: 10px; font-weight: 600;">${idx + 1}</td>
+                    <td style="padding: 10px;">${courseName}</td>
+                  `;
+                  tbody.appendChild(tr);
+                });
+
+                // Add event listener to limit to 3 selections
+                const checks = tbody.querySelectorAll('.course-pref-check');
+                checks.forEach(ch => {
+                  ch.addEventListener('change', () => {
+                    const checkedCount = tbody.querySelectorAll('.course-pref-check:checked').length;
+                    if (checkedCount > 3) {
+                      ch.checked = false;
+                      alert('You can select a maximum of 3 preferences.');
+                    }
+                  });
+                });
+              }
+            }
+          } catch (err) { console.error('Prefs rendering error:', err); }
 
           // Educational Details
           setVal('twelfth_institution', e.institution_name || '');
@@ -744,20 +781,7 @@
           // Declaration name
           setVal('declName', e.student_name || '');
 
-          // Preferences List
-          try {
-            const top4 = Array.isArray(prefs) ? prefs.slice(0, 4) : [];
-            while (top4.length < 4) top4.push('');
-            const tbody = document.getElementById('prefBody');
-            if (tbody) {
-              tbody.innerHTML = top4.map((p, idx) => `
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                  <td style="padding: 10px; font-weight: 600;">${idx + 1}</td>
-                  <td style="padding: 10px;">${typeof p === 'object' ? p.course : (p || '—')}</td>
-                </tr>
-              `).join('');
-            }
-          } catch (err) { console.error('Prefs list error:', err); }
+
 
           sel('autofillBanner').style.display = 'block';
         })
@@ -1065,8 +1089,8 @@
         gender: sel('gender')?.value || '',
         aadhaar_no: sel('aadhaarNo')?.value || '',
         selected_institute: sel('selectedInstitute')?.value || '',
-        course_preference: sel('coursePreference')?.value || '',
-        program_preference: sel('programPreference')?.value || '',
+        course_preference: Array.from(document.querySelectorAll('.course-pref-check:checked')).map(c => c.value).join(', '),
+        program_preference: 'UG Programs',
         comm_address_line1: sel('commLine1')?.value || '',
         comm_address_line2: sel('commLine2')?.value || '',
         comm_city: sel('commCity')?.value || '',
