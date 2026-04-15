@@ -365,15 +365,15 @@
                 <div class="marks-fields marks-fields-languages">
                     <div class="marks-field">
                         <label for="kannada_marks_12">Kannada/Telugu/Sanskrit: <span class="optional-note">(Optional)</span></label>
-                        <input type="number" id="kannada_marks_12" name="kannada_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                        <input type="number" id="kannada_marks_12" name="kannada_marks_12">
                     </div>
                     <div class="marks-field">
                         <label for="english_marks_12">English: <span class="optional-note">(Optional)</span></label>
-                        <input type="number" id="english_marks_12" name="english_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                        <input type="number" id="english_marks_12" name="english_marks_12">
                     </div>
                     <div class="marks-field">
                         <label for="other_unnamed_marks_12">Others: <span class="optional-note">(Optional)</span></label>
-                        <input type="number" id="other_unnamed_marks_12" name="other_unnamed_marks_12" oninput="handleExclusiveOptionalSubjectChange(this.id)">
+                        <input type="number" id="other_unnamed_marks_12" name="other_unnamed_marks_12">
                     </div>
                 </div>
             </div><!-- /12th marks -->
@@ -1025,18 +1025,7 @@
             };
         }
         
-        function handleExclusiveOptionalSubjectChange(changedId) {
-            const optionalFields = ['kannada_marks_12', 'english_marks_12', 'other_unnamed_marks_12'];
-            const changedField = document.getElementById(changedId);
-            
-            if (changedField.value) {
-                optionalFields.forEach(fieldId => {
-                    if (fieldId !== changedId) {
-                        document.getElementById(fieldId).value = '';
-                    }
-                });
-            }
-        }
+        // Optional subject fields (kannada/english/others) can all be filled independently
 
         // ── Pincode auto-detect ──────────────────────────────────
         (function() {
