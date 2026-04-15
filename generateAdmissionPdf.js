@@ -50,12 +50,12 @@ function generateAdmissionPdf(data) {
 
     // ── 1. Header ──────────────────────────────────────────────
     if (fs.existsSync(LOGO_PATH)) {
-      doc.image(LOGO_PATH, (W - 240) / 2, 20, { width: 240 });
+      doc.image(LOGO_PATH, (W - 280) / 2, 20, { width: 280 });
     }
     
-    doc.moveTo(M, 65).lineTo(W - M, 65).lineWidth(1.2).stroke(NAVY);
+    doc.moveTo(M, 100).lineTo(W - M, 100).lineWidth(1.2).stroke(NAVY);
     
-    let y = 75;
+    let y = 110;
 
     // Student Photo (Top Right)
     const photoBuffer = getImageBuffer(data.passport_photo_path);
@@ -75,7 +75,7 @@ function generateAdmissionPdf(data) {
     doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(11)
        .text('Application Form No: ' + (data.application_number || '—'), M, y + 25, { width: CW - 70, align: 'center' });
 
-    y = 160;
+    y = 200;
 
     // ── Table Logic (Dynamic Height) ───────────────────────────
     function sectionHeader(title) {
