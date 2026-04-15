@@ -1065,6 +1065,73 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
       ]);
       res.json({ success: true, id: result.rows[0].id, type: 'insert' });
     }
+
+    // ── Send Animated Confirmation Email ──
+    if (v.email) {
+      setImmediate(async () => {
+        try {
+          await transporter.sendMail({
+            from: '"SVCE Admissions" <enquiry.svce@gmail.com>',
+            to: v.email,
+            subject: '🎉 Congratulations! Provisional Admission Saved – SVCE Bengaluru',
+            html: `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <style>
+      @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
+      @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+      @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+  </head>
+  <body style="margin:0;padding:20px;background:#f8fafc;font-family:'Segoe UI',Arial,sans-serif;">
+    <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1);">
+      
+      <!-- Header Banner -->
+      <div style="background:linear-gradient(135deg, #1e3a8a, #3b82f6);padding:40px 20px;text-align:center;">
+        <div style="font-size:48px;animation: bounce 2s infinite;display:inline-block;margin-bottom:10px;">🎉</div>
+        <h1 style="color:#ffffff;margin:0;font-size:26px;letter-spacing:0.5px;text-shadow:0 2px 4px rgba(0,0,0,0.2);">Congratulations, ${v.student_name}!</h1>
+      </div>
+
+      <!-- Body Content -->
+      <div style="padding:40px 32px;text-align:center;animation: slideUp 1s ease-out;">
+        <h2 style="color:#334155;font-size:20px;font-weight:600;margin-top:0;">You have successfully filled the</h2>
+        
+        <!-- Animated Badge -->
+        <div style="display:inline-block;background:#ecfdf5;border:2px solid #10b981;color:#059669;padding:12px 24px;border-radius:30px;font-weight:700;font-size:18px;margin:20px 0;animation: pulse 2s infinite;">
+          ✨ Provisional Admission Form ✨
+        </div>
+        
+        <p style="color:#475569;font-size:18px;margin:0 0 30px;">of <strong>SVCE Bengaluru</strong>.</p>
+        
+        <!-- Detail Box -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;text-align:left;margin-bottom:30px;">
+          <p style="margin:0 0 10px;color:#334155;"><strong>Branch Selected:</strong> <span style="color:#1e3a8a;">${v.branch || 'N/A'}</span></p>
+          <p style="margin:0 0 10px;color:#334155;"><strong>Application No:</strong> <span style="color:#1e3a8a;">${v.app_no || 'N/A'}</span></p>
+          <p style="margin:0;color:#334155;"><strong>Academic Year:</strong> <span style="color:#1e3a8a;">${v.academic_year || 'N/A'}</span></p>
+        </div>
+
+        <p style="color:#64748b;font-size:14px;line-height:1.6;margin:0;">We are thrilled to welcome you to our community. Our administration team will process your details shortly.</p>
+        
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:30px 0;">
+        
+        <div style="font-size:12px;color:#94a3b8;">
+          <p style="margin:0;">Sri Venkateshwara College of Engineering</p>
+          <p style="margin:4px 0 0;">Vidyanagara Cross, Off International Airport Road, Bengaluru-562157</p>
+          <p style="margin:4px 0 0;">Email: enquiry.svce@gmail.com | Web: www.svcengg.edu.in</p>
+        </div>
+      </div>
+    </div>
+  </body>
+  </html>`
+          });
+          console.log('[Management-BG] Success email sent to', v.email);
+        } catch (err) {
+          console.error('[Management-BG] Email error:', err);
+        }
+      });
+    }
+
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
