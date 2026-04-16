@@ -1157,12 +1157,12 @@ async function finalPrintManagementForm() {
           .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
           .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-          .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
-          .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
-          .guidelines ol { padding-left: 15px; margin: 0; }
-          .guidelines li { margin-bottom: 2px; }
+          .guidelines { font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
+          .guidelines h3 { font-size: 13px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+          .guidelines ol { padding-left: 18px; margin: 0; }
+          .guidelines li { margin-bottom: 3px; }
 
-          .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
+          .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
           .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
           @media print {
@@ -1609,12 +1609,12 @@ async function printManagementFromRecord(id) {
               .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
-              .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
-              .guidelines ol { padding-left: 15px; margin: 0; }
-              .guidelines li { margin-bottom: 2px; }
+              .guidelines { font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
+              .guidelines h3 { font-size: 13px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+              .guidelines ol { padding-left: 18px; margin: 0; }
+              .guidelines li { margin-bottom: 3px; }
 
-              .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
+              .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
               .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
               @media print { body { -webkit-print-color-adjust: exact; } }

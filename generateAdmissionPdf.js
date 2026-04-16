@@ -23,11 +23,21 @@ const LOGO_PATH = path.join(__dirname, 'svce-logo.png');
  */
 function getImageBuffer(p) {
   if (!p) return null;
-  const cleanPath = p.startsWith('/') ? p.substring(1) : p;
-  const fullPath = path.isAbsolute(cleanPath) ? cleanPath : path.join(__dirname, cleanPath);
-  if (fs.existsSync(fullPath)) return fs.readFileSync(fullPath);
+  try {
+    p = decodeURIComponent(p);
+    const cleanPath = p.replace(/^[\/\\]+/, '');
+    const fullPath = path.isAbsolute(cleanPath) ? cleanPath : path.join(__dirname, cleanPath);
+    if (fs.existsSync(fullPath)) {
+      return fs.readFileSync(fullPath);
+    } else {
+      console.error('[getImageBuffer] File not found:', fullPath);
+    }
+  } catch (err) {
+    console.error('[getImageBuffer] Error reading:', p, err);
+  }
   return null;
 }
+
 
 function generateAdmissionPdf(data) {
   return new Promise((resolve, reject) => {
