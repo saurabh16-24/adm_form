@@ -1157,8 +1157,8 @@ async function finalPrintManagementForm() {
           .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
           .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-          .guidelines { font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-          .guidelines h3 { font-size: 13px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+          .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
+          .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
           .guidelines ol { padding-left: 18px; margin: 0; }
           .guidelines li { margin-bottom: 3px; }
 
@@ -1609,8 +1609,8 @@ async function printManagementFromRecord(id) {
               .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-              .guidelines h3 { font-size: 13px; margin-bottom: 5px; text-decoration: underline; font-weight: 800; }
+              .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
+              .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
               .guidelines ol { padding-left: 18px; margin: 0; }
               .guidelines li { margin-bottom: 3px; }
 
