@@ -871,6 +871,7 @@ async function viewAdmission(id) {
       </div>`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
+        ${detailHeader('Personal Information')}
         ${detailItem('Application No.', r.application_number)}
         ${detailItem('Date', formatDate(r.application_date))}
         ${detailItem('Title', r.title)}
@@ -879,23 +880,44 @@ async function viewAdmission(id) {
         ${detailItem('Mobile', r.mobile_no)}
         ${detailItem('DOB', formatDate(r.date_of_birth))}
         ${detailItem('Gender', r.gender)}
-        ${detailItem('Aadhaar No.', r.aadhaar_no)}
+        ${detailItem('Aadhaar No.', r.aadhaar_no || '—')}
+
+        ${detailHeader('Course Preferences')}
         ${detailItem('Institute', r.selected_institute || 'Engineering - SVCE')}
         ${detailItem('Course', r.course_preference)}
         ${detailItem('Programme', r.program_preference)}
-        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', '), true)}
+
+        ${detailHeader('Address Details')}
+        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_district, r.comm_state, r.comm_country, r.comm_pincode].filter(Boolean).join(', '), true)}
+        ${detailItem('Perm. Address Same?', r.same_as_comm ? 'Yes' : 'No')}
+        ${r.same_as_comm ? '' : detailItem('Perm. Address', [r.perm_address_line1, r.perm_address_line2, r.perm_city, r.perm_district, r.perm_state, r.perm_country, r.perm_pincode].filter(Boolean).join(', '), true)}
+        
+        ${detailHeader('Parent Details')}
         ${detailItem('Father', r.father_name)}
         ${detailItem('Father Mobile', r.father_mobile)}
         ${detailItem('Father Occupation', r.father_occupation)}
         ${detailItem('Mother', r.mother_name)}
         ${detailItem('Mother Mobile', r.mother_mobile)}
         ${detailItem('Mother Occupation', r.mother_occupation)}
+
+        ${detailHeader('Educational & Entrance Stats')}
         ${detailItem('Marksheet Name', r.candidate_name_marksheet)}
         ${detailItem('12th Institution', r.twelfth_institution)}
         ${detailItem('12th Board', r.twelfth_board)}
-        ${detailItem('12th %', r.twelfth_percentage + '%')}
-        ${detailItem('Entrance Exams', r.entrance_exams || 'None')}
-        ${detailItem('Payment UTR', r.payment_utr_no)}
+        ${detailItem('12th Stream', r.twelfth_stream || '—')}
+        ${detailItem('12th Year Passing', r.twelfth_year_passing || '—')}
+        ${detailItem('12th Marking Scheme', r.twelfth_marking_scheme || '—')}
+        ${detailItem('12th Result', r.twelfth_result_status || '—')}
+        ${detailItem('12th % / CGPA', (r.twelfth_percentage || '—') + '%')}
+        ${detailItem('Entrance Exams', r.entrance_exams || 'None', true)}
+
+        ${detailHeader('Payment & Documents')}
+        ${detailItem('Payment UTR', r.payment_utr_no || '—')}
+        ${detailItem('Declaration Accepted', r.declaration_accepted ? 'Yes' : 'No')}
+        ${r.passport_photo_path ? detailItem('Passport Photo', `<a href="${r.passport_photo_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Photo ↗</a>`) : ''}
+        ${r.signature_path ? detailItem('Signature', `<a href="${r.signature_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Signature ↗</a>`) : ''}
+        ${r.twelfth_marksheet_path ? detailItem('12th Marksheet', `<a href="${r.twelfth_marksheet_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Marksheet ↗</a>`) : ''}
+        ${r.payment_receipt_path ? detailItem('Payment Receipt', `<a href="${r.payment_receipt_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Receipt ↗</a>`) : ''}
       </div>`;
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to load admission details'); }
