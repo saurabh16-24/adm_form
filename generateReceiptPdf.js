@@ -123,10 +123,10 @@ function generateReceiptPdf(data) {
     y += 85;
 
     // ── 6. Footer ────────────────────────────────────────────────
-    doc.fillColor(GRAY).font('Helvetica-Oblique').fontSize(8.5)
-       .text('Notes:', M);
-    doc.font('Helvetica').fontSize(8);
-    doc.text('1. This fee is for the Admission Registration and is Non-Refundable.', M, y + 10);
+    doc.font('Helvetica-Oblique').fontSize(8).fillColor('#64748b');
+    doc.text('Notes:', M, y);
+    doc.font('Helvetica').fontSize(7.5).fillColor('#475569');
+    doc.text('1. I accept that fees paid is non refundable.', M, y + 10);
     doc.text('2. This is a computer-generated receipt and does not require a physical signature.', M, y + 20);
     doc.text('3. Please keep this receipt for future reference during the admission process.', M, y + 30);
 
