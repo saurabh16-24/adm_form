@@ -1122,7 +1122,7 @@ async function finalPrintManagementForm() {
           
           .header-left-wrap {
             background: #000;
-            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%);
+            clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
             flex: 1.4;
             padding-right: 3px; /* This creates the black slanted line */
           }
@@ -1134,10 +1134,10 @@ async function finalPrintManagementForm() {
             align-items: center; 
             gap: 15px; 
             height: 100%;
-            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); 
+            clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%); 
           }
-          .header-left img { height: 65px; width: auto; }
-          .college-info { line-height: 1.1; }
+          .header-left img { height: 50px; width: auto; object-fit: contain; }
+          .college-info { line-height: 1.15; padding: 4px 0; }
           .college-name { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
           .college-name span { font-weight: 400; font-size: 14px; margin-left: 10px; border-left: 2px solid #94a3b8; padding-left: 10px; display: inline-block; vertical-align: middle; }
           .sub-name { font-size: 11px; font-weight: 800; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; }
