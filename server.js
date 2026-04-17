@@ -1604,6 +1604,49 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .signature-img { max-height: 45px; width: 100%; object-fit: contain; }
           .sign-label { font-weight: 810; font-size: 8.5px; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; border-top:none; }
           
+          /* ───── NEW OFFICIAL HEADER ───── */
+          .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
+          
+          .header-left-wrap {
+            background: #000;
+            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%);
+            flex: 1.4;
+            padding-right: 3px;
+          }
+          
+          .header-left { 
+            background: #cbd5e1; 
+            padding: 10px 30px 10px 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            height: 100%;
+            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); 
+          }
+          .header-left img { height: 65px; width: auto; }
+          .college-info { line-height: 1.1; }
+          .college-name { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+          .college-name span { font-weight: 400; font-size: 14px; margin-left: 10px; border-left: 2px solid #94a3b8; padding-left: 10px; display: inline-block; vertical-align: middle; }
+          .sub-name { font-size: 11px; font-weight: 800; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; }
+          .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
+
+          .header-right { 
+            flex: 1; 
+            padding: 8px 0 8px 15px; 
+            font-size: 9px; 
+            font-weight: 600; 
+            color: #334155; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+          }
+          .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
+          .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
+          .contact-label { width: 45px; font-weight: 700; color: #64748b; }
+          .contact-sep { width: 10px; text-align: center; }
+
+          /* ─────────────────────────────── */
+
           @media print { 
             .no-print { display: none; } 
             table, tr { page-break-inside: avoid; }
@@ -1612,6 +1655,33 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         </style>
       </head>
       <body>
+        <div class="official-header">
+          <div class="header-left-wrap">
+            <div class="header-left">
+              <img src="/image copy 2.png" alt="SVCE Logo">
+              <div class="college-info">
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
+                  <div style="width:2.5px; height:35px; background:#475569;"></div>
+                  <div style="line-height: 1.1;">
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
+                  </div>
+                </div>
+                <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <table class="contact-table">
+              <tr><td class="contact-label">Phone</td><td class="contact-sep">:</td><td>+91 9916775988, +91 9740202345</td></tr>
+              <tr><td class="contact-label">Website</td><td class="contact-sep">:</td><td>https://svcengg.edu.in/</td></tr>
+              <tr><td class="contact-label">Email ID</td><td class="contact-sep">:</td><td>admissions@svceengg.edu.in</td></tr>
+              <tr><td class="contact-label" style="vertical-align:top">Address</td><td class="contact-sep" style="vertical-align:top">:</td><td>Kempegowda International Airport Road,<br>Vidya Nagar, Bengaluru - 562 157<br>Karnataka State</td></tr>
+            </table>
+          </div>
+        </div>
+
         <div class="top-bar">
           <div class="qr-box">
             <div class="photo-box" style="position:relative; width: 75px; height: 95px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10;">
