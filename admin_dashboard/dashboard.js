@@ -1675,9 +1675,10 @@ async function printManagementFromRecord(id) {
 
 
             <div class="meta-info">
-              <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:170px">${val(m.app_no)}</span></div>
-              <div style="flex: 1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${(y1[0]||'')}</span><span>${(y1[1]||'')}</span></span> 20<span class="year-boxes"><span>${(y2[0]||'')}</span><span>${(y2[1]||'')}</span></span></div>
-              <div style="flex: 0.8; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${val(m.form_date)}</span></div>
+              <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:130px">${val(m.app_no)}</span></div>
+              <div style="flex: 1;">Contineo ID: <span class="box-input" style="min-width:100px">${val(m.contineo_id)}</span></div>
+              <div style="flex: 1.1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${(y1[0]||'')}</span><span>${(y1[1]||'')}</span></span> 20<span class="year-boxes"><span>${(y2[0]||'')}</span><span>${(y2[1]||'')}</span></span></div>
+              <div style="flex: 0.6; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${val(m.form_date)}</span></div>
             </div>
 
             <table>
