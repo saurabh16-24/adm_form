@@ -1792,6 +1792,7 @@ function closeBulkMailModal() {
 async function sendBulkMail() {
   const subject = document.getElementById('bulk-mail-subject').value.trim();
   const message = document.getElementById('bulk-mail-message').value.trim();
+  const fileInput = document.getElementById('bulk-mail-attachments');
 
   if (!subject || !message) {
     return showToast('Please enter both subject and message', 'error');
@@ -1803,20 +1804,34 @@ async function sendBulkMail() {
   btn.disabled = true;
 
   try {
-    const res = await apiFetch('/api/admin/enquiries/bulk-email', {
-      method: 'POST',
-      body: JSON.stringify({
-        emails: currentBulkEmails,
-        subject: subject,
-        message: message
-      })
-    });
+    const formData = new FormData();
+    formData.append('subject', subject);
+    formData.append('message', message);
+    formData.append('emails', JSON.stringify(currentBulkEmails));
     
-    if (res.success) {
-      showToast(`Successfully sent mail to ${res.count} recipient(s)`);
+    if (fileInput && fileInput.files.length > 0) {
+      for (let i = 0; i < fileInput.files.length; i++) {
+        formData.append('attachments', fileInput.files[i]);
+      }
+    }
+
+    const res = await fetch(`${API}/api/admin/enquiries/bulk-email`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${sessionStorage.getItem('admin_token')}`
+      },
+      body: formData
+    });
+
+    if (res.status === 401) { logout(); throw new Error('Session expired'); }
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || 'Server error'); }
+    const data = await res.json();
+    
+    if (data.success) {
+      showToast(`Successfully sent mail to ${data.count} recipient(s)`);
       closeBulkMailModal();
     } else {
-      showToast(res.error || 'Failed to send mail', 'error');
+      showToast(data.error || 'Failed to send mail', 'error');
     }
   } catch (err) {
     showToast('Failed to send mail. Server error.', 'error');

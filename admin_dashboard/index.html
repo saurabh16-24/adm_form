@@ -381,6 +381,11 @@
           <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #334155;">Message:</label>
           <textarea id="bulk-mail-message" placeholder="Type your message here..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; box-sizing: border-box; min-height: 180px; resize: vertical; outline: none;"></textarea>
         </div>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: 600; margin-bottom: 6px; color: #334155;">Attachments (Optional):</label>
+          <input type="file" id="bulk-mail-attachments" multiple style="width: 100%; font-size: 13px;">
+          <p style="font-size: 11px; color: #64748b; margin-top: 4px;">You can select multiple files. Max 5MB per file recommended.</p>
+        </div>
         <div style="text-align: right;">
           <button class="btn" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; font-weight: 600; border-radius: 6px; cursor: pointer; margin-right: 10px;" onclick="closeBulkMailModal()">Cancel</button>
           <button class="btn" id="send-bulk-mail-btn" style="background: #1e40af; border: none; color: white; padding: 10px 24px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="sendBulkMail()">
