@@ -1720,7 +1720,7 @@ async function printManagementFromRecord(id) {
             <div class="footer-signs">
               <div class="sign-col">Student Signature</div>
               <div class="sign-col">Parents/Guardian Signature</div>
-              <div class="sign-col">Admissions Team Signature</div>
+              <div class="sign-col">Admission Head Signature</div>
             </div>
             <div style="margin-top:15px; font-size:8px; color:#94a3b8; text-align:center;">* Re-printed from Dashboard record #${m.id} on ${new Date().toLocaleString()}</div>
           </body>
