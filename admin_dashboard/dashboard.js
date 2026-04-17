@@ -1316,7 +1316,7 @@ async function finalPrintManagementForm() {
         <div class="footer-signs">
           <div class="sign-col">Student Signature</div>
           <div class="sign-col">Parents/Guardian Signature</div>
-          <div class="sign-col">Admissions Team Signature</div>
+          <div class="sign-col">Admission Head Signature</div>
         </div>
 
       </body>

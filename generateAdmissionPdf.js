@@ -220,8 +220,8 @@ function generateAdmissionPdf(data) {
 
     y += 30;
     const signBoxH = 34;
-    const signBoxW = 110;
-    const signGap = (CW - (signBoxW * 3)) / 2;
+    const signBoxW = 85;
+    const signGap = (CW - (signBoxW * 4)) / 3;
 
     function signBox(label, x, imgPath) {
       doc.rect(x, y, signBoxW, signBoxH).stroke(BORDER);
@@ -232,9 +232,10 @@ function generateAdmissionPdf(data) {
       doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(7.5).text(label, x, y + signBoxH + 4, { width: signBoxW, align: 'center' });
     }
 
-    signBox('ONLINE SIGNATURE', M, data.signature_path);
-    signBox('OFFLINE SIGNATURE', M + signBoxW + signGap, null);
+    signBox('OFFLINE SIGNATURE', M, null);
+    signBox('ONLINE SIGNATURE', M + signBoxW + signGap, data.signature_path);
     signBox('PARENT SIGNATURE', M + (signBoxW + signGap) * 2, null);
+    signBox('ADMISSION HEAD SIGNATURE', M + (signBoxW + signGap) * 3, null);
 
     doc.rect(12, 12, W - 24, doc.page.height - 24).lineWidth(0.5).stroke('#cbd5e1');
     doc.end();

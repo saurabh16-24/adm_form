@@ -1468,7 +1468,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
           <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
           <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Parent/Guardian Signature</div>
-          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Office Signature</div>
+          <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Admission Head Signature</div>
         </div>
 
 
@@ -1790,16 +1790,24 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
               <p style="color:#64748b; margin:0;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
               <p style="color:#64748b; font-size:8.5px; margin:0;">ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
             </div>
-            <div style="display:flex; justify-content: flex-end; width: 60%; gap: 10px;">
-              <div class="sign-area" style="width: 110px;">
+            <div style="display:flex; justify-content: space-between; width: 75%; gap: 10px;">
+              <div class="sign-area" style="width: 90px;">
+                <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;"></div>
+                <span class="sign-label" style="font-size: 8px;">Offline Signature</span>
+              </div>
+              <div class="sign-area" style="width: 90px;">
                 <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;">
                   ${signUrl ? `<img src="${signUrl}" class="signature-img" style="max-height: 35px;">` : ''}
                 </div>
                 <span class="sign-label" style="font-size: 8px;">Online Signature</span>
               </div>
-              <div class="sign-area" style="width: 110px;">
+              <div class="sign-area" style="width: 90px;">
                 <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;"></div>
                 <span class="sign-label" style="font-size: 8px;">Parent Signature</span>
+              </div>
+              <div class="sign-area" style="width: 100px;">
+                <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;"></div>
+                <span class="sign-label" style="font-size: 8px;">Admission Head Signature</span>
               </div>
             </div>
           </div>
