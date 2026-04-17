@@ -982,8 +982,9 @@ async function openManagementFormEditor(id) {
         
         <div class="meta-row">
           <div>App No: <input type="text" id="ed-app-no" value="${r.application_number}" class="meta-input" style="width:140px; display:inline-block;"></div>
-          <div>Academic Year: 20<input type="text" id="ed-y1" value="${yearBoxes[0]}${yearBoxes[1]}" class="meta-input" style="width:40px; display:inline-block;">-20<input type="text" id="ed-y2" value="${yearBoxes[2]}${yearBoxes[3]}" class="meta-input" style="width:40px; display:inline-block;"></div>
-          <div>Date: <input type="text" id="ed-date" value="${today}" class="meta-input" style="width:100px; display:inline-block;"></div>
+          <div>Contineo ID: <input type="text" id="ed-contineo-id" value="" class="meta-input" style="width:110px; display:inline-block;"></div>
+          <div>Academic Year: 20<input type="text" id="ed-y1" value="${yearBoxes[0]}${yearBoxes[1]}" class="meta-input" style="width:30px; display:inline-block;">-20<input type="text" id="ed-y2" value="${yearBoxes[2]}${yearBoxes[3]}" class="meta-input" style="width:30px; display:inline-block;"></div>
+          <div>Date: <input type="text" id="ed-date" value="${today}" class="meta-input" style="width:80px; display:inline-block;"></div>
         </div>
 
         <table>
@@ -1225,9 +1226,10 @@ async function finalPrintManagementForm() {
 
 
         <div class="meta-info">
-          <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:170px">${get('ed-app-no')}</span></div>
-          <div style="flex: 1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${get('ed-y1')[0] || ''}</span><span>${get('ed-y1')[1] || ''}</span></span> 20<span class="year-boxes"><span>${get('ed-y2')[0] || ''}</span><span>${get('ed-y2')[1] || ''}</span></span></div>
-          <div style="flex: 0.8; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${get('ed-date')}</span></div>
+          <div style="flex: 1.2;">Application No.: <span class="box-input" style="min-width:130px">${get('ed-app-no')}</span></div>
+          <div style="flex: 1;">Contineo ID: <span class="box-input" style="min-width:100px">${get('ed-contineo-id')}</span></div>
+          <div style="flex: 1.1; text-align: center;">Academic Year: 20<span class="year-boxes"><span>${get('ed-y1')[0] || ''}</span><span>${get('ed-y1')[1] || ''}</span></span> 20<span class="year-boxes"><span>${get('ed-y2')[0] || ''}</span><span>${get('ed-y2')[1] || ''}</span></span></div>
+          <div style="flex: 0.6; text-align: right;">Date: <span style="text-decoration: underline; font-weight:800">${get('ed-date')}</span></div>
         </div>
 
         <table>
@@ -1506,6 +1508,7 @@ async function saveAndPrintManagementForm(admissionId) {
     const payload = {
       admission_id: admissionId,
       app_no: get('ed-app-no'),
+      contineo_id: get('ed-contineo-id'),
       academic_year: get('ed-y1') + '-' + get('ed-y2'),
       form_date: get('ed-date'),
       student_name: get('ed-student-name'),

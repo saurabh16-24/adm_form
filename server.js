@@ -653,7 +653,8 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS jee_rank VARCHAR(50)",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS cet_no VARCHAR(50)",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100)"
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100)",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS contineo_id VARCHAR(50)"
     ];
     for (const sql of mgtAlter) await pool.query(sql);
 
@@ -1065,7 +1066,7 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
           parent_name = $6, parent_mobile = $7, branch = $8, state = $9, email = $10,
           actual_fee = $11, scholarship = $12, booking_fee = $13, net_payable = $14, reference_name = $15,
           pcm_percentage = $16, overall_percentage = $17, cet_rank = $18, comedk_rank = $19, jee_rank = $20, cet_no = $21,
-          updated_at = CURRENT_TIMESTAMP, updated_by = $22
+          updated_at = CURRENT_TIMESTAMP, updated_by = $22, contineo_id = $24
         WHERE admission_id = $23
         RETURNING id
       `;
@@ -1074,7 +1075,7 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
         v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
         v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
         v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
-        updater, v.admission_id
+        updater, v.admission_id, v.contineo_id
       ]);
       res.json({ success: true, id: result.rows[0].id, type: 'update' });
     } else {
@@ -1085,8 +1086,8 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
           parent_name, parent_mobile, branch, state, email,
           actual_fee, scholarship, booking_fee, net_payable, reference_name,
           pcm_percentage, overall_percentage, cet_rank, comedk_rank, jee_rank, cet_no,
-          updated_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+          updated_by, contineo_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
         RETURNING id
       `;
       const result = await pool.query(query, [
@@ -1094,7 +1095,7 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
         v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
         v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
         v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
-        updater
+        updater, v.contineo_id
       ]);
       res.json({ success: true, id: result.rows[0].id, type: 'insert' });
     }
