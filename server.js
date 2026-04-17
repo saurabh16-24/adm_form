@@ -1576,8 +1576,8 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
       <head>
         <title>Application Print - ${r.student_name}</title>
         <style>
-          @page { size: A4; margin: 6mm 10mm; }
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 9.8px; line-height: 1.2; color: #111; }
+          @page { size: A4; margin: 4mm 6mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 9.2px; line-height: 1.15; color: #111; }
           
           .header { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 5px; }
           .logo-img { height: 75px; width: auto; object-fit: contain; }
@@ -1589,11 +1589,11 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .app-meta { text-align: center; }
           .app-meta p { margin: 2px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
           
-          table { width: 100%; border-collapse: collapse; margin-bottom: 6px; border: 1px solid #111; table-layout: fixed; }
-          th, td { border: 1px solid #111; padding: 3px 6px; text-align: left; word-wrap: break-word; }
-          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
-          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9px; width: 35%; }
-          .value { font-weight: 700; color: #000; font-size: 9.5px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 5px; border: 1px solid #111; table-layout: fixed; }
+          th, td { border: 1px solid #111; padding: 2px 4px; text-align: left; word-wrap: break-word; }
+          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 9px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
+          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 8.5px; width: 35%; }
+          .value { font-weight: 800; color: #000; font-size: 9px; }
           
           .grid-head { background: #f8fafc; font-weight: 700; font-size: 9px; text-transform: uppercase; color: #64748b; }
           .declaration { font-size: 8.5px; text-align: justify; padding: 5px 10px; line-height: 1.3; color: #222; }
@@ -1605,26 +1605,23 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .sign-label { font-weight: 810; font-size: 8.5px; padding-top: 3px; display: block; text-transform: uppercase; letter-spacing: 0.5px; border-top:none; }
           
           /* ───── NEW OFFICIAL HEADER ───── */
-          .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
+          .official-header { display: flex; align-items: stretch; margin-bottom: 8px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
           
           .header-left-wrap {
-            background: #000;
-            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%);
-            flex: 1.4;
-            padding-right: 3px;
+            border-right: 3px solid #000;
+            flex: 1.5;
+            background: #cbd5e1;
           }
           
           .header-left { 
-            background: #cbd5e1; 
-            padding: 10px 30px 10px 15px; 
+            padding: 8px 12px; 
             display: flex; 
             align-items: center; 
-            gap: 15px; 
+            gap: 12px; 
             height: 100%;
-            clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); 
           }
-          .header-left img { height: 65px; width: auto; }
-          .college-info { line-height: 1.1; }
+          .header-left img { height: 50px; width: auto; }
+          .college-info { line-height: 1.15; padding-top: 2px; }
           .college-name { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
           .college-name span { font-weight: 400; font-size: 14px; margin-left: 10px; border-left: 2px solid #94a3b8; padding-left: 10px; display: inline-block; vertical-align: middle; }
           .sub-name { font-size: 11px; font-weight: 800; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; }
@@ -1632,8 +1629,8 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
 
           .header-right { 
             flex: 1; 
-            padding: 8px 0 8px 15px; 
-            font-size: 9px; 
+            padding: 6px 0 6px 12px; 
+            font-size: 8.5px; 
             font-weight: 600; 
             color: #334155; 
             display: flex; 
@@ -1643,7 +1640,10 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
           .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
           .contact-label { width: 45px; font-weight: 700; color: #64748b; }
-          .contact-sep { width: 10px; text-align: center; }
+          .contact-sep { width: 8px; text-align: center; }
+
+          .app-meta-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+          .meta-left-block { display: flex; flex-direction: column; gap: 3px; font-weight: 700; font-size: 10.5px; }
 
           /* ─────────────────────────────── */
 
@@ -1682,22 +1682,21 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           </div>
         </div>
 
-        <div class="top-bar">
-          <div class="qr-box">
-            <div class="photo-box" style="position:relative; width: 75px; height: 95px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10;">
-              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
-            </div>
+        <div class="app-meta-bar">
+          <div class="meta-left-block">
+            <div style="font-size: 11px;">App No.: <span style="font-weight: 800;">${r.application_number || '—'}</span></div>
+            <div>Date: <span style="font-weight: 800;">${formatDate(r.application_date)}</span></div>
+            <div style="font-size: 8px; color: #64748b;">Created At: ${r.application_date || r.created_at ? new Date(r.application_date || r.created_at).toLocaleString('en-IN') : '—'}</div>
           </div>
-          <div class="meta-right-block">
-            <div>App No.: <span class="token-val">${r.application_number || '—'}</span></div>
-            <div>Date: <span class="date-box">${formatDate(r.application_date)}</span></div>
-            <div class="created-at">Created At: ${r.application_date || r.created_at ? new Date(r.application_date || r.created_at).toLocaleString('en-IN') : '—'}</div>
+          
+          <div class="photo-box" style="width: 65px; height: 85px; border: 1.5px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff;">
+            ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
           </div>
         </div>
 
-        <div style="text-align: center; margin: -5px 0 8px; border-bottom: 2px solid #1e3a5f; padding-bottom: 5px;">
-           <div style="font-weight: 800; font-size: 13.5px; color: #1e3a5f; letter-spacing: 0.5px;">ADMISSION APPLICATION FORM</div>
-           <div style="font-size: 11px; font-weight: 700; color: #3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
+        <div style="text-align: center; margin: -10px 0 8px; border-bottom: 2px solid #1e3a5f; padding-bottom: 4px;">
+           <div style="font-weight: 800; font-size: 13px; color: #1e3a5f; letter-spacing: 0.5px; text-transform: uppercase;">ADMISSION APPLICATION FORM</div>
+           <div style="font-size: 10px; font-weight: 700; color: #3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
         </div>
 
         <table>
@@ -1782,26 +1781,22 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             </tr>
           </table>
 
-          <div class="footer">
+          <div class="footer" style="margin-top: 6px;">
             <div class="footer-info">
-              <p style="font-weight:900; font-size:13px; color:#1e3a8a;">${r.student_name.toUpperCase()}</p>
-              <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
-              <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
+              <p style="font-weight:900; font-size:12px; color:#1e3a8a; margin:2px 0;">${r.student_name.toUpperCase()}</p>
+              <p style="color:#64748b; margin:0;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
+              <p style="color:#64748b; font-size:8.5px; margin:0;">ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
             </div>
-            <div style="display:flex; justify-content: space-between; width: 100%; gap: 15px;">
-              <div class="sign-area" style="width: 130px;">
-                <div class="sign-placeholder">
-                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Digital Signature">` : ''}
+            <div style="display:flex; justify-content: flex-end; width: 60%; gap: 10px;">
+              <div class="sign-area" style="width: 110px;">
+                <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;">
+                  ${signUrl ? `<img src="${signUrl}" class="signature-img" style="max-height: 35px;">` : ''}
                 </div>
-                <span class="sign-label">Online Signature</span>
+                <span class="sign-label" style="font-size: 8px;">Online Signature</span>
               </div>
-              <div class="sign-area" style="width: 130px;">
-                <div class="sign-placeholder"></div>
-                <span class="sign-label">Offline Signature</span>
-              </div>
-              <div class="sign-area" style="width: 130px;">
-                <div class="sign-placeholder"></div>
-                <span class="sign-label">Parent Signature</span>
+              <div class="sign-area" style="width: 110px;">
+                <div class="sign-placeholder" style="height: 35px; border-bottom: 1px solid #000;"></div>
+                <span class="sign-label" style="font-size: 8px;">Parent Signature</span>
               </div>
             </div>
           </div>
