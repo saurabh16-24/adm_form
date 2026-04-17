@@ -15,31 +15,31 @@
   <!-- ── Form ───────────────────────────────────────────── -->
   <form id="admissionForm" class="main-wrap" novalidate>
 
-    <!-- Top header card (inside form, like enquiry form) -->
-    <div class="adm-header-card">
+    <!-- Header styled like management admission form -->
+    <header style="margin-bottom: 40px; padding-bottom: 20px;">
       <!-- Centered logo -->
-      <div style="text-align:center; margin-bottom:12px;">
-        <img src="svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
-             style="height:70px;width:auto;object-fit:contain;display:inline-block;">
+      <div style="text-align:center; padding-bottom: 16px;">
+        <img src="/svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
+             style="height:70px; width:auto; object-fit:contain; display:inline-block;">
       </div>
-      <!-- Title -->
-      <div style="text-align:center; margin-bottom:14px;">
-        <h1 class="adm-title">ADMISSION APPLICATION FORM</h1>
-        <div style="font-weight: 700; color: #1d4ed8; font-size: 1.1rem; margin-top: 4px;">Academic Year: <span id="dynamicYear"></span></div>
-        <p class="adm-subtitle">Sri Venkateshwara College of Engineering, Bengaluru &mdash; UG Programs</p>
-      </div>
-      <!-- App no. + Date row (like token/date in enquiry) -->
-      <div class="adm-meta-row">
-        <div class="adm-meta-item">
-          <span class="adm-meta-label">Application No.:</span>
-          <span class="adm-meta-value" id="appNumber">Loading…</span>
+
+      <div style="width: 100%;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #475569; margin-bottom: 15px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-weight: 600; font-size: 0.9rem;">Application No.: </label>
+            <span id="appNumber" style="font-weight: bold; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">Loading...</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-weight: 600; font-size: 0.9rem;">Date: </label>
+            <span id="appDate" style="font-weight: bold; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);"></span>
+          </div>
         </div>
-        <div class="adm-meta-item">
-          <span class="adm-meta-label">Date:</span>
-          <span class="adm-meta-value" id="appDate"></span>
+        <div style="text-align: center;">
+          <h3 style="font-size: 1.8rem; margin: 0; color: #1e293b; letter-spacing: 1px; font-weight: bold;">ADMISSION APPLICATION FORM</h3>
+          <div style="font-weight: 700; color: #3b82f6; font-size: 0.95rem; margin-top: 4px;">Academic Year: <span id="dynamicYear"></span></div>
         </div>
       </div>
-    </div>
+    </header>
 
     <!-- auto-fill banner (hidden by default) -->
     <div class="autofill-banner" id="autofillBanner" style="display:none;">
@@ -467,7 +467,7 @@
 
             <!-- UTR Number -->
             <div class="form-group" style="margin-bottom:16px;">
-              <label>UTR / Transaction Reference Number <span class="req">*</span></label>
+              <label>UTR No. or Transaction Ref No. <span class="req">*</span></label>
               <input type="text" id="paymentUtr" name="paymentUtr" required
                 placeholder="e.g. 407812345678"
                 style="font-family:'Courier New',monospace;letter-spacing:0.5px;"

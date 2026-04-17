@@ -1,13 +1,13 @@
-/* ═══════════════════════════════════════════════════════════════════════
-   SVCE Admin Dashboard — Client-side JS
-   ═══════════════════════════════════════════════════════════════════════ */
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+   SVCE Admin Dashboard ΓÇö Client-side JS
+   ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 
 const API = window.location.origin; // same origin
 let allEnquiries  = [];
 let allAdmissions = [];
 let allManagement = [];
 
-// ═══════════════ LOGIN ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ LOGIN ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const user = document.getElementById('login-user').value.trim();
@@ -29,7 +29,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (data.success) {
       sessionStorage.setItem('admin_token', data.token);
       sessionStorage.setItem('admin_name', data.username || 'Admin');
-      sessionStorage.setItem('admin_role', data.role || 'admin');
       showDashboard();
     } else {
       errEl.textContent = data.message || 'Invalid credentials';
@@ -57,23 +56,10 @@ function logout() {
   document.getElementById('login-pass').value = '';
 }
 
-// ═══════════════ DASHBOARD INIT ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ DASHBOARD INIT ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 function showDashboard() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
-
-  const role = sessionStorage.getItem('admin_role');
-  const navMgmt = document.getElementById('nav-management');
-  const panelTitle = document.getElementById('panel-title-role');
-  
-  if (role === 'counsellor') {
-    if (navMgmt) navMgmt.style.display = 'none';
-    if (panelTitle) panelTitle.textContent = 'Counsellor Panel';
-  } else {
-    if (navMgmt) navMgmt.style.display = 'flex';
-    if (panelTitle) panelTitle.textContent = 'Admin Panel';
-  }
-
   loadOverview();
   updateClock();
   setInterval(updateClock, 1000);
@@ -109,7 +95,7 @@ function updateLastRefreshInfo() {
 }
 
 
-// ═══════════════ SIDEBAR / TABS ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ SIDEBAR / TABS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   if (window.innerWidth <= 768) sb.classList.toggle('mobile-open');
@@ -134,8 +120,8 @@ function switchTab(tab) {
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
     enquiries:  ['Enquiries', 'Manage student enquiry records'],
-    admissions: ['Applications', 'Manage admission applications'],
-    management: ['Admissions', 'Generated Management Admission Forms']
+    admissions: ['Admissions', 'Manage admission applications'],
+    management: ['Management', 'Generated Management Admission Forms']
   };
   document.getElementById('page-title').textContent = titles[tab][0];
   document.getElementById('page-subtitle').textContent = titles[tab][1];
@@ -146,7 +132,7 @@ function switchTab(tab) {
   if (tab === 'management') loadManagementStatus();
 }
 
-// ═══════════════ API HELPERS ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ API HELPERS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -164,7 +150,7 @@ async function apiFetch(path, options = {}) {
   return res.json();
 }
 
-// ═══════════════ OVERVIEW ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ OVERVIEW ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 async function loadOverview() {
   try {
     const stats = await apiFetch('/api/admin/stats');
@@ -194,27 +180,27 @@ function renderRecentTable(tbodyId, rows, type) {
   tbody.innerHTML = rows.map(r => {
     if (type === 'enquiry') {
       return `<tr>
-        <td>${r.token_number || '—'}</td>
-        <td>${r.student_name || '—'}</td>
-        <td>${r.student_email || '—'}</td>
-        <td>${r.student_mobile || '—'}</td>
+        <td>${r.token_number || 'ΓÇö'}</td>
+        <td>${r.student_name || 'ΓÇö'}</td>
+        <td>${r.student_email || 'ΓÇö'}</td>
+        <td>${r.student_mobile || 'ΓÇö'}</td>
         <td>${formatDate(r.enquiry_date)}</td>
-        <td>${r.reference || '—'}</td>
+        <td>${r.reference || 'ΓÇö'}</td>
       </tr>`;
     } else {
       return `<tr>
-        <td>${r.application_number || '—'}</td>
-        <td>${r.student_name || '—'}</td>
-        <td>${r.email || '—'}</td>
-        <td>${r.mobile_no || '—'}</td>
+        <td>${r.application_number || 'ΓÇö'}</td>
+        <td>${r.student_name || 'ΓÇö'}</td>
+        <td>${r.email || 'ΓÇö'}</td>
+        <td>${r.mobile_no || 'ΓÇö'}</td>
         <td>${formatDate(r.application_date)}</td>
-        <td>${r.course_preference || '—'}</td>
+        <td>${r.course_preference || 'ΓÇö'}</td>
       </tr>`;
     }
   }).join('');
 }
 
-// ═══════════════ ENQUIRIES ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ ENQUIRIES ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 async function loadEnquiries() {
   try {
     const data = await apiFetch('/api/admin/enquiries');
@@ -235,19 +221,16 @@ function renderEnquiries(rows) {
     tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="material-icons-round">inbox</span><p>No enquiries found</p></td></tr>`;
     return;
   }
-  
-  const role = sessionStorage.getItem('admin_role');
-  
   tbody.innerHTML = rows.map(r => {
-    const remark = r.admin_remarks || '— Select Action —';
+    const remark = r.admin_remarks || 'ΓÇö Select Action ΓÇö';
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
     
     return `<tr>
     <td>${r.id}</td>
-    <td>${r.token_number || '—'}</td>
-    <td>${r.student_name || '—'}</td>
-    <td>${r.student_mobile || '—'}</td>
-    <td>${r.reference || '—'}</td>
+    <td>${r.token_number || 'ΓÇö'}</td>
+    <td>${r.student_name || 'ΓÇö'}</td>
+    <td>${r.student_mobile || 'ΓÇö'}</td>
+    <td>${r.reference || 'ΓÇö'}</td>
     <td class="remarks-cell">
       <div class="remarks-group-unified">
         <div class="remarks-pill-main" onclick="openActionMenu(${r.id}, this)">
@@ -270,7 +253,7 @@ function renderEnquiries(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewEnquiry(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printEnquiry(${r.id})" title="Print Enquiry"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
+      <button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`}).join('');
 }
@@ -283,7 +266,7 @@ function exportEnquiriesCSV() {
     let prefs = '';
     try {
       const pArr = JSON.parse(r.course_preferences || '[]');
-      prefs = Array.isArray(pArr) ? pArr.map(p => typeof p === 'object' ? `${p.course} (₹${p.fee || 0})` : p).join(' | ') : (r.course_preferences || '');
+      prefs = Array.isArray(pArr) ? pArr.map(p => typeof p === 'object' ? `${p.course} (Γé╣${p.fee || 0})` : p).join(' | ') : (r.course_preferences || '');
     } catch { prefs = r.course_preferences || ''; }
     
     return [
@@ -374,21 +357,6 @@ async function updateRemarks(id, field, value) {
 function filterEnquiries() {
   const search = document.getElementById('enq-search').value.toLowerCase();
   const dateFilter = document.getElementById('enq-filter-date').value;
-  
-  const followupDropdown = document.getElementById('enq-filter-followup');
-  const followupCustom = document.getElementById('enq-filter-followup-custom');
-  let followupFilter = followupDropdown ? followupDropdown.value : null;
-
-  if (followupDropdown && followupCustom) {
-    if (followupFilter === 'custom') {
-      followupCustom.style.display = 'inline-block';
-      followupFilter = followupCustom.value; 
-    } else {
-      followupCustom.style.display = 'none';
-      followupCustom.value = '';
-    }
-  }
-
   const actionFilter = document.getElementById('enq-filter-action').value;
   const courseFilter = document.getElementById('enq-filter-course').value;
   let filtered = allEnquiries;
@@ -406,7 +374,6 @@ function filterEnquiries() {
   }
 
   if (dateFilter) filtered = filterByDate(filtered, 'enquiry_date', dateFilter);
-  if (followupFilter) filtered = filterByDate(filtered, 'follow_up_date', followupFilter);
   if (actionFilter) filtered = filtered.filter(r => (r.admin_remarks || '') === actionFilter);
 
   if (courseFilter) {
@@ -455,18 +422,18 @@ async function viewEnquiry(id) {
                     <tr>
                         <td style="padding: 5px; border: 1px solid #e2e8f0;">${i+1}</td>
                         <td style="padding: 5px; border: 1px solid #e2e8f0;">${typeof p === 'object' ? p.course : p}</td>
-                        <td style="padding: 5px; border: 1px solid #e2e8f0;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+                        <td style="padding: 5px; border: 1px solid #e2e8f0;">${typeof p === 'object' && p.fee ? 'Γé╣' + p.fee : 'ΓÇö'}</td>
                     </tr>
                 `).join('')}
             </table>`;
         } else {
-            prefsHtml = '—';
+            prefsHtml = 'ΓÇö';
         }
     } catch { 
-        prefsHtml = r.course_preferences || '—'; 
+        prefsHtml = r.course_preferences || 'ΓÇö'; 
     }
 
-    document.getElementById('modal-title').textContent = `Enquiry #${r.id} — ${r.student_name}`;
+    document.getElementById('modal-title').textContent = `Enquiry #${r.id} ΓÇö ${r.student_name}`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
         ${detailItem('Token Number', r.token_number)}
@@ -481,12 +448,12 @@ async function viewEnquiry(id) {
         ${detailItem('Address', r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '), true)}
         ${detailItem('Qualification', r.education_qualification)}
         ${detailItem('Board', r.education_board)}
-        ${detailItem('Expected %', r.expected_percentage != null ? r.expected_percentage + '%' : '—')}
+        ${detailItem('Expected %', r.expected_percentage != null ? r.expected_percentage + '%' : 'ΓÇö')}
         ${detailItem('Result Status', r.result_status)}
         ${detailItem('Hostel Req.', r.hostel_required ? 'YES' : 'NO')}
-        ${r.hostel_required ? detailItem('Hostel Details', `${r.hostel_type} (₹${r.hostel_fee})`, true) : ''}
+        ${r.hostel_required ? detailItem('Hostel Details', `${r.hostel_type} (Γé╣${r.hostel_fee})`, true) : ''}
         ${detailItem('Transport Req.', r.transport_required ? 'YES' : 'NO')}
-        ${r.transport_required ? detailItem('Transport Details', `${r.transport_route} (₹${r.transport_fee})`, true) : ''}
+        ${r.transport_required ? detailItem('Transport Details', `${r.transport_route} (Γé╣${r.transport_fee})`, true) : ''}
         ${detailHeader('11th Marks (AP/TS Students)')}
         ${detailItem('Physics', r.physics_11)}
         ${detailItem('Chemistry', r.chemistry_11)}
@@ -507,8 +474,8 @@ async function viewEnquiry(id) {
         ${detailItem('COMEDK Rank', r.comedk_rank)}
         ${detailItem('CET Rank', r.cet_rank)}
         ${detailHeader('Percentages & Prefs')}
-        ${detailItem('Total %', r.total_percentage != null ? r.total_percentage + '%' : '—')}
-        ${detailItem('PCM %', r.pcm_percentage != null ? r.pcm_percentage + '%' : '—')}
+        ${detailItem('Total %', r.total_percentage != null ? r.total_percentage + '%' : 'ΓÇö')}
+        ${detailItem('PCM %', r.pcm_percentage != null ? r.pcm_percentage + '%' : 'ΓÇö')}
         ${detailItem('Course Preferences & Fees', prefsHtml, true)}
         ${detailItem('Reference', r.reference)}
       </div>
@@ -522,44 +489,31 @@ async function viewEnquiry(id) {
 }
 
 function performHiddenPrint(htmlContent) {
-  // Use window.open() instead of a hidden iframe.
-  // Iframes are blocked by browsers on deployed servers due to X-Frame-Options
-  // and Content-Security-Policy headers set by Nginx, causing "Print Failed".
-  const printWin = window.open('', '_blank', 'width=900,height=700');
-  if (!printWin) {
-    alert('Print popup was blocked. Please allow popups for this site and try again.');
-    return;
-  }
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'absolute';
+  iframe.style.width = '1px';
+  iframe.style.height = '1px';
+  iframe.style.left = '-9999px';
+  iframe.style.top = '-9999px';
+  iframe.style.border = '0';
+  document.body.appendChild(iframe);
 
-  printWin.document.open();
-  printWin.document.write(htmlContent);
-  printWin.document.close();
+  iframe.contentWindow.document.open();
+  iframe.contentWindow.document.write(htmlContent);
+  iframe.contentWindow.document.close();
 
-  // Wait for all images and styles to load before printing
-  printWin.onload = function () {
-    setTimeout(() => {
-      printWin.focus();
-      printWin.print();
-      // Auto-close the print window after the dialog is dismissed
-      printWin.onafterprint = function () { printWin.close(); };
-    }, 500);
-  };
-
-  // Fallback: if onload doesn't fire (e.g. some browsers), trigger after 1.5s
+  // Give the browser time to render and fetch images
   setTimeout(() => {
-    if (!printWin.closed) {
-      printWin.focus();
-      try { printWin.print(); } catch(e) { console.error('Print error:', e); }
-    }
-  }, 1500);
+    iframe.contentWindow.focus();
+    try {
+      iframe.contentWindow.print();
+    } catch(e) { console.error('Print crash avoided', e); }
+    // Clean up
+    setTimeout(() => { document.body.removeChild(iframe); }, 1500);
+  }, 1000);
 }
 
 async function printEnquiry(id) {
-  const token = sessionStorage.getItem('admin_token');
-  window.open(`${API}/api/admin/enquiry/${id}/print?token=${encodeURIComponent(token)}`, '_blank');
-}
-
-async function _old_printEnquiry_unused(id) {
   try {
     const data = await apiFetch(`/api/admin/enquiry/${id}`);
     const r = data.row;
@@ -739,14 +693,14 @@ async function _old_printEnquiry_unused(id) {
             <tr>
               <td class="pref-num">${i + 1}.</td>
               <td style="white-space: normal;">${typeof p === 'object' ? p.course : p}</td>
-              <td style="text-align: center;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+              <td style="text-align: center;">${typeof p === 'object' && p.fee ? 'Γé╣' + p.fee : 'ΓÇö'}</td>
               ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background: #fff;"></td>` : ''}
             </tr>
           `).join('') || '<tr><td colspan="4">No preferences selected</td></tr>'}
           <tr style="background: #f8fafc; font-weight: 700; font-size: 10px;">
             <td style="text-align: right; padding: 4px; border-right: none;">Hostel:</td>
-            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? (r.hostel_type.replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (₹' + r.hostel_fee + ')') : 'NO'}</td>
-            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? (r.transport_route + ' (₹' + r.transport_fee + ')') : 'NO'}</td>
+            <td style="padding: 4px; border-left: none; border-right: none;">${r.hostel_required ? (r.hostel_type.replace('(Only Accomm)', '').replace('(With Food)', '').trim() + ' (Γé╣' + r.hostel_fee + ')') : 'NO'}</td>
+            <td colspan="2" style="padding: 4px; border-left: none;"><span style="font-weight:700">Transport:</span> ${r.transport_required ? (r.transport_route + ' (Γé╣' + r.transport_fee + ')') : 'NO'}</td>
           </tr>
         </table>
 
@@ -770,7 +724,6 @@ async function _old_printEnquiry_unused(id) {
 
   } catch (err) { alert('Failed to generate print view'); console.error(err); }
 }
-// END old printEnquiry
 
 async function deleteEnquiry(id) {
   if (!confirm(`Delete enquiry #${id}? This cannot be undone.`)) return;
@@ -780,7 +733,7 @@ async function deleteEnquiry(id) {
   } catch (err) { alert('Delete failed'); }
 }
 
-// ═══════════════ ADMISSIONS ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ ADMISSIONS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 async function loadAdmissions() {
   try {
     const data = await apiFetch('/api/admin/admissions');
@@ -799,24 +752,22 @@ function renderAdmissions(rows) {
     return;
   }
 
-  const role = sessionStorage.getItem('admin_role');
-
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.id}</td>
-    <td>${r.application_number || '—'}</td>
-    <td>${r.student_name || '—'}</td>
-    <td>${r.email || '—'}</td>
-    <td>${r.mobile_no || '—'}</td>
+    <td>${r.application_number || 'ΓÇö'}</td>
+    <td>${r.student_name || 'ΓÇö'}</td>
+    <td>${r.email || 'ΓÇö'}</td>
+    <td>${r.mobile_no || 'ΓÇö'}</td>
     <td>${formatDate(r.date_of_birth)}</td>
-    <td>${r.course_preference || '—'}</td>
-    <td>${r.program_preference || '—'}</td>
-    <td>${r.payment_utr_no || '—'}</td>
+    <td>${r.course_preference || 'ΓÇö'}</td>
+    <td>${r.program_preference || 'ΓÇö'}</td>
+    <td>${r.payment_utr_no || 'ΓÇö'}</td>
     <td>${formatDate(r.application_date)}</td>
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
-      ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
+      <button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>
+      <button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`).join('');
 }
@@ -853,25 +804,21 @@ async function viewAdmission(id) {
   try {
     const data = await apiFetch(`/api/admin/admission/${id}`);
     const r = data.row;
-    const role = sessionStorage.getItem('admin_role');
     document.getElementById('modal-title').innerHTML = `
       <div style="display:flex; align-items:center; gap:12px; width:100%;">
         <span class="material-icons-round" style="color:var(--accent);">assignment</span>
-        <span>Admission #${r.id} — ${r.student_name}</span>
+        <span>Admission #${r.id} ΓÇö ${r.student_name}</span>
         <div style="margin-left:auto; display:flex; gap:8px;">
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="printAdmission(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">print</span> Print Confirmation
           </button>
-          ${role !== 'counsellor' ? `
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px; background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">description</span> Management Form
           </button>
-          ` : ''}
         </div>
       </div>`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
-        ${detailHeader('Personal Information')}
         ${detailItem('Application No.', r.application_number)}
         ${detailItem('Date', formatDate(r.application_date))}
         ${detailItem('Title', r.title)}
@@ -880,52 +827,205 @@ async function viewAdmission(id) {
         ${detailItem('Mobile', r.mobile_no)}
         ${detailItem('DOB', formatDate(r.date_of_birth))}
         ${detailItem('Gender', r.gender)}
-        ${detailItem('Aadhaar No.', r.aadhaar_no || '—')}
-
-        ${detailHeader('Course Preferences')}
+        ${detailItem('Aadhaar No.', r.aadhaar_no)}
         ${detailItem('Institute', r.selected_institute || 'Engineering - SVCE')}
         ${detailItem('Course', r.course_preference)}
         ${detailItem('Programme', r.program_preference)}
-
-        ${detailHeader('Address Details')}
-        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_district, r.comm_state, r.comm_country, r.comm_pincode].filter(Boolean).join(', '), true)}
-        ${detailItem('Perm. Address Same?', r.same_as_comm ? 'Yes' : 'No')}
-        ${r.same_as_comm ? '' : detailItem('Perm. Address', [r.perm_address_line1, r.perm_address_line2, r.perm_city, r.perm_district, r.perm_state, r.perm_country, r.perm_pincode].filter(Boolean).join(', '), true)}
-        
-        ${detailHeader('Parent Details')}
+        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', '), true)}
         ${detailItem('Father', r.father_name)}
         ${detailItem('Father Mobile', r.father_mobile)}
         ${detailItem('Father Occupation', r.father_occupation)}
         ${detailItem('Mother', r.mother_name)}
         ${detailItem('Mother Mobile', r.mother_mobile)}
         ${detailItem('Mother Occupation', r.mother_occupation)}
-
-        ${detailHeader('Educational & Entrance Stats')}
         ${detailItem('Marksheet Name', r.candidate_name_marksheet)}
         ${detailItem('12th Institution', r.twelfth_institution)}
         ${detailItem('12th Board', r.twelfth_board)}
-        ${detailItem('12th Stream', r.twelfth_stream || '—')}
-        ${detailItem('12th Year Passing', r.twelfth_year_passing || '—')}
-        ${detailItem('12th Marking Scheme', r.twelfth_marking_scheme || '—')}
-        ${detailItem('12th Result', r.twelfth_result_status || '—')}
-        ${detailItem('12th % / CGPA', (r.twelfth_percentage || '—') + '%')}
-        ${detailItem('Entrance Exams', r.entrance_exams || 'None', true)}
-
-        ${detailHeader('Payment & Documents')}
-        ${detailItem('Payment UTR', r.payment_utr_no || '—')}
-        ${detailItem('Declaration Accepted', r.declaration_accepted ? 'Yes' : 'No')}
-        ${r.passport_photo_path ? detailItem('Passport Photo', `<a href="${r.passport_photo_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Photo ↗</a>`) : ''}
-        ${r.signature_path ? detailItem('Signature', `<a href="${r.signature_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Signature ↗</a>`) : ''}
-        ${r.twelfth_marksheet_path ? detailItem('12th Marksheet', `<a href="${r.twelfth_marksheet_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Marksheet ↗</a>`) : ''}
-        ${r.payment_receipt_path ? detailItem('Payment Receipt', `<a href="${r.payment_receipt_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Receipt ↗</a>`) : ''}
+        ${detailItem('12th %', r.twelfth_percentage + '%')}
+        ${detailItem('Entrance Exams', r.entrance_exams || 'None')}
+        ${detailItem('Payment UTR', r.payment_utr_no)}
       </div>`;
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to load admission details'); }
 }
 
 async function printAdmission(id) {
-  const token = sessionStorage.getItem('admin_token');
-  window.open(`${API}/api/admin/admission/${id}/print?token=${encodeURIComponent(token)}`, '_blank');
+  try {
+    const data = await apiFetch(`/api/admin/admission/${id}`);
+    const r = data.row;
+
+    const logoUrl = window.location.origin + '/image copy.png';
+    const photoUrl = r.passport_photo_path ? window.location.origin + r.passport_photo_path : '';
+    const signUrl = r.signature_path ? window.location.origin + r.signature_path : '';
+    
+    // Fetch enquiry preferences (from joined field)
+    let prefsArray = [];
+    if (typeof r.course_preferences === 'string') {
+        try { prefsArray = JSON.parse(r.course_preferences || '[]'); } catch { prefsArray = []; }
+    } else {
+        prefsArray = r.course_preferences || [];
+    }
+    prefsArray = Array.isArray(prefsArray) ? prefsArray.slice(0, 4) : [];
+    while(prefsArray.length < 4) prefsArray.push('');
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Application Print - ${r.student_name}</title>
+        <style>
+          @page { size: A4; margin: 10mm 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-size: 10.5px; line-height: 1.35; color: #111; }
+          
+          .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; }
+          .logo-img { height: 60px; width: auto; object-fit: contain; }
+          
+          .header-meta-area { position: relative; min-height: 115px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+          .photo-box { position: absolute; right: 0; top: 0; width: 90px; height: 110px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10; }
+          .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+          
+          .app-meta { text-align: center; }
+          .app-meta p { margin: 3px 0; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+          
+          table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1px solid #111; table-layout: fixed; }
+          th, td { border: 1px solid #111; padding: 5px 8px; text-align: left; word-wrap: break-word; }
+          .section-header { background: #bae6fd !important; font-weight: 800; font-size: 10.5px; text-transform: uppercase; color: #000; letter-spacing: 0.5px; font-family: sans-serif; }
+          .label { font-weight: 600; background: #f8fafc; color: #475569; font-size: 9.5px; width: 35%; }
+          .value { font-weight: 700; color: #000; font-size: 10px; }
+          
+          .grid-head { background: #f8fafc; font-weight: 700; font-size: 9.5px; text-transform: uppercase; color: #64748b; }
+          .declaration { font-size: 9.5px; text-align: justify; padding: 8px 12px; line-height: 1.5; color: #222; }
+          
+          .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px; }
+          .sign-area { text-align: center; width: 200px; }
+          .sign-placeholder { height: 50px; margin-bottom: 4px; display: flex; align-items: flex-end; justify-content: center; }
+          .signature-img { max-height: 48px; max-width: 180px; object-fit: contain; }
+          .sign-label { font-weight: 810; font-size: 10px; border-top: 1.5px solid #000; padding-top: 4px; display: block; text-transform: uppercase; letter-spacing: 0.5px; }
+          
+          @media print { 
+            .no-print { display: none; } 
+            table, tr { page-break-inside: avoid; }
+            body { print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header" style="margin-bottom:15px;">
+          <img src="${logoUrl}" class="logo-img">
+        </div>
+
+        <div class="header-meta-area">
+          <div class="photo-box">
+            ${photoUrl ? `<img src="${photoUrl}">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
+          </div>
+
+          <div class="app-meta">
+            <p style="font-size:11px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 5px; display:inline-block; margin-bottom:12px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
+            <div style="font-size:15px; font-weight:800; margin-bottom:15px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
+          </div>
+        </div>
+
+        <table>
+          <tr class="section-header"><th colspan="2">Personal Details</th></tr>
+          <tr><td class="label">Name</td><td class="value">${r.title || ''} ${r.student_name}</td></tr>
+          <tr><td class="label">Mobile No.</td><td class="value">${r.mobile_no}</td></tr>
+          <tr><td class="label">Email Address</td><td class="value">${r.email}</td></tr>
+          <tr><td class="label">Date of Birth</td><td class="value">${formatDate(r.date_of_birth)}</td></tr>
+          <tr><td class="label">Gender</td><td class="value">${r.gender}</td></tr>
+          <tr><td class="label">Aadhaar Number</td><td class="value">${r.aadhaar_no || 'ΓÇö'}</td></tr>
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="3">Preference Details (From Enquiry)</th></tr>
+          <tr class="grid-head">
+            <th style="width: 25px; text-align: center;">#</th>
+            <th>Course Name</th>
+            <th style="width: 150px;">Fee (Agreed)</th>
+          </tr>
+          ${prefsArray.map((p, i) => `
+            <tr>
+              <td style="text-align: center; font-weight: 700;">${i + 1}.</td>
+              <td class="value">${typeof p === 'object' ? p.course : p}</td>
+              <td class="value" style="text-align: center;">${typeof p === 'object' && p.fee ? 'Γé╣' + p.fee : 'ΓÇö'}</td>
+            </tr>
+          `).join('')}
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="3">Address Details</th></tr>
+          <tr><td colspan="3" style="font-size: 10px; font-weight: 600; background: #f8fafc; padding: 4px 8px;">Permanent Address Same as Communication Address: <span style="font-weight: 800; color: #1e40af;">${r.same_as_comm ? 'Yes' : 'No'}</span></td></tr>
+          <tr class="grid-head"><th style="width: 26%;">Field</th><th style="width: 37%;">Communication Address</th><th style="width: 37%;">Permanent Address</th></tr>
+          <tr><td class="label">Address Line 1</td><td class="value">${r.comm_address_line1}</td><td class="value">${r.perm_address_line1 || r.comm_address_line1}</td></tr>
+          <tr><td class="label">Address Line 2</td><td class="value">${r.comm_address_line2 || 'ΓÇö'}</td><td class="value">${r.perm_address_line2 || r.comm_address_line2 || 'ΓÇö'}</td></tr>
+          <tr><td class="label">City</td><td class="value">${r.comm_city}</td><td class="value">${r.perm_city || r.comm_city}</td></tr>
+          <tr><td class="label">District</td><td class="value">${r.comm_district || 'ΓÇö'}</td><td class="value">${r.perm_district || r.comm_district || 'ΓÇö'}</td></tr>
+          <tr><td class="label">State</td><td class="value">${r.comm_state}</td><td class="value">${r.perm_state || r.comm_state}</td></tr>
+          <tr><td class="label">Country</td><td class="value">${r.comm_country || 'India'}</td><td class="value">${r.perm_country || r.comm_country || 'India'}</td></tr>
+          <tr><td class="label">Pincode</td><td class="value">${r.comm_pincode}</td><td class="value">${r.perm_pincode || r.comm_pincode}</td></tr>
+        </table>
+        <div style="page-break-after: always;"></div>
+        <table>
+          <tr class="section-header"><th colspan="2">Parent Details</th></tr>
+          <tr><td class="label">Father Name</td><td class="value">${r.father_name}</td></tr>
+          <tr><td class="label">Father's Mobile / Occupation</td><td class="value">${r.father_mobile || 'ΓÇö'} / ${r.father_occupation || 'ΓÇö'}</td></tr>
+          <tr><td class="label">Mother Name</td><td class="value">${r.mother_name}</td></tr>
+          <tr><td class="label">Mother's Mobile / Occupation</td><td class="value">${r.mother_mobile || 'ΓÇö'} / ${r.mother_occupation || 'ΓÇö'}</td></tr>
+        </table>
+        <table>
+          <tr class="section-header"><th colspan="2">Educational Details</th></tr>
+          <tr><td colspan="2" class="label" style="width:100%; background:#f8fafc; font-weight:700;">Qualifying Marksheet Name: <span style="font-weight:800; color:#000;">${r.candidate_name_marksheet}</span></td></tr>
+          <tr class="grid-head"><th>Details</th><th>12th Standard</th></tr>
+          <tr><td class="label">Institution</td><td class="value">${r.twelfth_institution}</td></tr>
+          <tr><td class="label">Board / University</td><td class="value">${r.twelfth_board}</td></tr>
+          <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing} / ${r.twelfth_result_status || 'ΓÇö'}</td></tr>
+          <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || 'ΓÇö'}%</td></tr>
+          <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
+        </table>
+
+        <div style="page-break-inside: avoid;">
+          <table>
+            <tr class="section-header"><th>Declaration</th></tr>
+            <tr>
+              <td class="declaration">
+                <ul style="margin: 0; padding-left: 1.2rem; line-height: 1.6;">
+                  <li style="margin-bottom: 8px;">I hereby declare that all the information provided by me in this application form is true, complete, and correct to the best of my knowledge and belief. I understand that if any information furnished by me is found to be false, incorrect, incomplete, or misleading at any stage, my application is liable to be rejected or cancelled without prior notice.</li>
+                  <li style="margin-bottom: 8px;">I further confirm that I have carefully read and understood all the instructions, eligibility criteria, and details mentioned in the admission notification for the respective program. I agree to abide by all the rules and regulations of the College (SVCE), as applicable from time to time.</li>
+                  <li style="margin-bottom: 8px;">I hereby authorize the College (SVCE) to use, process, store, or share the information provided by me for application processing, academic records, and compliance with statutory or regulatory authorities.</li>
+                  <li style="margin-bottom: 8px;">I understand that submission of this application does not guarantee admission, and the allotment of the selected/preferred course is strictly subject to the availability of seats and fulfillment of eligibility criteria.</li>
+                  <li style="margin-bottom: 8px;">I understand that this application is valid only for a limited period and is subject to seat availability at the time of admission.</li>
+                  <li>I also understand that in case I have not appeared for any entrance examination such as CET / COMEDK / JEE or equivalent, my admission (if selected) shall be subject to approval from the concerned authorities such as DTE / VTU or any other regulatory body, as applicable.</li>
+                </ul>
+              </td>
+            </tr>
+          </table>
+
+          <div class="footer">
+            <div class="footer-info">
+              <p style="font-weight:900; font-size:13px; color:#1e3a8a;">${r.student_name.toUpperCase()}</p>
+              <p style="color:#64748b;">Generated On: ${new Date().toLocaleString('en-IN')}</p>
+              <p style="color:#64748b; font-size:10px;">Submission ID: ${r.id} | Timestamp: ${new Date(r.application_date).toLocaleString('en-IN')}</p>
+            </div>
+            <div style="display:flex; gap: 40px;">
+              <div class="sign-area">
+                <div class="sign-placeholder">
+                  ${signUrl ? `<img src="${signUrl}" class="signature-img" alt="Candidate Signature">` : r.student_name}
+                </div>
+                <span class="sign-label">Candidate Signature</span>
+              </div>
+              <div class="sign-area">
+                <div class="sign-placeholder"></div>
+                <span class="sign-label">Parent/Guardian Signature</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </body>
+      </html>
+    `;
+    
+    performHiddenPrint(html);
+
+  } catch (err) { alert('Failed to generate print view'); console.error(err); }
 }
 
 async function openManagementFormEditor(id) {
@@ -936,21 +1036,15 @@ async function openManagementFormEditor(id) {
     // Helper to format values
     const val = (v) => (v === null || v === undefined || v === '') ? '' : v;
     
-    // Calculate default annual fee based on preferred course
+    // Calculate default annual fee
     let defaultFee = 0;
-    const initialFeeMap = {
-      "BE Computer Science and Engineering": 375000,
-      "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
-      "BE Computer Science and Engineering (Data Science)": 350000,
-      "BE Computer Science and Engineering (Cyber Security)": 350000,
-      "BE Information Science and Engineering": 350000,
-      "BE Electronics and Communication Engineering": 300000,
-      "BE Mechanical Engineering": 125000,
-      "BE Civil Engineering": 125000
-    };
-    if (r.course_preference && initialFeeMap[r.course_preference]) {
-      defaultFee = initialFeeMap[r.course_preference];
-    }
+    try {
+      const prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
+      const match = prefs.find(p => (typeof p === 'object' ? p.course : p) === r.course_preference);
+      if (match && typeof match === 'object' && match.fee) {
+        defaultFee = parseFloat(match.fee);
+      }
+    } catch(e) {}
 
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/');
     const currentYear = new Date().getFullYear();
@@ -996,34 +1090,20 @@ async function openManagementFormEditor(id) {
             <td class="label">Parent Mobile</td><td><input type="text" id="ed-parent-mobile" value="${r.father_mobile || r.mother_mobile}"></td>
           </tr>
           <tr>
-            <td class="label">Branch Selected</td><td>
-              <select id="ed-branch" style="width:100%; border:none; padding:4px; font-weight:700; font-size:11px; background:transparent; outline:none; text-overflow: ellipsis;" onchange="updateActualFeeByBranch()">
-                <option value="">-- Select Branch --</option>
-                ${[
-                  "BE Computer Science and Engineering",
-                  "BE Computer Science and Engineering (Artificial Intelligence)",
-                  "BE Computer Science and Engineering (Data Science)",
-                  "BE Computer Science and Engineering (Cyber Security)",
-                  "BE Information Science and Engineering",
-                  "BE Electronics and Communication Engineering",
-                  "BE Mechanical Engineering",
-                  "BE Civil Engineering"
-                ].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
-              </select>
-            </td>
+            <td class="label">Branch Selected</td><td><input type="text" id="ed-branch" value="${r.course_preference}"></td>
             <td class="label">State</td><td><input type="text" id="ed-state" value="${r.perm_state || 'Karnataka'}"></td>
           </tr>
           <tr>
             <td class="label">Email</td><td><input type="text" id="ed-email" value="${r.student_email || r.email}"></td>
-            <td class="label">Actual Fee (₹)</td><td><input type="number" id="ed-actual-fee" value="${defaultFee}" oninput="updateEdNet()"></td>
+            <td class="label">Actual Fee (Γé╣)</td><td><input type="number" id="ed-actual-fee" value="${defaultFee}" oninput="updateEdNet()"></td>
           </tr>
           <tr>
             <td class="label">PUC/+2 Board</td><td><input type="text" id="ed-board" value="${r.education_board || r.twelfth_board}"></td>
-            <td class="label">Scholarship (₹)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
+            <td class="label">Scholarship (Γé╣)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
           </tr>
           <tr>
-            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value=""></td>
-            <td class="label">Net Payable (₹)</td><td><input type="text" id="ed-net-payable" value="${defaultFee.toLocaleString()}" readonly style="color:#10b981;"></td>
+            <td class="label">Booking Fee (Γé╣)</td><td><input type="text" id="ed-booking-fee" value="${r.payment_utr_no ? '1250' : ''}"></td>
+            <td class="label">Net Payable (Γé╣)</td><td><input type="text" id="ed-net-payable" value="${defaultFee.toLocaleString()}" readonly style="color:#10b981;"></td>
           </tr>
         </table>
 
@@ -1080,25 +1160,6 @@ async function openManagementFormEditor(id) {
       document.getElementById('ed-net-payable').value = (actual - scholarship).toLocaleString();
     };
 
-    window.updateActualFeeByBranch = () => {
-      const branchSel = document.getElementById('ed-branch');
-      const bVal = branchSel.value;
-      const feeMap = {
-        "BE Computer Science and Engineering": 375000,
-        "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
-        "BE Computer Science and Engineering (Data Science)": 350000,
-        "BE Computer Science and Engineering (Cyber Security)": 350000,
-        "BE Information Science and Engineering": 350000,
-        "BE Electronics and Communication Engineering": 300000,
-        "BE Mechanical Engineering": 125000,
-        "BE Civil Engineering": 125000
-      };
-      if (feeMap[bVal] !== undefined) {
-        document.getElementById('ed-actual-fee').value = feeMap[bVal];
-        window.updateEdNet();
-      }
-    };
-
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to open management editor'); console.error(err); }
 }
@@ -1117,7 +1178,7 @@ async function finalPrintManagementForm() {
           * { box-sizing: border-box; }
           body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
           
-          /* ───── NEW OFFICIAL HEADER ───── */
+          /* ΓöÇΓöÇΓöÇΓöÇΓöÇ NEW OFFICIAL HEADER ΓöÇΓöÇΓöÇΓöÇΓöÇ */
           .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
           
           .header-left-wrap {
@@ -1158,7 +1219,7 @@ async function finalPrintManagementForm() {
           .contact-label { width: 45px; font-weight: 700; color: #64748b; }
           .contact-sep { width: 10px; text-align: center; }
 
-          /* ─────────────────────────────── */
+          /* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
           .form-title { text-align: center; background: #fff; padding: 4px; font-size: 14px; font-weight: 810; border: 2px solid #000; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.8px; }
           
@@ -1179,12 +1240,12 @@ async function finalPrintManagementForm() {
           .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
           .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-          .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-          .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
-          .guidelines ol { padding-left: 18px; margin: 0; }
-          .guidelines li { margin-bottom: 3px; }
+          .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+          .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+          .guidelines ol { padding-left: 15px; margin: 0; }
+          .guidelines li { margin-bottom: 2px; }
 
-          .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
+          .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
           .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
           @media print {
@@ -1203,8 +1264,8 @@ async function finalPrintManagementForm() {
                   <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                   <div style="width:2.5px; height:35px; background:#475569;"></div>
                   <div style="line-height: 1.1;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
                   </div>
                 </div>
                 <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
@@ -1245,15 +1306,15 @@ async function finalPrintManagementForm() {
           </tr>
           <tr>
             <td class="label">Email</td><td class="value">${get('ed-email')}</td>
-            <td class="label">Actual Annual Fee</td><td class="value">₹ ${parseFloat(get('ed-actual-fee')).toLocaleString()}</td>
+            <td class="label">Actual Annual Fee</td><td class="value">Γé╣ ${parseFloat(get('ed-actual-fee')).toLocaleString()}</td>
           </tr>
           <tr>
             <td class="label">PUC/+2 Exam Board</td><td class="value">${get('ed-board')}</td>
-            <td class="label">Scholarship Attained</td><td class="value">₹ ${parseFloat(get('ed-scholarship')).toLocaleString()}</td>
+            <td class="label">Scholarship Attained</td><td class="value">Γé╣ ${parseFloat(get('ed-scholarship')).toLocaleString()}</td>
           </tr>
           <tr>
-            <td class="label">Seat Booking Fee</td><td class="value">₹ ${parseFloat(get('ed-booking-fee') || 0).toLocaleString()}</td>
-            <td class="label">Net Payable Fee</td><td class="value" style="background: #f8fafc;">₹ ${get('ed-net-payable')}</td>
+            <td class="label">Seat Booking Fee</td><td class="value">Γé╣ ${parseFloat(get('ed-booking-fee') || 0).toLocaleString()}</td>
+            <td class="label">Net Payable Fee</td><td class="value" style="background: #f8fafc;">Γé╣ ${get('ed-net-payable')}</td>
           </tr>
         </table>
 
@@ -1273,11 +1334,11 @@ async function finalPrintManagementForm() {
           <tbody>
             <tr>
               <td>${get('ed-pcm')}${get('ed-pcm') ? '%' : ''}</td>
-              <td>${get('ed-total') || '—'}${get('ed-total') ? '%' : ''}</td>
-              <td>${get('ed-cet') || '—'}</td>
-              <td>${get('ed-comedk') || '—'}</td>
-              <td>${get('ed-jee') || '—'}</td>
-              <td>${get('ed-cet-no') || '—'}</td>
+              <td>${get('ed-total') || 'ΓÇö'}${get('ed-total') ? '%' : ''}</td>
+              <td>${get('ed-cet') || 'ΓÇö'}</td>
+              <td>${get('ed-comedk') || 'ΓÇö'}</td>
+              <td>${get('ed-jee') || 'ΓÇö'}</td>
+              <td>${get('ed-cet-no') || 'ΓÇö'}</td>
             </tr>
           </tbody>
         </table>
@@ -1335,7 +1396,7 @@ async function deleteAdmission(id) {
   } catch (err) { alert('Delete failed'); }
 }
 
-// ═══════════════ EXPORT CSV ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ EXPORT CSV ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 function exportEnquiriesCSV() {
   const headers = ['ID','Token','Name','Email','Mobile','Father','Qualification','Board','Total %','Date'];
   const rows = allEnquiries.map(r => [
@@ -1366,21 +1427,21 @@ function downloadCSV(filename, headers, rows) {
   URL.revokeObjectURL(url);
 }
 
-// ═══════════════ HELPERS ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ HELPERS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 function formatDate(d) {
-  if (!d) return '—';
+  if (!d) return 'ΓÇö';
   return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function truncate(str, len) {
-  if (!str) return '—';
-  return str.length > len ? str.substring(0, len) + '…' : str;
+  if (!str) return 'ΓÇö';
+  return str.length > len ? str.substring(0, len) + 'ΓÇª' : str;
 }
 
 function detailItem(label, value, fullWidth) {
   return `<div class="detail-item${fullWidth ? ' full-width' : ''}">
     <span class="detail-label">${label}</span>
-    <span class="detail-value">${value ?? '—'}</span>
+    <span class="detail-value">${value ?? 'ΓÇö'}</span>
   </div>`;
 }
 
@@ -1391,32 +1452,9 @@ function detailHeader(title) {
 }
 
 function filterByDate(rows, field, filter) {
-  const getLocalYMD = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
   const now = new Date();
-  const todayStr = getLocalYMD(now);
-  
+  const todayStr = now.toISOString().split('T')[0];
   if (filter === 'today') return rows.filter(r => r[field] && r[field].substring(0, 10) === todayStr);
-
-  if (filter === 'tomorrow') {
-    const tmrw = new Date();
-    tmrw.setDate(tmrw.getDate() + 1);
-    const tmrwStr = getLocalYMD(tmrw);
-    return rows.filter(r => r[field] && r[field].substring(0, 10) === tmrwStr);
-  }
-
-  if (filter === 'past') {
-    return rows.filter(r => r[field] && r[field].substring(0, 10) < todayStr);
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(filter)) {
-    return rows.filter(r => r[field] && r[field].substring(0, 10) === filter);
-  }
-
   if (filter === 'week') {
     const weekAgo = new Date(now - 7 * 86400000);
     return rows.filter(r => r[field] && new Date(r[field]) >= weekAgo);
@@ -1460,7 +1498,7 @@ function showToast(msg, type = 'success') {
   }, 3000);
 }
 
-// ═══════════════ MANAGEMENT FUNCTIONS ═══════════════
+// ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ MANAGEMENT FUNCTIONS ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
 
 
 async function loadManagementStatus() {
@@ -1483,11 +1521,11 @@ function renderManagement(rows) {
 
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.id}</td>
-    <td>${r.app_no || '—'}</td>
-    <td>${r.student_name || '—'}</td>
-    <td>${r.branch || '—'}</td>
-    <td>${r.academic_year || '—'}</td>
-    <td>₹${parseFloat(r.net_payable).toLocaleString()}</td>
+    <td>${r.app_no || 'ΓÇö'}</td>
+    <td>${r.student_name || 'ΓÇö'}</td>
+    <td>${r.branch || 'ΓÇö'}</td>
+    <td>${r.academic_year || 'ΓÇö'}</td>
+    <td>Γé╣${parseFloat(r.net_payable).toLocaleString()}</td>
     <td>
       <div style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">${formatDate(r.updated_at)}</div>
       <div style="font-size:0.7rem; color:var(--text-muted);">by ${r.updated_by || 'Admin'}</div>
@@ -1550,7 +1588,7 @@ async function viewManagementForm(id) {
     try {
         const data = await apiFetch(`/api/admin/management-form/${id}`);
         const r = data.row;
-        document.getElementById('modal-title').textContent = `Management Form #${r.id} — ${r.student_name}`;
+        document.getElementById('modal-title').textContent = `Management Form #${r.id} ΓÇö ${r.student_name}`;
         document.getElementById('modal-body').innerHTML = `
           <div class="detail-grid">
             ${detailItem('App No.', r.app_no)}
@@ -1558,9 +1596,9 @@ async function viewManagementForm(id) {
             ${detailItem('Form Date', r.form_date)}
             ${detailItem('Student Name', r.student_name)}
             ${detailItem('Branch', r.branch)}
-            ${detailItem('Actual Fee', '₹' + parseFloat(r.actual_fee).toLocaleString())}
-            ${detailItem('Scholarship', '₹' + parseFloat(r.scholarship).toLocaleString())}
-            ${detailItem('Net Payable', '₹' + parseFloat(r.net_payable).toLocaleString())}
+            ${detailItem('Actual Fee', 'Γé╣' + parseFloat(r.actual_fee).toLocaleString())}
+            ${detailItem('Scholarship', 'Γé╣' + parseFloat(r.scholarship).toLocaleString())}
+            ${detailItem('Net Payable', 'Γé╣' + parseFloat(r.net_payable).toLocaleString())}
             ${detailItem('Booking Fee', r.booking_fee)}
             ${detailItem('Reference', r.reference_name)}
             ${detailItem('PCM %', r.pcm_percentage)}
@@ -1589,7 +1627,7 @@ async function printManagementFromRecord(id) {
         const y1 = yr[0] || '';
         const y2 = yr[1] || '';
 
-        const val = (v) => v || '—';
+        const val = (v) => v || 'ΓÇö';
 
         const html = `
           <!DOCTYPE html>
@@ -1631,12 +1669,12 @@ async function printManagementFromRecord(id) {
               .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-              .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
-              .guidelines ol { padding-left: 18px; margin: 0; }
-              .guidelines li { margin-bottom: 3px; }
+              .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+              .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+              .guidelines ol { padding-left: 15px; margin: 0; }
+              .guidelines li { margin-bottom: 2px; }
 
-              .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
+              .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
               .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
               @media print { body { -webkit-print-color-adjust: exact; } }
@@ -1651,8 +1689,8 @@ async function printManagementFromRecord(id) {
                     <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                     <div style="width:2.5px; height:35px; background:#475569;"></div>
                     <div style="line-height: 1.1;">
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
                     </div>
                   </div>
                   <div class="estd">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
@@ -1681,9 +1719,9 @@ async function printManagementFromRecord(id) {
               <tr><td class="label">Student Name</td><td class="value">${val(m.student_name)}</td><td class="label">Phone No.</td><td class="value">${val(m.mobile_no)}</td></tr>
               <tr><td class="label">Parent/Guardian</td><td class="value">${val(m.parent_name)}</td><td class="label">Parent Mobile</td><td class="value">${val(m.parent_mobile)}</td></tr>
               <tr><td class="label">Branch Selected</td><td class="val">${val(m.branch)}</td><td class="label">State</td><td class="val">${val(m.state)}</td></tr>
-              <tr><td class="label">Email</td><td class="val">${val(m.email)}</td><td class="label">Actual Annual Fee</td><td class="val">₹ ${parseFloat(m.actual_fee || 0).toLocaleString()}</td></tr>
-              <tr><td class="label">PUC/+2 Board</td><td class="val">${val(r.education_board || r.twelfth_board)}</td><td class="label">Scholarship</td><td class="val">₹ ${parseFloat(m.scholarship || 0).toLocaleString()}</td></tr>
-              <tr><td class="label">Booking Fee</td><td class="val">₹ ${parseFloat(m.booking_fee || 0).toLocaleString()}</td><td class="label">Net Payable</td><td class="val" style="background:#f8fafc">₹ ${parseFloat(m.net_payable || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">Email</td><td class="val">${val(m.email)}</td><td class="label">Actual Annual Fee</td><td class="val">Γé╣ ${parseFloat(m.actual_fee || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">PUC/+2 Board</td><td class="val">${val(r.education_board || r.twelfth_board)}</td><td class="label">Scholarship</td><td class="val">Γé╣ ${parseFloat(m.scholarship || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">Booking Fee</td><td class="val">Γé╣ ${parseFloat(m.booking_fee || 0).toLocaleString()}</td><td class="label">Net Payable</td><td class="val" style="background:#f8fafc">Γé╣ ${parseFloat(m.net_payable || 0).toLocaleString()}</td></tr>
             </table>
 
             <div style="font-weight: 800; margin-bottom: 6px; font-size:11px;">Reference Name: <span style="text-decoration: underline;">${val(m.reference_name)}</span></div>
@@ -1758,68 +1796,3 @@ function exportManagementCSV() {
   downloadCSV('management_export.csv', headers, rows);
 }
 
-// ═══════════════ BULK MAIL ═══════════════
-let currentBulkEmails = [];
-
-function openBulkMailModal() {
-  if (!lastFilteredEnquiries || lastFilteredEnquiries.length === 0) {
-    return showToast('No records visible to send email to', 'error');
-  }
-
-  // Filter out invalid emails
-  currentBulkEmails = lastFilteredEnquiries
-    .map(r => r.student_email)
-    .filter(e => e && e.trim() !== '' && e.indexOf('@') !== -1);
-
-  if (currentBulkEmails.length === 0) {
-    return showToast('No valid email addresses found in the current filter', 'error');
-  }
-
-  document.getElementById('bulk-mail-count').textContent = `${currentBulkEmails.length} recipient(s) selected`;
-  document.getElementById('bulk-mail-recipients').textContent = currentBulkEmails.join(', ');
-  document.getElementById('bulk-mail-subject').value = '';
-  document.getElementById('bulk-mail-message').value = '';
-  document.getElementById('bulk-mail-modal').classList.add('open');
-}
-
-function closeBulkMailModal() {
-  document.getElementById('bulk-mail-modal').classList.remove('open');
-}
-
-async function sendBulkMail() {
-  const subject = document.getElementById('bulk-mail-subject').value.trim();
-  const message = document.getElementById('bulk-mail-message').value.trim();
-
-  if (!subject || !message) {
-    return showToast('Please enter both subject and message', 'error');
-  }
-
-  const btn = document.getElementById('send-bulk-mail-btn');
-  const ogHtml = btn.innerHTML;
-  btn.innerHTML = '<span class="spinner" style="margin-right: 8px;"></span> Sending...';
-  btn.disabled = true;
-
-  try {
-    const res = await apiFetch('/api/admin/enquiries/bulk-email', {
-      method: 'POST',
-      body: JSON.stringify({
-        emails: currentBulkEmails,
-        subject: subject,
-        message: message
-      })
-    });
-    
-    if (res.success) {
-      showToast(`Successfully sent mail to ${res.count} recipient(s)`);
-      closeBulkMailModal();
-    } else {
-      showToast(res.error || 'Failed to send mail', 'error');
-    }
-  } catch (err) {
-    showToast('Failed to send mail. Server error.', 'error');
-    console.error('Send bulk mail error:', err);
-  } finally {
-    btn.innerHTML = ogHtml;
-    btn.disabled = false;
-  }
-}

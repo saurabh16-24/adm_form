@@ -29,7 +29,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     if (data.success) {
       sessionStorage.setItem('admin_token', data.token);
       sessionStorage.setItem('admin_name', data.username || 'Admin');
-      sessionStorage.setItem('admin_role', data.role || 'admin');
       showDashboard();
     } else {
       errEl.textContent = data.message || 'Invalid credentials';
@@ -61,19 +60,6 @@ function logout() {
 function showDashboard() {
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
-
-  const role = sessionStorage.getItem('admin_role');
-  const navMgmt = document.getElementById('nav-management');
-  const panelTitle = document.getElementById('panel-title-role');
-  
-  if (role === 'counsellor') {
-    if (navMgmt) navMgmt.style.display = 'none';
-    if (panelTitle) panelTitle.textContent = 'Counsellor Panel';
-  } else {
-    if (navMgmt) navMgmt.style.display = 'flex';
-    if (panelTitle) panelTitle.textContent = 'Admin Panel';
-  }
-
   loadOverview();
   updateClock();
   setInterval(updateClock, 1000);
@@ -134,8 +120,8 @@ function switchTab(tab) {
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
     enquiries:  ['Enquiries', 'Manage student enquiry records'],
-    admissions: ['Applications', 'Manage admission applications'],
-    management: ['Admissions', 'Generated Management Admission Forms']
+    admissions: ['Admissions', 'Manage admission applications'],
+    management: ['Management', 'Generated Management Admission Forms']
   };
   document.getElementById('page-title').textContent = titles[tab][0];
   document.getElementById('page-subtitle').textContent = titles[tab][1];
@@ -235,9 +221,6 @@ function renderEnquiries(rows) {
     tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="material-icons-round">inbox</span><p>No enquiries found</p></td></tr>`;
     return;
   }
-  
-  const role = sessionStorage.getItem('admin_role');
-  
   tbody.innerHTML = rows.map(r => {
     const remark = r.admin_remarks || '— Select Action —';
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
@@ -270,7 +253,7 @@ function renderEnquiries(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewEnquiry(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printEnquiry(${r.id})" title="Print Enquiry"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
+      <button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`}).join('');
 }
@@ -374,21 +357,6 @@ async function updateRemarks(id, field, value) {
 function filterEnquiries() {
   const search = document.getElementById('enq-search').value.toLowerCase();
   const dateFilter = document.getElementById('enq-filter-date').value;
-  
-  const followupDropdown = document.getElementById('enq-filter-followup');
-  const followupCustom = document.getElementById('enq-filter-followup-custom');
-  let followupFilter = followupDropdown ? followupDropdown.value : null;
-
-  if (followupDropdown && followupCustom) {
-    if (followupFilter === 'custom') {
-      followupCustom.style.display = 'inline-block';
-      followupFilter = followupCustom.value; 
-    } else {
-      followupCustom.style.display = 'none';
-      followupCustom.value = '';
-    }
-  }
-
   const actionFilter = document.getElementById('enq-filter-action').value;
   const courseFilter = document.getElementById('enq-filter-course').value;
   let filtered = allEnquiries;
@@ -406,7 +374,6 @@ function filterEnquiries() {
   }
 
   if (dateFilter) filtered = filterByDate(filtered, 'enquiry_date', dateFilter);
-  if (followupFilter) filtered = filterByDate(filtered, 'follow_up_date', followupFilter);
   if (actionFilter) filtered = filtered.filter(r => (r.admin_remarks || '') === actionFilter);
 
   if (courseFilter) {
@@ -799,8 +766,6 @@ function renderAdmissions(rows) {
     return;
   }
 
-  const role = sessionStorage.getItem('admin_role');
-
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.id}</td>
     <td>${r.application_number || '—'}</td>
@@ -815,8 +780,8 @@ function renderAdmissions(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
-      ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
+      <button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>
+      <button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
     </td>
   </tr>`).join('');
 }
@@ -853,7 +818,6 @@ async function viewAdmission(id) {
   try {
     const data = await apiFetch(`/api/admin/admission/${id}`);
     const r = data.row;
-    const role = sessionStorage.getItem('admin_role');
     document.getElementById('modal-title').innerHTML = `
       <div style="display:flex; align-items:center; gap:12px; width:100%;">
         <span class="material-icons-round" style="color:var(--accent);">assignment</span>
@@ -862,16 +826,13 @@ async function viewAdmission(id) {
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px;" onclick="printAdmission(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">print</span> Print Confirmation
           </button>
-          ${role !== 'counsellor' ? `
           <button class="btn btn-print" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:6px; background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})">
             <span class="material-icons-round" style="font-size:16px;">description</span> Management Form
           </button>
-          ` : ''}
         </div>
       </div>`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
-        ${detailHeader('Personal Information')}
         ${detailItem('Application No.', r.application_number)}
         ${detailItem('Date', formatDate(r.application_date))}
         ${detailItem('Title', r.title)}
@@ -880,44 +841,23 @@ async function viewAdmission(id) {
         ${detailItem('Mobile', r.mobile_no)}
         ${detailItem('DOB', formatDate(r.date_of_birth))}
         ${detailItem('Gender', r.gender)}
-        ${detailItem('Aadhaar No.', r.aadhaar_no || '—')}
-
-        ${detailHeader('Course Preferences')}
+        ${detailItem('Aadhaar No.', r.aadhaar_no)}
         ${detailItem('Institute', r.selected_institute || 'Engineering - SVCE')}
         ${detailItem('Course', r.course_preference)}
         ${detailItem('Programme', r.program_preference)}
-
-        ${detailHeader('Address Details')}
-        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_district, r.comm_state, r.comm_country, r.comm_pincode].filter(Boolean).join(', '), true)}
-        ${detailItem('Perm. Address Same?', r.same_as_comm ? 'Yes' : 'No')}
-        ${r.same_as_comm ? '' : detailItem('Perm. Address', [r.perm_address_line1, r.perm_address_line2, r.perm_city, r.perm_district, r.perm_state, r.perm_country, r.perm_pincode].filter(Boolean).join(', '), true)}
-        
-        ${detailHeader('Parent Details')}
+        ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', '), true)}
         ${detailItem('Father', r.father_name)}
         ${detailItem('Father Mobile', r.father_mobile)}
         ${detailItem('Father Occupation', r.father_occupation)}
         ${detailItem('Mother', r.mother_name)}
         ${detailItem('Mother Mobile', r.mother_mobile)}
         ${detailItem('Mother Occupation', r.mother_occupation)}
-
-        ${detailHeader('Educational & Entrance Stats')}
         ${detailItem('Marksheet Name', r.candidate_name_marksheet)}
         ${detailItem('12th Institution', r.twelfth_institution)}
         ${detailItem('12th Board', r.twelfth_board)}
-        ${detailItem('12th Stream', r.twelfth_stream || '—')}
-        ${detailItem('12th Year Passing', r.twelfth_year_passing || '—')}
-        ${detailItem('12th Marking Scheme', r.twelfth_marking_scheme || '—')}
-        ${detailItem('12th Result', r.twelfth_result_status || '—')}
-        ${detailItem('12th % / CGPA', (r.twelfth_percentage || '—') + '%')}
-        ${detailItem('Entrance Exams', r.entrance_exams || 'None', true)}
-
-        ${detailHeader('Payment & Documents')}
-        ${detailItem('Payment UTR', r.payment_utr_no || '—')}
-        ${detailItem('Declaration Accepted', r.declaration_accepted ? 'Yes' : 'No')}
-        ${r.passport_photo_path ? detailItem('Passport Photo', `<a href="${r.passport_photo_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Photo ↗</a>`) : ''}
-        ${r.signature_path ? detailItem('Signature', `<a href="${r.signature_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Signature ↗</a>`) : ''}
-        ${r.twelfth_marksheet_path ? detailItem('12th Marksheet', `<a href="${r.twelfth_marksheet_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Marksheet ↗</a>`) : ''}
-        ${r.payment_receipt_path ? detailItem('Payment Receipt', `<a href="${r.payment_receipt_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Receipt ↗</a>`) : ''}
+        ${detailItem('12th %', r.twelfth_percentage + '%')}
+        ${detailItem('Entrance Exams', r.entrance_exams || 'None')}
+        ${detailItem('Payment UTR', r.payment_utr_no)}
       </div>`;
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to load admission details'); }
@@ -925,7 +865,7 @@ async function viewAdmission(id) {
 
 async function printAdmission(id) {
   const token = sessionStorage.getItem('admin_token');
-  window.open(`${API}/api/admin/admission/${id}/print?token=${encodeURIComponent(token)}`, '_blank');
+  window.open(`${API}/api/admin/admission/${id}/print-pdf?token=${encodeURIComponent(token)}`, '_blank');
 }
 
 async function openManagementFormEditor(id) {
@@ -936,21 +876,15 @@ async function openManagementFormEditor(id) {
     // Helper to format values
     const val = (v) => (v === null || v === undefined || v === '') ? '' : v;
     
-    // Calculate default annual fee based on preferred course
+    // Calculate default annual fee
     let defaultFee = 0;
-    const initialFeeMap = {
-      "BE Computer Science and Engineering": 375000,
-      "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
-      "BE Computer Science and Engineering (Data Science)": 350000,
-      "BE Computer Science and Engineering (Cyber Security)": 350000,
-      "BE Information Science and Engineering": 350000,
-      "BE Electronics and Communication Engineering": 300000,
-      "BE Mechanical Engineering": 125000,
-      "BE Civil Engineering": 125000
-    };
-    if (r.course_preference && initialFeeMap[r.course_preference]) {
-      defaultFee = initialFeeMap[r.course_preference];
-    }
+    try {
+      const prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
+      const match = prefs.find(p => (typeof p === 'object' ? p.course : p) === r.course_preference);
+      if (match && typeof match === 'object' && match.fee) {
+        defaultFee = parseFloat(match.fee);
+      }
+    } catch(e) {}
 
     const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '/');
     const currentYear = new Date().getFullYear();
@@ -996,21 +930,7 @@ async function openManagementFormEditor(id) {
             <td class="label">Parent Mobile</td><td><input type="text" id="ed-parent-mobile" value="${r.father_mobile || r.mother_mobile}"></td>
           </tr>
           <tr>
-            <td class="label">Branch Selected</td><td>
-              <select id="ed-branch" style="width:100%; border:none; padding:4px; font-weight:700; font-size:11px; background:transparent; outline:none; text-overflow: ellipsis;" onchange="updateActualFeeByBranch()">
-                <option value="">-- Select Branch --</option>
-                ${[
-                  "BE Computer Science and Engineering",
-                  "BE Computer Science and Engineering (Artificial Intelligence)",
-                  "BE Computer Science and Engineering (Data Science)",
-                  "BE Computer Science and Engineering (Cyber Security)",
-                  "BE Information Science and Engineering",
-                  "BE Electronics and Communication Engineering",
-                  "BE Mechanical Engineering",
-                  "BE Civil Engineering"
-                ].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
-              </select>
-            </td>
+            <td class="label">Branch Selected</td><td><input type="text" id="ed-branch" value="${r.course_preference}"></td>
             <td class="label">State</td><td><input type="text" id="ed-state" value="${r.perm_state || 'Karnataka'}"></td>
           </tr>
           <tr>
@@ -1022,7 +942,7 @@ async function openManagementFormEditor(id) {
             <td class="label">Scholarship (₹)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
           </tr>
           <tr>
-            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value=""></td>
+            <td class="label">Booking Fee (₹)</td><td><input type="text" id="ed-booking-fee" value="${r.payment_utr_no ? '1250' : ''}"></td>
             <td class="label">Net Payable (₹)</td><td><input type="text" id="ed-net-payable" value="${defaultFee.toLocaleString()}" readonly style="color:#10b981;"></td>
           </tr>
         </table>
@@ -1078,25 +998,6 @@ async function openManagementFormEditor(id) {
       const actual = parseFloat(document.getElementById('ed-actual-fee').value) || 0;
       const scholarship = parseFloat(document.getElementById('ed-scholarship').value) || 0;
       document.getElementById('ed-net-payable').value = (actual - scholarship).toLocaleString();
-    };
-
-    window.updateActualFeeByBranch = () => {
-      const branchSel = document.getElementById('ed-branch');
-      const bVal = branchSel.value;
-      const feeMap = {
-        "BE Computer Science and Engineering": 375000,
-        "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
-        "BE Computer Science and Engineering (Data Science)": 350000,
-        "BE Computer Science and Engineering (Cyber Security)": 350000,
-        "BE Information Science and Engineering": 350000,
-        "BE Electronics and Communication Engineering": 300000,
-        "BE Mechanical Engineering": 125000,
-        "BE Civil Engineering": 125000
-      };
-      if (feeMap[bVal] !== undefined) {
-        document.getElementById('ed-actual-fee').value = feeMap[bVal];
-        window.updateEdNet();
-      }
     };
 
     document.getElementById('detail-modal').classList.add('open');
@@ -1179,12 +1080,12 @@ async function finalPrintManagementForm() {
           .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
           .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-          .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-          .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
-          .guidelines ol { padding-left: 18px; margin: 0; }
-          .guidelines li { margin-bottom: 3px; }
+          .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+          .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+          .guidelines ol { padding-left: 15px; margin: 0; }
+          .guidelines li { margin-bottom: 2px; }
 
-          .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
+          .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
           .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
           @media print {
@@ -1203,8 +1104,8 @@ async function finalPrintManagementForm() {
                   <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                   <div style="width:2.5px; height:35px; background:#475569;"></div>
                   <div style="line-height: 1.1;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
                   </div>
                 </div>
                 <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
@@ -1391,32 +1292,9 @@ function detailHeader(title) {
 }
 
 function filterByDate(rows, field, filter) {
-  const getLocalYMD = (d) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
   const now = new Date();
-  const todayStr = getLocalYMD(now);
-  
+  const todayStr = now.toISOString().split('T')[0];
   if (filter === 'today') return rows.filter(r => r[field] && r[field].substring(0, 10) === todayStr);
-
-  if (filter === 'tomorrow') {
-    const tmrw = new Date();
-    tmrw.setDate(tmrw.getDate() + 1);
-    const tmrwStr = getLocalYMD(tmrw);
-    return rows.filter(r => r[field] && r[field].substring(0, 10) === tmrwStr);
-  }
-
-  if (filter === 'past') {
-    return rows.filter(r => r[field] && r[field].substring(0, 10) < todayStr);
-  }
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(filter)) {
-    return rows.filter(r => r[field] && r[field].substring(0, 10) === filter);
-  }
-
   if (filter === 'week') {
     const weekAgo = new Date(now - 7 * 86400000);
     return rows.filter(r => r[field] && new Date(r[field]) >= weekAgo);
@@ -1631,12 +1509,12 @@ async function printManagementFromRecord(id) {
               .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
-              .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
-              .guidelines ol { padding-left: 18px; margin: 0; }
-              .guidelines li { margin-bottom: 3px; }
+              .guidelines { font-size: 8.5px; margin-bottom: 20px; line-height: 1.3; text-align: justify; }
+              .guidelines h3 { font-size: 10px; margin-bottom: 4px; text-decoration: underline; font-weight: 800; }
+              .guidelines ol { padding-left: 15px; margin: 0; }
+              .guidelines li { margin-bottom: 2px; }
 
-              .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
+              .footer-signs { display: flex; justify-content: space-between; margin-top: 40px; font-weight: 800; font-size: 10.5px; width: 100%; }
               .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
 
               @media print { body { -webkit-print-color-adjust: exact; } }
@@ -1651,8 +1529,8 @@ async function printManagementFromRecord(id) {
                     <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
                     <div style="width:2.5px; height:35px; background:#475569;"></div>
                     <div style="line-height: 1.1;">
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">SRI VENKATESHWARA</div>
+                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b;">COLLEGE OF ENGINEERING</div>
                     </div>
                   </div>
                   <div class="estd">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
@@ -1758,68 +1636,3 @@ function exportManagementCSV() {
   downloadCSV('management_export.csv', headers, rows);
 }
 
-// ═══════════════ BULK MAIL ═══════════════
-let currentBulkEmails = [];
-
-function openBulkMailModal() {
-  if (!lastFilteredEnquiries || lastFilteredEnquiries.length === 0) {
-    return showToast('No records visible to send email to', 'error');
-  }
-
-  // Filter out invalid emails
-  currentBulkEmails = lastFilteredEnquiries
-    .map(r => r.student_email)
-    .filter(e => e && e.trim() !== '' && e.indexOf('@') !== -1);
-
-  if (currentBulkEmails.length === 0) {
-    return showToast('No valid email addresses found in the current filter', 'error');
-  }
-
-  document.getElementById('bulk-mail-count').textContent = `${currentBulkEmails.length} recipient(s) selected`;
-  document.getElementById('bulk-mail-recipients').textContent = currentBulkEmails.join(', ');
-  document.getElementById('bulk-mail-subject').value = '';
-  document.getElementById('bulk-mail-message').value = '';
-  document.getElementById('bulk-mail-modal').classList.add('open');
-}
-
-function closeBulkMailModal() {
-  document.getElementById('bulk-mail-modal').classList.remove('open');
-}
-
-async function sendBulkMail() {
-  const subject = document.getElementById('bulk-mail-subject').value.trim();
-  const message = document.getElementById('bulk-mail-message').value.trim();
-
-  if (!subject || !message) {
-    return showToast('Please enter both subject and message', 'error');
-  }
-
-  const btn = document.getElementById('send-bulk-mail-btn');
-  const ogHtml = btn.innerHTML;
-  btn.innerHTML = '<span class="spinner" style="margin-right: 8px;"></span> Sending...';
-  btn.disabled = true;
-
-  try {
-    const res = await apiFetch('/api/admin/enquiries/bulk-email', {
-      method: 'POST',
-      body: JSON.stringify({
-        emails: currentBulkEmails,
-        subject: subject,
-        message: message
-      })
-    });
-    
-    if (res.success) {
-      showToast(`Successfully sent mail to ${res.count} recipient(s)`);
-      closeBulkMailModal();
-    } else {
-      showToast(res.error || 'Failed to send mail', 'error');
-    }
-  } catch (err) {
-    showToast('Failed to send mail. Server error.', 'error');
-    console.error('Send bulk mail error:', err);
-  } finally {
-    btn.innerHTML = ogHtml;
-    btn.disabled = false;
-  }
-}

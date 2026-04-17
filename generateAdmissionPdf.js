@@ -58,39 +58,39 @@ function generateAdmissionPdf(data) {
       return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB'); 
     };
 
-    // ── 1. Header ──────────────────────────────────────────────
-    if (fs.existsSync(LOGO_PATH)) {
-      doc.image(LOGO_PATH, M, 25, { width: 180 });
-    }
-    
-    doc.fillColor(GRAY).font('Helvetica').fontSize(8)
-       .text('Vidyanagara Cross, Off International Airport Road, Bengaluru-562157', M, 30, { width: CW, align: 'right' })
-       .text('Affiliated to VTU, Belagavi | Approved by AICTE, New Delhi', M, 40, { width: CW, align: 'right' })
-       .text('Web: www.svcengg.edu.in | Email: enquiry.svce@gmail.com', M, 50, { width: CW, align: 'right' });
+    // ── 1. Top Bar (Photo & Meta) ──────────────────────────────
+    let y = 30;
 
-    doc.moveTo(M, 85).lineTo(W - M, 85).lineWidth(1.2).stroke(NAVY);
-    
-    let y = 95;
-
-    // Student Photo (Top Right)
+    // Student Photo (Top Left)
     const photoBuffer = getImageBuffer(data.passport_photo_path);
     doc.save();
-    doc.rect(W - M - 65, y, 65, 80).stroke(BORDER);
+    doc.rect(M, y, 65, 80).stroke(BORDER);
     if (photoBuffer) {
-      doc.image(photoBuffer, W - M - 64, y + 1, { width: 63, height: 78, fit: [63, 78], align: 'center', valign: 'center' });
+      doc.image(photoBuffer, M + 1, y + 1, { width: 63, height: 78, fit: [63, 78], align: 'center', valign: 'center' });
     } else {
-      doc.fillColor('#999').fontSize(7).text('AFFIX\nSTUDENT\nPHOTO', W - M - 65, y + 30, { width: 65, align: 'center' });
+      doc.fillColor('#999').fontSize(7).text('AFFIX\nSTUDENT\nPHOTO', M + 1, y + 30, { width: 63, align: 'center' });
     }
     doc.restore();
 
-    // App Meta
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(9)
-       .text(`APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})`, M, y + 10, { width: CW - 70, align: 'center' });
-    
-    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(11)
-       .text('Application Form No: ' + (data.application_number || '—'), M, y + 25, { width: CW - 70, align: 'center' });
+    // App Meta (Top Right)
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(10)
+       .text('App No.: ' + (data.application_number || '—'), M + 80, y + 10, { width: CW - 80, align: 'right' });
+    doc.fillColor(BLACK).font('Helvetica').fontSize(9)
+       .text('Date: ' + formatDate(data.application_date), M + 80, y + 25, { width: CW - 80, align: 'right' });
+    doc.fillColor(GRAY).font('Helvetica').fontSize(7.5)
+       .text('Created At: ' + (data.application_date || data.created_at ? new Date(data.application_date || data.created_at).toLocaleString('en-IN') : 'N/A'), M + 80, y + 40, { width: CW - 80, align: 'right' });
 
-    y = 185;
+    y = 120;
+    
+    doc.moveTo(M, y).lineTo(W - M, y).lineWidth(1.2).stroke(NAVY);
+    
+    // Centered Title
+    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(11)
+       .text('ADMISSION APPLICATION FORM', M, y + 8, { width: CW, align: 'center' });
+    doc.fillColor('#3b82f6').font('Helvetica-Bold').fontSize(9)
+       .text(`Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`, M, y + 22, { width: CW, align: 'center' });
+
+    y = 165;
 
     // ── Table Logic (Dynamic Height) ───────────────────────────
     function sectionHeader(title) {
@@ -193,6 +193,7 @@ function generateAdmissionPdf(data) {
     eduRow('Year / Result Status', (data.twelfth_year_passing || '') + ' / ' + (data.twelfth_result_status || '—'));
     eduRow('Percentage / CGPA', (data.twelfth_percentage || '—') + '%');
     eduRow('Entrance Exams', data.entrance_exams);
+    eduRow('UTR/Transaction Ref No', data.payment_utr_no);
 
     y += 5;
 

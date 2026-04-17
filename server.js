@@ -1612,19 +1612,22 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         </style>
       </head>
       <body>
-        <div class="header" style="margin-bottom:8px;">
-          <img src="${logoUrl}" class="logo-img">
+        <div class="top-bar">
+          <div class="qr-box">
+            <div class="photo-box" style="position:relative; width: 75px; height: 95px; border: 1.2px solid #111; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #fff; z-index: 10;">
+              ${photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
+            </div>
+          </div>
+          <div class="meta-right-block">
+            <div>App No.: <span class="token-val">${val(r.application_number)}</span></div>
+            <div>Date: <span class="date-box">${fmtDate(r.application_date)}</span></div>
+            <div class="created-at">Created At: ${fmtTime(r.application_date || r.created_at)}</div>
+          </div>
         </div>
 
-        <div class="header-meta-area">
-          <div class="photo-box">
-            ${photoUrl ? `<img src="${photoUrl}">` : '<div style="font-size:10px; color:#999; text-align:center;">AFFIX<br>STUDENT<br>PHOTO</div>'}
-          </div>
-
-          <div class="app-meta">
-            <p style="font-size:10px; color:#1e40af; border-bottom: 1.5px solid #bae6fd; padding-bottom: 3px; display:inline-block; margin-bottom:8px; font-weight:800;">APPLICATION FORM (ACADEMIC YEAR ${new Date().getFullYear()}-${new Date().getFullYear() + 1})</p>
-            <div style="font-size:13px; font-weight:800; margin-bottom:10px;">Application Form No: <span style="color:#000;">${r.application_number}</span></div>
-          </div>
+        <div style="text-align: center; margin: -5px 0 8px; border-bottom: 2px solid #1e3a5f; padding-bottom: 5px;">
+           <div style="font-weight: 800; font-size: 13.5px; color: #1e3a5f; letter-spacing: 0.5px;">ADMISSION APPLICATION FORM</div>
+           <div style="font-size: 11px; font-weight: 700; color: #3b82f6;">Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}</div>
         </div>
 
         <table>
@@ -1687,6 +1690,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || '—'}%</td></tr>
           <tr><td class="label">${pmXLabel}</td><td class="value">${pmXValue}${pmXValue !== '—' ? '%' : ''}</td></tr>
           <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
+          <tr><td class="label">UTR / Transaction Ref No</td><td class="value" style="font-weight: 800; color: #1e40af;">${r.payment_utr_no || '—'}</td></tr>
         </table>
 
         </table>

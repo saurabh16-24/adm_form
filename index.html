@@ -384,7 +384,7 @@
                     <input type="number" step="0.01" id="totalPercentage" name="totalPercentage" placeholder="Auto-calculated" readonly style="cursor:not-allowed;opacity:0.8;">
                 </div>
                 <div class="form-group">
-                    <label for="pcmPercentage"><i class="fas fa-flask"></i> P+M+Max(chem,bio,cs,ece)</label>
+                    <label for="pcmPercentage"><i class="fas fa-flask"></i> P+M+Max(chem,cs,ece)</label>
                     <input type="number" step="0.01" id="pcmPercentage" name="pcmPercentage" placeholder="Auto-calculated" readonly style="cursor:not-allowed;opacity:0.8;">
                 </div>
             </div>
@@ -693,8 +693,8 @@
                         return;
                     }
 
-                    // PCM: Phy + Math + Best(Chem, CS, Bio, ECE)
-                    const bestOptional = Math.max(chem.value, cs.value, bio.value, ece.value);
+                    // PCM: Phy + Math + Best(Chem, CS, ECE)
+                    const bestOptional = Math.max(chem.value, cs.value, ece.value);
                     const pcmMarks = phy.value + math.value + bestOptional;
                     document.getElementById('pcmPercentage').value = ((pcmMarks / 300) * 100).toFixed(2);
 
