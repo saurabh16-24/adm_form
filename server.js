@@ -1619,9 +1619,9 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             </div>
           </div>
           <div class="meta-right-block">
-            <div>App No.: <span class="token-val">${val(r.application_number)}</span></div>
-            <div>Date: <span class="date-box">${fmtDate(r.application_date)}</span></div>
-            <div class="created-at">Created At: ${fmtTime(r.application_date || r.created_at)}</div>
+            <div>App No.: <span class="token-val">${r.application_number || '—'}</span></div>
+            <div>Date: <span class="date-box">${formatDate(r.application_date)}</span></div>
+            <div class="created-at">Created At: ${r.application_date || r.created_at ? new Date(r.application_date || r.created_at).toLocaleString('en-IN') : '—'}</div>
           </div>
         </div>
 
