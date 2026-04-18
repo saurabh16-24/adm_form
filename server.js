@@ -80,7 +80,22 @@ app.get('/admission-form', (req, res) => {
 // ── Helper: Convert uploaded file path to base64 data URL for embedded printing ──
 function fileToDataUrl(relativePath) {
   if (!relativePath) return '';
-  return relativePath;
+  try {
+    const cleanPath = decodeURIComponent(relativePath).replace(/^[\\/]+/, '');
+    const fullPath = path.isAbsolute(cleanPath) ? cleanPath : path.join(__dirname, cleanPath);
+    if (fs.existsSync(fullPath)) {
+      const buf = fs.readFileSync(fullPath);
+      const ext = path.extname(fullPath).toLowerCase();
+      const mimeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif' };
+      const mime = mimeMap[ext] || 'image/png';
+      return `data:${mime};base64,${buf.toString('base64')}`;
+    } else {
+      console.error('[fileToDataUrl] File not found:', fullPath);
+    }
+  } catch (err) {
+    console.error('[fileToDataUrl] Error:', err.message);
+  }
+  return '';
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
