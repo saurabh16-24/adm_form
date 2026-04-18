@@ -478,10 +478,10 @@
                 <p>Your tracking token:</p>
                 <h3 id="tokenNumber"></h3>
             </div>
-            <div id="qrcodeContainer" style="display:flex; justify-content:center; margin: 20px 0; padding: 10px; background: white; border-radius: 10px; width: fit-content; margin-inline: auto;">
+            <a id="qrcodeLink" href="#" target="_blank" style="display:flex; justify-content:center; margin: 20px 0; padding: 10px; background: white; border-radius: 10px; width: fit-content; margin-inline: auto; cursor: pointer; text-decoration: none;">
                 <div id="qrcode"></div>
-            </div>
-            <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 15px;">Save or scan this QR code. In the future, scanning this code will open a new form entirely pre-filled with your details.</p>
+            </a>
+            <p style="font-size: 0.85rem; color: #8b949e; margin-bottom: 15px;">Save or scan this QR code. Click on it or scan to open the admission form pre-filled with your details.</p>
             <button id="printFormBtn"><i class="fas fa-print"></i> Print Receipt</button>
         </div>
     </div>
@@ -933,6 +933,9 @@
                     
                     // Create an autofill link containing the permanent Database ID
                     const autofillUrl = window.location.origin + "/admission-form/?enquiry_id=" + dbId;
+                    
+                    // Set the QR code link so clicking it opens the admission form
+                    document.getElementById('qrcodeLink').href = autofillUrl;
                     
                     // Generate branded QR: qrcodejs renders first, then we overlay the logo
                     new QRCode(qrContainer, {

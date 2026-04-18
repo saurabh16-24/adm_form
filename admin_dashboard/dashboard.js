@@ -621,8 +621,10 @@ async function _old_printEnquiry_unused(id) {
 
         <div class="top-bar">
           <div class="qr-box">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(window.location.origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
-            <p>Scan for Application Form</p>
+            <a href="${window.location.origin + '/admission-form/?enquiry_id=' + r.id}" target="_blank" style="text-decoration:none;">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=1e3a5f&data=${encodeURIComponent(window.location.origin + '/admission-form/?enquiry_id=' + r.id)}" alt="Admission QR">
+            </a>
+            <p>Click or Scan for Application Form</p>
           </div>
           <div class="meta-right-block">
             <div>Token No.: <span class="token-val">${val(r.token_number)}</span></div>

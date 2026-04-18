@@ -413,11 +413,11 @@ Admission Team<br>
  SVCE, Bengaluru<br>
  9916775988<br><br>
 <div style="text-align: center; margin: 20px 0;">
-  <p style="font-size: 14px; color: #555; margin-bottom: 8px; font-weight: bold;">Scan QR Code to Access Your Details:</p>
-  <div style="display:inline-block; padding:14px; background:#ffffff; border:2px solid #e2e8f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+  <p style="font-size: 14px; color: #555; margin-bottom: 8px; font-weight: bold;">Scan or Click QR Code to Access Your Admission Form:</p>
+  <a href="${autofillUrl}" target="_blank" style="display:inline-block; padding:14px; background:#ffffff; border:2px solid #e2e8f0; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.08); text-decoration:none;">
     <img src="cid:qrcode" alt="QR Code" style="width:220px; height:220px; display:block;" />
-  </div>
-  <p style="font-size:11px; color:#9ca3af; margin-top:6px;">This QR code pre-fills your admission form automatically</p>
+  </a>
+  <p style="font-size:11px; color:#9ca3af; margin-top:6px;">Click the QR code or scan it to open your admission form</p>
 </div>
 <br>
 <div style="text-align: center; width: 100%; max-width: 600px; margin: 20px auto;">
@@ -1393,8 +1393,10 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
         <div class="top-bar">
           <div class="qr-box">
-            <img src="${qrDataUrl}" alt="Admission QR" style="width:80px;height:80px;">
-            <p>Scan for Application Form</p>
+            <a href="${formUrl}" target="_blank" style="text-decoration:none;">
+              <img src="${qrDataUrl}" alt="Admission QR" style="width:80px;height:80px;">
+            </a>
+            <p>Click or Scan for Application Form</p>
           </div>
           <div class="meta-right-block">
             <div>Token No.: <span class="token-val">${val(r.token_number)}</span></div>
