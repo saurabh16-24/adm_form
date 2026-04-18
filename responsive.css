@@ -1,7 +1,8 @@
 @media (max-width: 768px) {
     .container {
-        margin: 15px;
-        padding: 20px;
+        margin: 16px auto;
+        padding: 20px 15px;
+        width: 92%;
         border-radius: 12px;
     }
 
@@ -12,40 +13,52 @@
     }
 
     .title-meta {
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
+        flex-direction: column !important;
+        gap: 10px !important;
+        align-items: center !important;
+    }
+    
+    .token-container, .date-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
     }
 
     .form-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     .form-actions {
         flex-direction: column;
+        gap: 10px;
     }
 
     button {
         width: 100%;
-        padding: 12px;
     }
 
     .title h3 {
-        font-size: 1.4rem;
-        margin-top: 10px;
+        font-size: 1.3rem !important;
+        line-height: 1.3;
+    }
+    
+    h3.section-heading {
+        font-size: 0.9rem;
     }
 }
 
 @media (max-width: 480px) {
     .container {
-        margin: 10px;
-        padding: 15px;
-        width: 90%;
-        margin-left: auto;
-        margin-right: auto;
+        padding: 16px 12px;
     }
 
     .modal-content {
-        padding: 20px;
+        padding: 24px 16px;
+        width: 90%;
+    }
+    
+    header img {
+        width: 100% !important;
+        height: auto !important;
     }
 }

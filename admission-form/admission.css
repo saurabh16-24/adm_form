@@ -24,7 +24,8 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  background: var(--bg);
+  background: linear-gradient(rgba(13, 17, 23, 0.7), rgba(13, 17, 23, 0.7)), url('bg.jpg') no-repeat center center fixed;
+  background-size: cover;
   color: var(--text);
   font-family: var(--ff);
   font-size: 14px;
@@ -35,67 +36,50 @@ body {
 a { color: var(--accent); text-decoration: none; }
 
 /* ── Background ───────────────────────────────────────────── */
-.bg-grid {
+/* .bg-grid {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background-image:
     linear-gradient(rgba(79,142,247,0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(79,142,247,0.03) 1px, transparent 1px);
   background-size: 40px 40px;
-}
+} */
 
 /* ── Old sticky header – now unused ───────────────────────── */
 .app-header, .header-inner, .svce-logo,
 .header-titles, .header-meta, .app-number, .app-date { display: none !important; }
 
-/* ── In-form header card (matches enquiry style) ───────────── */
-.adm-header-card {
+/* ── Form Header ─────────────────────────────────────────── */
+.form-header { margin-bottom: 40px; }
+.header-card {
   background: #ffffff;
   border-radius: 16px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-  padding: 28px 32px 20px;
-  text-align: center;
+  padding: 30px;
 }
-.adm-title {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #1e293b;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin: 0 0 4px;
-}
-.adm-subtitle {
-  font-size: 0.82rem;
-  color: #64748b;
-  margin: 0;
-}
-.adm-meta-row {
+.logo-wrap { text-align: center; padding-bottom: 20px; }
+.header-logo { height: 70px; width: auto; max-width: 100%; object-fit: contain; display: inline-block; }
+.header-info { width: 100%; }
+.meta-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #e2e8f0;
-}
-.adm-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
   color: #475569;
-  font-weight: 500;
+  margin-bottom: 15px;
 }
-.adm-meta-label { color: #64748b; }
-.adm-meta-value {
-  font-weight: 700;
-  color: #059669;
-  background: rgba(5,150,105,0.08);
-  border: 1px solid rgba(5,150,105,0.25);
+.meta-item { display: flex; align-items: center; gap: 8px; }
+.meta-item label { font-weight: 600; font-size: 0.9rem; margin: 0; }
+.app-no-badge, .date-badge {
+  font-weight: bold;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
   border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 0.85rem;
-  font-family: 'Courier New', monospace;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
+.title-wrap { text-align: center; }
+.main-title { font-size: 1.8rem; margin: 0; color: #1e293b; letter-spacing: 1px; font-weight: bold; }
+.acad-year { font-weight: 700; color: #3b82f6; font-size: 0.95rem; margin-top: 4px; }
 
 /* ── Auto-fill banner ─────────────────────────────────────── */
 .autofill-banner .banner-inner {
@@ -654,11 +638,33 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ── Responsive uploads ───────────────────────────────────── */
+/* ── Responsive adjustments ────────────────────────────────── */
 @media (max-width: 768px) {
-  .doc-upload-grid { grid-template-columns: 1fr; }
-  .photo-upload-wrap { flex-direction: column; align-items: flex-start; }
-  .photo-preview-ring { width: 100px; height: 130px; }
+  .main-wrap { margin: 16px auto; padding: 0 12px; gap: 16px; }
+  
+  .header-card { padding: 20px; }
+  .meta-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  .main-title { font-size: 1.4rem; }
+  
+  .section-body { padding: 16px; }
+  .form-grid, .form-grid.cols-2, .form-grid.cols-3 { grid-template-columns: 1fr; }
+  .address-cols { grid-template-columns: 1fr; gap: 24px; }
+  .sign-row { grid-template-columns: 1fr; gap: 24px; }
   .payment-layout { grid-template-columns: 1fr; }
-  .qr-card img { width: 180px; height: 180px; }
-  .utr-row { grid-template-columns: 1fr; }
+  .payment-amount-badge { width: 100%; justify-content: space-between; }
+  
+  .name-row { grid-template-columns: 1fr; }
+  
+  .btn-submit, .btn-reset { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .main-title { font-size: 1.2rem; }
+  .section-title { font-size: 0.8rem; }
+  .modal-box { padding: 24px 16px; }
+  .header-logo { height: auto; width: 100%; }
 }

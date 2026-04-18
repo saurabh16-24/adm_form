@@ -15,7 +15,8 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #0d1117;
+            background: linear-gradient(rgba(13, 17, 23, 0.7), rgba(13, 17, 23, 0.7)), url('bg.jpg') no-repeat center center fixed;
+            background-size: cover;
             color: #ffffff;
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow-x: hidden;
@@ -90,9 +91,8 @@
     <div class="container content-container" id="main-content">
         <header>
           <!-- Centered logo -->
-          <div style="text-align:center; padding-bottom: 16px;">
-            <img src="svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
-                 style="height:70px; width:auto; object-fit:contain; display:inline-block;">
+          <div class="logo-container">
+            <img src="svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering" class="svce-logo-img">
           </div>
 
           <div class="title-container">

@@ -16,27 +16,27 @@
   <form id="admissionForm" class="main-wrap" novalidate>
 
     <!-- Header styled like management admission form -->
-    <header style="margin-bottom: 40px; padding-bottom: 20px;">
-      <!-- Centered logo -->
-      <div style="text-align:center; padding-bottom: 16px;">
-        <img src="/svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering"
-             style="height:70px; width:auto; object-fit:contain; display:inline-block;">
-      </div>
-
-      <div style="width: 100%;">
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: #475569; margin-bottom: 15px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Application No.: </label>
-            <span id="appNumber" style="font-weight: bold; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">Loading...</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-weight: 600; font-size: 0.9rem;">Date: </label>
-            <span id="appDate" style="font-weight: bold; color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);"></span>
-          </div>
+    <header class="form-header">
+      <div class="header-card">
+        <div class="logo-wrap">
+          <img src="/svce-logo.png" alt="SVCE – Sri Venkateshwara College of Engineering" class="header-logo">
         </div>
-        <div style="text-align: center;">
-          <h3 style="font-size: 1.8rem; margin: 0; color: #1e293b; letter-spacing: 1px; font-weight: bold;">ADMISSION APPLICATION FORM</h3>
-          <div style="font-weight: 700; color: #3b82f6; font-size: 0.95rem; margin-top: 4px;">Academic Year: <span id="dynamicYear"></span></div>
+  
+        <div class="header-info">
+          <div class="meta-row">
+            <div class="meta-item">
+              <label>Application No.: </label>
+              <span id="appNumber" class="app-no-badge">Loading...</span>
+            </div>
+            <div class="meta-item">
+              <label>Date: </label>
+              <span id="appDate" class="date-badge"></span>
+            </div>
+          </div>
+          <div class="title-wrap">
+            <h3 class="main-title">ADMISSION APPLICATION FORM</h3>
+            <div class="acad-year">Academic Year: <span id="dynamicYear"></span></div>
+          </div>
         </div>
       </div>
     </header>

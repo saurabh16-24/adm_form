@@ -42,10 +42,16 @@ header {
 
 /* SVCE logo image */
 .svce-logo-img {
-    height: 60px;
+    height: 70px;
     width: auto;
-    display: block;
+    max-width: 100%;
+    display: inline-block;
     object-fit: contain;
+}
+
+.logo-container {
+    text-align: center;
+    padding-bottom: 16px;
 }
 
 /* Legacy text logo (hidden now) */
