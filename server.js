@@ -605,7 +605,9 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS payment_receipt_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS payment_utr_no VARCHAR(50)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS sequence_number INTEGER",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS signature_path VARCHAR(500)"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS signature_path VARCHAR(500)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_requested BOOLEAN DEFAULT FALSE",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enabled BOOLEAN DEFAULT FALSE"
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -727,6 +729,31 @@ app.get('/api/admissions/next-token', async (req, res) => {
   }
 });
 
+// GET check if admission exists for an enquiry
+app.get('/api/admissions/check/:enquiry_id', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM admissions WHERE enquiry_id = $1 ORDER BY id DESC LIMIT 1';
+    const result = await pool.query(query, [req.params.enquiry_id]);
+    if (result.rows.length > 0) {
+      res.json({ success: true, exists: true, data: result.rows[0] });
+    } else {
+      res.json({ success: true, exists: false });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST request edit for an admission
+app.post('/api/admissions/:id/request-edit', async (req, res) => {
+  try {
+    await pool.query('UPDATE admissions SET edit_requested = TRUE WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST submit admission form (multipart/form-data with file uploads)
 app.post('/api/admissions/submit', (req, res) => {
   admissionUpload(req, res, async (uploadErr) => {
@@ -765,40 +792,90 @@ app.post('/api/admissions/submit', (req, res) => {
       const receipt_path = req.files?.payment_receipt?.[0] ? `/uploads/admissions/${req.files.payment_receipt[0].filename}` : null;
       const signature_path = req.files?.signature_image?.[0] ? `/uploads/admissions/${req.files.signature_image[0].filename}` : null;
 
-      const query = `
-        INSERT INTO admissions (
-          enquiry_id, application_number, sequence_number, application_date,
-          title, student_name, mobile_no, email, date_of_birth, gender, aadhaar_no,
-          comm_address_line1, comm_address_line2, comm_city, comm_district, comm_state, comm_country, comm_pincode,
-          same_as_comm, perm_address_line1, perm_address_line2, perm_city, perm_district, perm_state, perm_country, perm_pincode,
-          father_name, father_mobile, father_occupation, mother_name, mother_mobile, mother_occupation,
-          candidate_name_marksheet,
-          twelfth_institution, twelfth_board, twelfth_stream, twelfth_year_passing, twelfth_result_status, twelfth_marking_scheme, twelfth_percentage,
-          ug_institution, ug_board, ug_stream, ug_year_passing, ug_result_status, ug_marking_scheme, ug_percentage,
-          entrance_exams, declaration_accepted, student_signature,
-          passport_photo_path, twelfth_marksheet_path,
-          payment_receipt_path, payment_utr_no, signature_path
-        ) VALUES (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
-          $24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,
-          $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55
-        ) RETURNING id;
-      `;
-      const values = [
-        v.enquiry_id ? parseInt(v.enquiry_id) : null, v.application_number, v._adm_seq, today,
-        v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
-        v.comm_address_line1, v.comm_address_line2, v.comm_city, v.comm_district, v.comm_state, v.comm_country, v.comm_pincode,
-        v.same_as_comm === 'true' || v.same_as_comm === true,
-        v.perm_address_line1, v.perm_address_line2, v.perm_city, v.perm_district, v.perm_state, v.perm_country, v.perm_pincode,
-        v.father_name, v.father_mobile, v.father_occupation, v.mother_name, v.mother_mobile, v.mother_occupation,
-        v.candidate_name_marksheet,
-        v.twelfth_institution, v.twelfth_board, v.twelfth_stream, v.twelfth_year_passing, v.twelfth_result_status, v.twelfth_marking_scheme, v.twelfth_percentage,
-        null, null, null, null, null, null, null, // UG not applicable
-        v.entrance_exams, v.declaration_accepted === 'true' || v.declaration_accepted === true, v.student_signature || null,
-        photoPath, twelfth_path,
-        receipt_path, v.payment_utr_no || null, signature_path
-      ];
-      const result = await pool.query(query, values);
+      let result;
+      
+      // Check if admission already exists for this enquiry_id
+      let existingAdm = null;
+      if (v.enquiry_id) {
+        const existCheck = await pool.query('SELECT id, application_number, edit_enabled FROM admissions WHERE enquiry_id = $1 ORDER BY id DESC LIMIT 1', [v.enquiry_id]);
+        if (existCheck.rows.length > 0) {
+          existingAdm = existCheck.rows[0];
+        }
+      }
+
+      if (existingAdm) {
+        if (!existingAdm.edit_enabled) {
+           return res.status(403).json({ success: false, error: 'Admission already submitted. Please request an edit if needed.' });
+        }
+        
+        // Update existing admission
+        const updateQuery = `
+          UPDATE admissions SET
+            title=$1, student_name=$2, mobile_no=$3, email=$4, date_of_birth=$5, gender=$6, aadhaar_no=$7,
+            comm_address_line1=$8, comm_address_line2=$9, comm_city=$10, comm_district=$11, comm_state=$12, comm_country=$13, comm_pincode=$14,
+            same_as_comm=$15, perm_address_line1=$16, perm_address_line2=$17, perm_city=$18, perm_district=$19, perm_state=$20, perm_country=$21, perm_pincode=$22,
+            father_name=$23, father_mobile=$24, father_occupation=$25, mother_name=$26, mother_mobile=$27, mother_occupation=$28,
+            candidate_name_marksheet=$29, twelfth_institution=$30, twelfth_board=$31, twelfth_stream=$32, twelfth_year_passing=$33, twelfth_result_status=$34, twelfth_marking_scheme=$35, twelfth_percentage=$36,
+            entrance_exams=$37, student_signature=$38,
+            passport_photo_path = COALESCE($39, passport_photo_path),
+            twelfth_marksheet_path = COALESCE($40, twelfth_marksheet_path),
+            payment_receipt_path = COALESCE($41, payment_receipt_path),
+            payment_utr_no = COALESCE($42, payment_utr_no),
+            signature_path = COALESCE($43, signature_path),
+            edit_enabled = FALSE, edit_requested = FALSE
+          WHERE id = $44
+        `;
+        const values = [
+          v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
+          v.comm_address_line1, v.comm_address_line2, v.comm_city, v.comm_district, v.comm_state, v.comm_country, v.comm_pincode,
+          v.same_as_comm === 'true' || v.same_as_comm === true,
+          v.perm_address_line1, v.perm_address_line2, v.perm_city, v.perm_district, v.perm_state, v.perm_country, v.perm_pincode,
+          v.father_name, v.father_mobile, v.father_occupation, v.mother_name, v.mother_mobile, v.mother_occupation,
+          v.candidate_name_marksheet, v.twelfth_institution, v.twelfth_board, v.twelfth_stream, v.twelfth_year_passing, v.twelfth_result_status, v.twelfth_marking_scheme, v.twelfth_percentage,
+          v.entrance_exams, v.student_signature || null,
+          photoPath, twelfth_path, receipt_path, v.payment_utr_no || null, signature_path,
+          existingAdm.id
+        ];
+        await pool.query(updateQuery, values);
+        result = { rows: [{ id: existingAdm.id }] };
+        v.application_number = existingAdm.application_number;
+      } else {
+        // Insert new admission
+        const query = `
+          INSERT INTO admissions (
+            enquiry_id, application_number, sequence_number, application_date,
+            title, student_name, mobile_no, email, date_of_birth, gender, aadhaar_no,
+            comm_address_line1, comm_address_line2, comm_city, comm_district, comm_state, comm_country, comm_pincode,
+            same_as_comm, perm_address_line1, perm_address_line2, perm_city, perm_district, perm_state, perm_country, perm_pincode,
+            father_name, father_mobile, father_occupation, mother_name, mother_mobile, mother_occupation,
+            candidate_name_marksheet,
+            twelfth_institution, twelfth_board, twelfth_stream, twelfth_year_passing, twelfth_result_status, twelfth_marking_scheme, twelfth_percentage,
+            ug_institution, ug_board, ug_stream, ug_year_passing, ug_result_status, ug_marking_scheme, ug_percentage,
+            entrance_exams, declaration_accepted, student_signature,
+            passport_photo_path, twelfth_marksheet_path,
+            payment_receipt_path, payment_utr_no, signature_path
+          ) VALUES (
+            $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
+            $24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,
+            $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55
+          ) RETURNING id;
+        `;
+        const values = [
+          v.enquiry_id ? parseInt(v.enquiry_id) : null, v.application_number, v._adm_seq, today,
+          v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
+          v.comm_address_line1, v.comm_address_line2, v.comm_city, v.comm_district, v.comm_state, v.comm_country, v.comm_pincode,
+          v.same_as_comm === 'true' || v.same_as_comm === true,
+          v.perm_address_line1, v.perm_address_line2, v.perm_city, v.perm_district, v.perm_state, v.perm_country, v.perm_pincode,
+          v.father_name, v.father_mobile, v.father_occupation, v.mother_name, v.mother_mobile, v.mother_occupation,
+          v.candidate_name_marksheet,
+          v.twelfth_institution, v.twelfth_board, v.twelfth_stream, v.twelfth_year_passing, v.twelfth_result_status, v.twelfth_marking_scheme, v.twelfth_percentage,
+          null, null, null, null, null, null, null, // UG not applicable
+          v.entrance_exams, v.declaration_accepted === 'true' || v.declaration_accepted === true, v.student_signature || null,
+          photoPath, twelfth_path,
+          receipt_path, v.payment_utr_no || null, signature_path
+        ];
+        result = await pool.query(query, values);
+      }
 
       // ── Send confirmation email with PDF (async – don't block response) ──
       setImmediate(async () => {

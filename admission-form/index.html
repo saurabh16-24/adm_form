@@ -705,14 +705,163 @@
     const enquiryId = params.get('enquiry_id');
 
     if (enquiryId) {
-      fetch('/api/enquiry/' + enquiryId)
+      checkAdmissionStatus(enquiryId);
+    }
+    
+    function checkAdmissionStatus(id) {
+      if (!id) return;
+      // First, fetch enquiry data to populate preferences
+      fetchEnquiryData(id).then(() => {
+        // Then check if admission is submitted
+        fetch('/api/admissions/check/' + id)
+          .then(r => r.json())
+          .then(chk => {
+            if (chk.success && chk.exists && !chk.data.edit_enabled) {
+              setupViewMode(chk.data);
+            } else if (chk.success && chk.exists && chk.data.edit_enabled) {
+              // Pre-fill admission data for editing
+              prefillAdmissionData(chk.data);
+            }
+          })
+          .catch(err => { console.error('Check error:', err); });
+      });
+    }
+
+    function prefillAdmissionData(adm) {
+      setOpt('title', adm.title || '');
+      setVal('studentName', adm.student_name || '');
+      setVal('mobileNo', adm.mobile_no || '');
+      setVal('email', adm.email || '');
+      if (adm.date_of_birth) setVal('dob', adm.date_of_birth.split('T')[0]);
+      setOpt('gender', adm.gender || '');
+      setVal('aadhaarNo', adm.aadhaar_no || '');
+      
+      setVal('commLine1', adm.comm_address_line1 || '');
+      setVal('commLine2', adm.comm_address_line2 || '');
+      setVal('commCity', adm.comm_city || '');
+      setVal('commDistrict', adm.comm_district || '');
+      setOpt('commState', adm.comm_state || '');
+      setVal('commCountry', adm.comm_country || '');
+      setVal('commPincode', adm.comm_pincode || '');
+      
+      setVal('fatherName', adm.father_name || '');
+      setVal('fatherMobile', adm.father_mobile || '');
+      setOpt('fatherOccupation', adm.father_occupation || '');
+      setVal('motherName', adm.mother_name || '');
+      setVal('motherMobile', adm.mother_mobile || '');
+      setOpt('motherOccupation', adm.mother_occupation || '');
+      
+      setVal('twelfthInstitution', adm.twelfth_institution || '');
+      setVal('twelfthBoard', adm.twelfth_board || '');
+      setVal('twelfthStream', adm.twelfth_stream || '');
+      setVal('twelfthYear', adm.twelfth_year_passing || '');
+      setOpt('twelfth_result', adm.twelfth_result_status || '');
+      setOpt('twelfth_marking', adm.twelfth_marking_scheme || '');
+      setVal('twelfthPercentage', adm.twelfth_percentage || '');
+      
+      setVal('entranceExams', adm.entrance_exams || '');
+    }
+
+    function setupViewMode(adm) {
+      const form = sel('admissionForm');
+      if (!form) return;
+      
+      // Make all inputs readonly/disabled
+      const inputs = form.querySelectorAll('input, select, textarea, button');
+      inputs.forEach(el => {
+        if (el.tagName === 'BUTTON') {
+          if (!el.classList.contains('move-up-btn') && !el.classList.contains('move-down-btn')) {
+            el.style.display = 'none'; // hide most buttons (like capture photo)
+          }
+        } else {
+          el.disabled = true;
+        }
+      });
+
+      // Show banner at the top
+      const banner = document.createElement('div');
+      banner.className = 'view-mode-banner';
+      banner.style.cssText = 'background:#f0fdf4; border:1px solid #16a34a; color:#16a34a; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px;';
+      
+      if (adm.edit_requested) {
+         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have requested an edit. Waiting for admin approval.</p>';
+      } else {
+         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have already submitted your admission form. You can only view it.</p><button type="button" id="requestEditBtn" style="padding:8px 16px; background:#eab308; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Request Edit</button>';
+      }
+      
+      form.insertBefore(banner, form.firstChild);
+      
+      // Hide the submit button explicitly
+      const submitBtn = sel('submitBtn');
+      if (submitBtn) submitBtn.style.display = 'none';
+      
+      // Add edit request listener
+      const reqEditBtn = document.getElementById('requestEditBtn');
+      if (reqEditBtn) {
+        reqEditBtn.addEventListener('click', () => {
+          reqEditBtn.textContent = 'Requesting...';
+          fetch(`/api/admissions/${adm.id}/request-edit`, { method: 'POST' })
+            .then(r => r.json())
+            .then(res => {
+              if (res.success) {
+                banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have requested an edit. Waiting for admin approval.</p>';
+              } else {
+                alert('Error requesting edit: ' + res.error);
+                reqEditBtn.textContent = 'Request Edit';
+              }
+            }).catch(e => {
+              alert('Error requesting edit.');
+              reqEditBtn.textContent = 'Request Edit';
+            });
+        });
+      }
+      
+      // Pre-fill fields with admission data
+      setOpt('title', adm.title || '');
+      setVal('studentName', adm.student_name || '');
+      setVal('mobileNo', adm.mobile_no || '');
+      setVal('email', adm.email || '');
+      if (adm.date_of_birth) setVal('dob', adm.date_of_birth.split('T')[0]);
+      setOpt('gender', adm.gender || '');
+      setVal('aadhaarNo', adm.aadhaar_no || '');
+      
+      setVal('commLine1', adm.comm_address_line1 || '');
+      setVal('commLine2', adm.comm_address_line2 || '');
+      setVal('commCity', adm.comm_city || '');
+      setVal('commDistrict', adm.comm_district || '');
+      setOpt('commState', adm.comm_state || '');
+      setVal('commCountry', adm.comm_country || '');
+      setVal('commPincode', adm.comm_pincode || '');
+      
+      setVal('fatherName', adm.father_name || '');
+      setVal('fatherMobile', adm.father_mobile || '');
+      setOpt('fatherOccupation', adm.father_occupation || '');
+      setVal('motherName', adm.mother_name || '');
+      setVal('motherMobile', adm.mother_mobile || '');
+      setOpt('motherOccupation', adm.mother_occupation || '');
+      
+      setVal('twelfthInstitution', adm.twelfth_institution || '');
+      setVal('twelfthBoard', adm.twelfth_board || '');
+      setVal('twelfthStream', adm.twelfth_stream || '');
+      setVal('twelfthYear', adm.twelfth_year_passing || '');
+      setOpt('twelfth_result', adm.twelfth_result_status || '');
+      setOpt('twelfth_marking', adm.twelfth_marking_scheme || '');
+      setVal('twelfthPercentage', adm.twelfth_percentage || '');
+      
+      setVal('entranceExams', adm.entrance_exams || '');
+      
+      sel('appNumber').textContent = adm.application_number;
+    }
+
+    function fetchEnquiryData(id) {
+      return fetch('/api/enquiry/' + id)
         .then(r => r.json())
         .then(res => {
           if (!res.success) return;
           const e = res.data;
 
           // Personal
-          if (e.student_name) {
+          if (e.student_name && !sel('studentName').value) {
             const parts = e.student_name.trim().split(' ');
             const titles = ['MR.','MS.','MRS.','DR.'];
             if (titles.includes(parts[0].toUpperCase())) {
@@ -722,17 +871,17 @@
               setVal('studentName', e.student_name);
             }
           }
-          setVal('mobileNo', e.student_mobile || '');
-          setVal('email', e.student_email || '');
+          if (!sel('mobileNo').value) setVal('mobileNo', e.student_mobile || '');
+          if (!sel('email').value) setVal('email', e.student_email || '');
 
           // Parent
-          setVal('fatherName', e.father_name || '');
-          setVal('fatherMobile', e.father_mobile || '');
-          setVal('motherName', e.mother_name || '');
-          setVal('motherMobile', e.mother_mobile || '');
+          if (!sel('fatherName').value) setVal('fatherName', e.father_name || '');
+          if (!sel('fatherMobile').value) setVal('fatherMobile', e.father_mobile || '');
+          if (!sel('motherName').value) setVal('motherName', e.mother_name || '');
+          if (!sel('motherMobile').value) setVal('motherMobile', e.mother_mobile || '');
 
           // Address
-          if (e.address_line1) {
+          if (e.address_line1 && !sel('commLine1').value) {
             setVal('commLine1',    e.address_line1 || '');
             setVal('commLine2',    e.address_line2 || '');
             setVal('commCity',     e.address_city  || '');
@@ -740,7 +889,7 @@
             setOpt('commState',    e.address_state || '');
             setVal('commCountry',  e.address_country || 'INDIA');
             setVal('commPincode',  e.address_pincode || '');
-          } else if (e.address) {
+          } else if (e.address && !sel('commLine1').value) {
             setVal('commLine1', e.address);
           }
 
@@ -788,6 +937,10 @@
                       <button type="button" class="move-down-btn" style="padding:4px 8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px;" title="Move Down"><i class="fas fa-chevron-down"></i></button>
                     </td>
                   `;
+                  const upBtn = tr.querySelector('.move-up-btn');
+                  const dnBtn = tr.querySelector('.move-down-btn');
+                  upBtn.addEventListener('click', () => moveRow(upBtn, -1));
+                  dnBtn.addEventListener('click', () => moveRow(dnBtn, 1));
                   tbody.appendChild(tr);
                 });
 
@@ -842,7 +995,7 @@
 
           sel('autofillBanner').style.display = 'block';
         })
-        .catch(err => console.warn('Auto-fill failed:', err));
+        .catch(err => console.error('Enquiry autofill error:', err));
     }
 
     /* ── Same Address Checkbox ─────────────────────────────── */

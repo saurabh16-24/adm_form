@@ -816,7 +816,7 @@ function renderAdmissions(rows) {
 
   tbody.innerHTML = rows.map(r => `<tr>
     <td>${r.id}</td>
-    <td>${r.application_number || '—'}</td>
+    <td>${r.application_number || '—'} ${r.edit_requested ? '<span class="status-badge" style="background:var(--accent-orange-glow);color:var(--accent-orange);margin-left:5px;">Edit Requested</span>' : ''}</td>
     <td>${r.student_name || '—'}</td>
     <td>${r.email || '—'}</td>
     <td>${r.mobile_no || '—'}</td>
@@ -828,10 +828,23 @@ function renderAdmissions(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      ${r.edit_requested && !r.edit_enabled ? `<button class="btn" style="background:#fef3c7; color:#d97706; padding: 6px;" onclick="enableAdmissionEdit(${r.id})" title="Enable Editing"><span class="material-icons-round" style="font-size:14px">edit</span> Approve Edit</button>` : ''}
+      ${r.edit_enabled ? `<span class="status-badge" style="background:#d1fae5; color:#059669; font-size:10px;">Edit Enabled</span>` : ''}
       ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
       ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
     </td>
   </tr>`).join('');
+}
+
+async function enableAdmissionEdit(id) {
+  if (!confirm('Are you sure you want to unlock this application to allow the candidate to resubmit?')) return;
+  try {
+    await apiFetch(`/api/admin/admissions/${id}/enable-edit`, { method: 'POST' });
+    alert('Candidate can now edit and resubmit their application.');
+    loadAdmissions();
+  } catch (err) {
+    alert('Failed to enable: ' + err.message);
+  }
 }
 
 function filterAdmissions() {
