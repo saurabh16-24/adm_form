@@ -728,6 +728,7 @@
     }
 
     function prefillAdmissionData(adm) {
+      if (!adm) return;
       setOpt('title', adm.title || '');
       setVal('studentName', adm.student_name || '');
       setVal('mobileNo', adm.mobile_no || '');
@@ -751,15 +752,61 @@
       setVal('motherMobile', adm.mother_mobile || '');
       setOpt('motherOccupation', adm.mother_occupation || '');
       
-      setVal('twelfthInstitution', adm.twelfth_institution || '');
-      setVal('twelfthBoard', adm.twelfth_board || '');
-      setVal('twelfthStream', adm.twelfth_stream || '');
-      setVal('twelfthYear', adm.twelfth_year_passing || '');
+      setVal('twelfth_institution', adm.twelfth_institution || '');
+      setVal('twelfth_board', adm.twelfth_board || '');
+      setVal('twelfth_stream', adm.twelfth_stream || '');
+      setVal('twelfth_year', adm.twelfth_year_passing || '');
       setOpt('twelfth_result', adm.twelfth_result_status || '');
       setOpt('twelfth_marking', adm.twelfth_marking_scheme || '');
-      setVal('twelfthPercentage', adm.twelfth_percentage || '');
+      setVal('twelfth_percentage', adm.twelfth_percentage || '');
       
       setVal('entranceExams', adm.entrance_exams || '');
+      setVal('paymentUtr', adm.payment_utr_no || '');
+      
+      // Re-populate Preferences from Admission data
+      try {
+        let prefs = typeof adm.course_preferences === 'string' ? JSON.parse(adm.course_preferences) : (adm.course_preferences || []);
+        if (Array.isArray(prefs) && prefs.length > 0) {
+            const tbody = document.getElementById('prefBody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                prefs.forEach((courseName, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.style.borderBottom = '1px solid #f1f5f9';
+                    tr.innerHTML = `
+                      <td style="padding: 10px; text-align: center;">
+                        <input type="checkbox" class="course-pref-check" value="${courseName}" checked>
+                      </td>
+                      <td class="pref-idx" style="padding: 10px; font-weight: 600;">${idx + 1}</td>
+                      <td style="padding: 10px;">${courseName}</td>
+                      <td style="padding: 10px; text-align: center; white-space: nowrap;">
+                        <button type="button" class="move-up-btn" style="padding:4px 8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; margin-right:4px;" title="Move Up"><i class="fas fa-chevron-up"></i></button>
+                        <button type="button" class="move-down-btn" style="padding:4px 8px; cursor:pointer; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px;" title="Move Down"><i class="fas fa-chevron-down"></i></button>
+                      </td>
+                    `;
+                    const upBtn = tr.querySelector('.move-up-btn');
+                    const dnBtn = tr.querySelector('.move-down-btn');
+                    upBtn.addEventListener('click', () => {
+                        const r = upBtn.closest('tr');
+                        if (r.previousElementSibling) { tbody.insertBefore(r, r.previousElementSibling); updateIndices(); }
+                    });
+                    dnBtn.addEventListener('click', () => {
+                        const r = dnBtn.closest('tr');
+                        if (r.nextElementSibling) { tbody.insertBefore(r.nextElementSibling, r); updateIndices(); }
+                    });
+                    tbody.appendChild(tr);
+                });
+                function updateIndices() {
+                  tbody.querySelectorAll('tr').forEach((tr, i) => {
+                    const idxCell = tr.querySelector('.pref-idx');
+                    if (idxCell) idxCell.textContent = i + 1;
+                  });
+                }
+            }
+        }
+      } catch(e) { console.error('Pref prefill error:', e); }
+
+      sel('appNumber').textContent = adm.application_number;
     }
 
     function setupViewMode(adm) {

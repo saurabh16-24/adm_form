@@ -607,7 +607,8 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS sequence_number INTEGER",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS signature_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_requested BOOLEAN DEFAULT FALSE",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enabled BOOLEAN DEFAULT FALSE"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enabled BOOLEAN DEFAULT FALSE",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB"
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -822,8 +823,9 @@ app.post('/api/admissions/submit', (req, res) => {
             payment_receipt_path = COALESCE($41, payment_receipt_path),
             payment_utr_no = COALESCE($42, payment_utr_no),
             signature_path = COALESCE($43, signature_path),
+            course_preferences = $44,
             edit_enabled = FALSE, edit_requested = FALSE
-          WHERE id = $44
+          WHERE id = $45
         `;
         const values = [
           v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
@@ -834,6 +836,7 @@ app.post('/api/admissions/submit', (req, res) => {
           v.candidate_name_marksheet, v.twelfth_institution, v.twelfth_board, v.twelfth_stream, v.twelfth_year_passing, v.twelfth_result_status, v.twelfth_marking_scheme, v.twelfth_percentage,
           v.entrance_exams, v.student_signature || null,
           photoPath, twelfth_path, receipt_path, v.payment_utr_no || null, signature_path,
+          JSON.stringify(v.course_preferences ? (typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences) : []),
           existingAdm.id
         ];
         await pool.query(updateQuery, values);
@@ -853,11 +856,12 @@ app.post('/api/admissions/submit', (req, res) => {
             ug_institution, ug_board, ug_stream, ug_year_passing, ug_result_status, ug_marking_scheme, ug_percentage,
             entrance_exams, declaration_accepted, student_signature,
             passport_photo_path, twelfth_marksheet_path,
-            payment_receipt_path, payment_utr_no, signature_path
+            payment_receipt_path, payment_utr_no, signature_path,
+            course_preferences
           ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
             $24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,
-            $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55
+            $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55, $56
           ) RETURNING id;
         `;
         const values = [
@@ -872,7 +876,8 @@ app.post('/api/admissions/submit', (req, res) => {
           null, null, null, null, null, null, null, // UG not applicable
           v.entrance_exams, v.declaration_accepted === 'true' || v.declaration_accepted === true, v.student_signature || null,
           photoPath, twelfth_path,
-          receipt_path, v.payment_utr_no || null, signature_path
+          receipt_path, v.payment_utr_no || null, signature_path,
+          JSON.stringify(v.course_preferences ? (typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences) : [])
         ];
         result = await pool.query(query, values);
       }
