@@ -1664,6 +1664,37 @@ app.get('/api/admin/admission/:id/print-pdf', adminAuthQuery, async (req, res) =
   }
 });
 
+// Candidate-facing PUBLIC PDF route (no admin auth)
+app.get('/api/admissions/:id/pdf', async (req, res) => {
+  try {
+    const query = `
+      SELECT a.*, e.course_preferences, e.admin_remarks
+      FROM admissions a
+      LEFT JOIN enquiries e ON a.enquiry_id = e.id
+      WHERE a.id = $1
+    `;
+    const result = await pool.query(query, [req.params.id]);
+    if (!result.rows.length) return res.status(404).send('Admission not found');
+    const r = result.rows[0];
+
+    let prefs = [];
+    try {
+      prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences || '[]') : (r.course_preferences || []);
+    } catch { prefs = []; }
+    
+    const pdfData = { ...r, _top_prefs: prefs.slice(0, 4), _admin_remarks: r.admin_remarks || '' };
+    const pdfBuffer = await generateAdmissionPdf(pdfData);
+
+    const safeName = (r.application_number || 'admission').replace(/\//g, '_');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="SVCE_${safeName}.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    res.status(500).send('Error: ' + err.message);
+  }
+});
+
+
 
 // GET /api/admin/admission/:id/print  — returns a printable HTML application form
 app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {

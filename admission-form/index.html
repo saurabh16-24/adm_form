@@ -861,9 +861,9 @@
       banner.style.cssText = 'background:#f0fdf4; border:1px solid #16a34a; color:#16a34a; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px;';
       
       if (adm.edit_requested) {
-         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have requested an edit. Waiting for admin approval.</p>';
+         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have requested an edit. Waiting for admin approval.</p><div style="display:flex;gap:10px;"><button type="button" id="printAppBtn" style="padding:8px 16px; background:#16a34a; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;"><i class="fas fa-print"></i> Print Application</button></div>';
       } else {
-         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have already submitted your admission form. You can only view it.</p><button type="button" id="requestEditBtn" style="padding:8px 16px; background:#eab308; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Request Edit</button>';
+         banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have already submitted your admission form. You can only view or print it.</p><div style="display:flex;gap:10px;"><button type="button" id="printAppBtn" style="padding:8px 16px; background:#16a34a; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;"><i class="fas fa-print"></i> Print Application</button><button type="button" id="requestEditBtn" style="padding:8px 16px; background:#eab308; color:#fff; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">Request Edit</button></div>';
       }
       
       form.insertBefore(banner, form.firstChild);
@@ -878,21 +878,27 @@
         reqEditBtn.addEventListener('click', () => {
           reqEditBtn.textContent = 'Requesting...';
           fetch(`/api/admissions/${adm.id}/request-edit`, { method: 'POST' })
-            .then(r => r.json())
-            .then(res => {
-              if (res.success) {
-                banner.innerHTML = '<strong>Application Submitted</strong><p style="margin:0;font-size:0.9em;color:#475569;">You have requested an edit. Waiting for admin approval.</p>';
+            .then(res => res.json())
+            .then(d => {
+              if (d.success) {
+                alert('Edit request sent successfully. Redirecting...');
+                window.location.reload();
               } else {
-                alert('Error requesting edit: ' + res.error);
+                alert('Error: ' + d.error);
                 reqEditBtn.textContent = 'Request Edit';
               }
-            }).catch(e => {
-              alert('Error requesting edit.');
-              reqEditBtn.textContent = 'Request Edit';
             });
         });
       }
-      
+
+      // Add print listener
+      const printBtn = document.getElementById('printAppBtn');
+      if (printBtn) {
+        printBtn.addEventListener('click', () => {
+           window.open(`/api/admissions/${adm.id}/pdf`, '_blank');
+        });
+      }
+
       // Pre-fill fields with admission data
       setOpt('title', adm.title || '');
       setVal('studentName', adm.student_name || '');
