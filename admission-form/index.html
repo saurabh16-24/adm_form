@@ -729,6 +729,18 @@
 
     function prefillAdmissionData(adm) {
       if (!adm) return;
+      
+      // Clear any previous mode banners
+      const oldBanners = document.querySelectorAll('.view-mode-banner, .edit-mode-banner');
+      oldBanners.forEach(b => b.remove());
+
+      // Show Edit Mode Banner
+      const banner = document.createElement('div');
+      banner.className = 'edit-mode-banner';
+      banner.style.cssText = 'background:#fff7ed; border:1px solid #ea580c; color:#ea580c; padding:15px; border-radius:8px; margin-bottom:20px; text-align:center; font-weight:bold;';
+      banner.innerHTML = '📝 EDIT MODE ENABLED: You are now updating your previously submitted application.';
+      sel('admissionForm').insertBefore(banner, sel('admissionForm').firstChild);
+
       setOpt('title', adm.title || '');
       setVal('studentName', adm.student_name || '');
       setVal('mobileNo', adm.mobile_no || '');
@@ -737,13 +749,30 @@
       setOpt('gender', adm.gender || '');
       setVal('aadhaarNo', adm.aadhaar_no || '');
       
+      // Communication Address
       setVal('commLine1', adm.comm_address_line1 || '');
       setVal('commLine2', adm.comm_address_line2 || '');
       setVal('commCity', adm.comm_city || '');
       setVal('commDistrict', adm.comm_district || '');
       setOpt('commState', adm.comm_state || '');
-      setVal('commCountry', adm.comm_country || '');
+      setVal('commCountry', adm.comm_country || 'INDIA');
       setVal('commPincode', adm.comm_pincode || '');
+      
+      // Permanent Address Handling
+      const sameChr = !!adm.same_as_comm;
+      sel('sameAsComm').checked = sameChr;
+      if (sameChr) {
+          sel('permAddressCol').style.opacity = '0.5';
+          sel('permAddressCol').style.pointerEvents = 'none';
+      } else {
+          setVal('permLine1', adm.perm_address_line1 || '');
+          setVal('permLine2', adm.perm_address_line2 || '');
+          setVal('permCity', adm.perm_city || '');
+          setVal('permDistrict', adm.perm_district || '');
+          setOpt('permState', adm.perm_state || '');
+          setVal('permCountry', adm.perm_country || 'INDIA');
+          setVal('permPincode', adm.perm_pincode || '');
+      }
       
       setVal('fatherName', adm.father_name || '');
       setVal('fatherMobile', adm.father_mobile || '');
@@ -752,12 +781,13 @@
       setVal('motherMobile', adm.mother_mobile || '');
       setOpt('motherOccupation', adm.mother_occupation || '');
       
+      setVal('candidateNameMarksheet', adm.candidate_name_marksheet || '');
       setVal('twelfth_institution', adm.twelfth_institution || '');
       setVal('twelfth_board', adm.twelfth_board || '');
       setVal('twelfth_stream', adm.twelfth_stream || '');
       setVal('twelfth_year', adm.twelfth_year_passing || '');
       setOpt('twelfth_result', adm.twelfth_result_status || '');
-      setOpt('twelfth_marking', adm.twelfth_marking_scheme || '');
+      setOpt('twelfth_scheme', adm.twelfth_marking_scheme || '');
       setVal('twelfth_percentage', adm.twelfth_percentage || '');
       
       setVal('entranceExams', adm.entrance_exams || '');
