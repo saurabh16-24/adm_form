@@ -1152,6 +1152,16 @@ app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// POST /api/admin/admissions/:id/enable-edit
+app.post('/api/admin/admissions/:id/enable-edit', adminAuth, async (req, res) => {
+  try {
+    await pool.query('UPDATE admissions SET edit_enabled = TRUE WHERE id = $1', [req.params.id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Management Forms
 app.post('/api/admin/management-form', adminAuth, async (req, res) => {
   if (req.userRole === 'counsellor') {
