@@ -623,9 +623,36 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script>
   (function () {
+    // Immediately explicitly reset form to clear browser input cache
+    const form = document.getElementById('admissionForm');
+    if (form) setTimeout(() => form.reset(), 50);
+
+    let isSubmitting = false;
+    if (form) form.addEventListener('submit', () => { isSubmitting = true; });
+
+    window.addEventListener('beforeunload', function (e) {
+        if (isSubmitting) return; 
+        let isDirty = false;
+        if (form) {
+            let inputs = form.querySelectorAll('input:not([type="hidden"]), textarea, select');
+            for (let input of inputs) {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    if (input.checked) { isDirty = true; break;}
+                } else if (input.value.trim() !== '') {
+                    isDirty = true; break;
+                }
+            }
+        }
+        
+        if (isDirty) {
+            e.preventDefault();
+            e.returnValue = 'Data will be lost if you refresh. Are you sure?';
+            return e.returnValue;
+        }
+    });
+
     /* ── Helpers ───────────────────────────────────────────── */
     const sel = (id) => document.getElementById(id);
     const setVal = (id, val) => { const el = sel(id); if (el && val != null && val !== '') el.value = val; };
@@ -1178,6 +1205,7 @@
 
         sel('modalAppNo').textContent = appNum;
         sel('successModal').classList.add('open');
+        sel('admissionForm').style.display = 'none';
         sel('admissionForm').reset();
         clearPhoto();
         if (sel('tenthCard')) sel('tenthCard').classList.remove('has-file');
@@ -1225,8 +1253,8 @@
     });
 
     /* ── Modal close ───────────────────────────────────────── */
-    sel('modalCloseBtn').addEventListener('click', () => sel('successModal').classList.remove('open'));
-    sel('successModal').addEventListener('click', e => { if (e.target === sel('successModal')) sel('successModal').classList.remove('open'); });
+    sel('modalCloseBtn').addEventListener('click', () => window.location.href = window.location.pathname);
+    sel('successModal').addEventListener('click', e => { if (e.target === sel('successModal')) window.location.href = window.location.pathname; });
 
   })();
   </script>

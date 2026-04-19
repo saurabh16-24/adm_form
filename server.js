@@ -1246,6 +1246,17 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         : (r.course_preferences || []);
       if (!Array.isArray(prefsArray)) prefsArray = [];
     } catch { prefsArray = []; }
+    
+    // Deduplicate preferences
+    const seenPrefs1 = new Set();
+    prefsArray = prefsArray.filter(p => {
+        let c = typeof p === 'object' ? p.course : p;
+        if (!c) return false;
+        c = String(c).trim();
+        if (seenPrefs1.has(c)) return false;
+        seenPrefs1.add(c);
+        return true;
+    });
 
     const val = (v) => (v === null || v === undefined || v === '') ? 'N/A' : v;
     const fmtDate = (d) => d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' - ') : 'N/A';
@@ -1535,6 +1546,17 @@ app.get('/api/admin/admission/:id/print-pdf', adminAuthQuery, async (req, res) =
         : (r.course_preferences || []);
       if (!Array.isArray(prefs)) prefs = [];
     } catch { prefs = []; }
+    
+    // Deduplicate preferences
+    const seenPrefs2 = new Set();
+    prefs = prefs.filter(p => {
+        let c = typeof p === 'object' ? p.course : p;
+        if (!c) return false;
+        c = String(c).trim();
+        if (seenPrefs2.has(c)) return false;
+        seenPrefs2.add(c);
+        return true;
+    });
 
     const pdfData = { ...r, _top_prefs: prefs.slice(0, 4), _admin_remarks: r.admin_remarks || '' };
     const pdfBuffer = await generateAdmissionPdf(pdfData);
@@ -1596,6 +1618,17 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     } else {
         prefsArray = r.course_preferences || [];
     }
+    
+    // Deduplicate preferences
+    const seenPrefs3 = new Set();
+    prefsArray = (Array.isArray(prefsArray) ? prefsArray : []).filter(p => {
+        let c = typeof p === 'object' ? p.course : p;
+        if (!c) return false;
+        c = String(c).trim();
+        if (seenPrefs3.has(c)) return false;
+        seenPrefs3.add(c);
+        return true;
+    });
     prefsArray = Array.isArray(prefsArray) ? prefsArray.slice(0, 4) : [];
     while(prefsArray.length < 4) prefsArray.push('');
 

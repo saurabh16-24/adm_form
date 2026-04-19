@@ -444,7 +444,18 @@ async function viewEnquiry(id) {
         } else {
             prefsArray = r.course_preferences || [];
         }
-        if (Array.isArray(prefsArray) && prefsArray.length > 0) {
+        
+        let seenPrefs = new Set();
+        prefsArray = (Array.isArray(prefsArray) ? prefsArray : []).filter(p => {
+            let c = typeof p === 'object' ? p.course : p;
+            if (!c) return false;
+            c = String(c).trim();
+            if (seenPrefs.has(c)) return false;
+            seenPrefs.add(c);
+            return true;
+        });
+        
+        if (prefsArray.length > 0) {
             prefsHtml = `<table style="width:100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 5px;">
                 <tr style="background: #f1f5f9; text-align: left;">
                     <th style="padding: 5px; border: 1px solid #e2e8f0;">#</th>
