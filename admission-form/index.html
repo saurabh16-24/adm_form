@@ -843,13 +843,19 @@
       const form = sel('admissionForm');
       if (!form) return;
       
-      // Hide all form sections except the header
+      // Hide all form sections, the header, and the submit area
       const sections = form.querySelectorAll('section.section-card');
       sections.forEach(s => s.style.display = 'none');
       
+      const header = form.querySelector('.form-header');
+      if (header) header.style.display = 'none';
+
+      const submitArea = form.querySelector('.submit-area');
+      if (submitArea) submitArea.style.display = 'none';
+      
       // Also hide the magic auto-fill banner if any
       if (sel('autofillBanner')) sel('autofillBanner').style.display = 'none';
-      if (sel('footerBtns')) sel('footerBtns').style.display = 'none';
+
 
 
       // Show banner at the top
