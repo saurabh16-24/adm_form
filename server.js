@@ -1451,7 +1451,6 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
     const thirdSubjectCandidates = [
       { abbr: 'C',   val: parseFloat(r.chemistry_marks) || 0 },
       { abbr: 'CS',  val: parseFloat(r.cs_marks) || 0 },
-      { abbr: 'B',   val: parseFloat(r.bio_marks) || 0 },
       { abbr: 'ECE', val: parseFloat(r.ece_marks) || 0 },
     ].filter(s => s.val > 0).sort((a, b) => b.val - a.val);
     const pmLabel = thirdSubjectCandidates.length > 0
@@ -1728,7 +1727,6 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     const subjects = [
       { abbr: 'C',   val: parseFloat(r.chemistry_marks) || 0 },
       { abbr: 'CS',  val: parseFloat(r.cs_marks) || 0 },
-      { abbr: 'B',   val: parseFloat(r.bio_marks) || 0 },
       { abbr: 'ECE', val: parseFloat(r.ece_marks) || 0 },
     ].filter(s => s.val > 0).sort((a, b) => b.val - a.val);
     
