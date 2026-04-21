@@ -58,39 +58,78 @@ function generateAdmissionPdf(data) {
       return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-GB'); 
     };
 
-    // ── 1. Top Bar (Photo & Meta) ──────────────────────────────
-    let y = 30;
+    // ── 1. Top Header (Slanted Blue/Grey Style) ────────────────
+    let y = 25;
+    const headerHeight = 70;
+    
+    // Grey/Blue Shape (Left)
+    doc.fillColor('#cbd5e1').rect(M, y, CW * 0.6, headerHeight).fill();
+    // Slanted part
+    doc.fillColor('#cbd5e1').polygon(
+        [M + CW * 0.6, y], 
+        [M + CW * 0.6 + 30, y], 
+        [M + CW * 0.6 - 10, y + headerHeight],
+        [M + CW * 0.6, y + headerHeight]
+    ).fill();
 
-    // Student Photo (Top Left)
-    const photoBuffer = getImageBuffer(data.passport_photo_path);
+    // SVCE Logo
+    const logoBuf = getImageBuffer('image copy 2.png');
+    if (logoBuf) {
+      doc.image(logoBuf, M + 15, y + 10, { height: 50 });
+    }
+
+    // College Text
+    doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(28).text('SVCE', M + 85, y + 10);
+    doc.rect(M + 175, y + 10, 2, 40).fill('#475569');
+    doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(11).text('SRI VENKATESHWARA', M + 185, y + 12);
+    doc.text('COLLEGE OF ENGINEERING', M + 185, y + 25);
+    doc.fillColor('#64748b').font('Helvetica-Bold').fontSize(8).text('ESTD. 2001. AUTONOMOUS INSTITUTE', M + 85, y + 48, { characterSpacing: 1 });
+
+    // Right side contact info
+    doc.fillColor('#334155').font('Helvetica').fontSize(7.5);
+    const rx = M + CW * 0.65;
+    doc.text('Phone   : +91 9916775988, +91 9740202345', rx, y + 8);
+    doc.text('Website : https://svcengg.edu.in/', rx, y + 18);
+    doc.text('Email ID: admissions@svceengg.edu.in', rx, y + 28);
+    doc.text('Address : Kempegowda International Airport Road,', rx, y + 38);
+    doc.text('          Vidya Nagar, Bengaluru - 562 157', rx, y + 48);
+
+    doc.moveTo(M, y + headerHeight + 5).lineTo(W - M, y + headerHeight + 5).lineWidth(1.5).stroke('#000');
+
+    y = 105;
+
+    // Photo Box & Application Meta
     doc.save();
-    doc.rect(M, y, 65, 80).stroke(BORDER);
+    const photoBoxY = y;
+    const photoBoxH = 85;
+    const photoBoxW = 65;
+    doc.rect(W - M - photoBoxW, photoBoxY, photoBoxW, photoBoxH).stroke(BORDER);
+    const photoBuffer = getImageBuffer(data.passport_photo_path);
     if (photoBuffer) {
-      doc.image(photoBuffer, M + 1, y + 1, { width: 63, height: 78, fit: [63, 78], align: 'center', valign: 'center' });
+      doc.image(photoBuffer, W - M - photoBoxW + 1, photoBoxY + 1, { width: photoBoxW - 2, height: photoBoxH - 2, fit: [photoBoxW - 2, photoBoxH - 2], align: 'center', valign: 'center' });
     } else {
-      doc.fillColor('#999').fontSize(7).text('AFFIX\nSTUDENT\nPHOTO', M + 1, y + 30, { width: 63, align: 'center' });
+      doc.fillColor('#999').fontSize(7).text('AFFIX\nSTUDENT\nPHOTO', W - M - photoBoxW, photoBoxY + 30, { width: photoBoxW, align: 'center' });
     }
     doc.restore();
 
-    // App Meta (Top Right)
-    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(10)
-       .text('App No.: ' + (data.application_number || '—'), M + 80, y + 10, { width: CW - 80, align: 'right' });
-    doc.fillColor(BLACK).font('Helvetica').fontSize(9)
-       .text('Date: ' + formatDate(data.application_date), M + 80, y + 25, { width: CW - 80, align: 'right' });
+    // App Meta text to the left of photo
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(10.5)
+       .text('App No.: ' + (data.application_number || '—'), M, y + 5);
+    doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(9)
+       .text('Date: ' + formatDate(data.application_date), M, y + 20);
     doc.fillColor(GRAY).font('Helvetica').fontSize(7.5)
-       .text('Created At: ' + (data.application_date || data.created_at ? new Date(data.application_date || data.created_at).toLocaleString('en-IN') : 'N/A'), M + 80, y + 40, { width: CW - 80, align: 'right' });
+       .text('Created At: ' + (data.application_date || data.created_at ? new Date(data.application_date || data.created_at).toLocaleString('en-IN') : 'N/A'), M, y + 35);
 
-    y = 120;
-    
-    doc.moveTo(M, y).lineTo(W - M, y).lineWidth(1.2).stroke(NAVY);
+    y = 195;
     
     // Centered Title
-    doc.fillColor(NAVY).font('Helvetica-Bold').fontSize(11)
+    doc.moveTo(M, y).lineTo(W - M, y).lineWidth(2).stroke('#1e3a5f');
+    doc.fillColor('#1e3a5f').font('Helvetica-Bold').fontSize(12)
        .text('ADMISSION APPLICATION FORM', M, y + 8, { width: CW, align: 'center' });
-    doc.fillColor('#3b82f6').font('Helvetica-Bold').fontSize(9)
+    doc.fillColor('#3b82f6').font('Helvetica-Bold').fontSize(9.5)
        .text(`Academic Year: ${new Date().getFullYear()}-${new Date().getFullYear() + 1}`, M, y + 22, { width: CW, align: 'center' });
 
-    y = 165;
+    y = 235;
 
     // ── Table Logic (Dynamic Height) ───────────────────────────
     function sectionHeader(title) {
