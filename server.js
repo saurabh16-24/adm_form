@@ -608,6 +608,7 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS signature_path VARCHAR(500)",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_requested BOOLEAN DEFAULT FALSE",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enabled BOOLEAN DEFAULT FALSE",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS view_enabled BOOLEAN DEFAULT TRUE",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB"
     ];
     for (const sql of alterCols) await pool.query(sql);
