@@ -310,6 +310,24 @@
             <input type="text" id="mgt-search" placeholder="Search by name, app no, student info..." oninput="filterManagement()">
           </div>
           <div class="toolbar-actions">
+            <select id="mgt-filter-date" onchange="filterManagement()">
+              <option value="">All Dates</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <select id="mgt-filter-branch" onchange="filterManagement()">
+              <option value="">All Branches</option>
+              <option value="CSE_ANY">Computer Science (Any)</option>
+              <option value="BE Computer Science and Engineering">BE Computer Science and Engineering</option>
+              <option value="BE Computer Science and Engineering (Artificial Intelligence)">BE Computer Science and Engineering (AI)</option>
+              <option value="BE Computer Science and Engineering (Data Science)">BE Computer Science and Engineering (Data Science)</option>
+              <option value="BE Computer Science and Engineering (Cyber Security)">BE Computer Science and Engineering (Cyber Security)</option>
+              <option value="BE Information Science and Engineering">BE Information Science and Engineering</option>
+              <option value="BE Electronics and Communication Engineering">BE Electronics and Communication Engineering</option>
+              <option value="BE Mechanical Engineering">BE Mechanical Engineering</option>
+              <option value="BE Civil Engineering">BE Civil Engineering</option>
+            </select>
             <button class="btn btn-export" onclick="exportManagementCSV()" id="export-mgt-btn">
               <span class="material-icons-round">download</span>
               Export CSV

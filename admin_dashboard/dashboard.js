@@ -1825,7 +1825,10 @@ async function deleteManagement(id) {
 
 function filterManagement() {
   const search = document.getElementById('mgt-search').value.toLowerCase();
+  const dateFilter = document.getElementById('mgt-filter-date').value;
+  const branchFilter = document.getElementById('mgt-filter-branch').value;
   let filtered = allManagement;
+
   if (search) {
     filtered = filtered.filter(r => 
       (r.student_name || '').toLowerCase().includes(search) ||
@@ -1833,6 +1836,19 @@ function filterManagement() {
       (r.branch || '').toLowerCase().includes(search)
     );
   }
+
+  if (dateFilter) {
+    filtered = filterByDate(filtered, 'created_at', dateFilter);
+  }
+
+  if (branchFilter) {
+    if (branchFilter === 'CSE_ANY') {
+      filtered = filtered.filter(r => (r.branch || '').toLowerCase().includes('computer science'));
+    } else {
+      filtered = filtered.filter(r => r.branch === branchFilter);
+    }
+  }
+
   renderManagement(filtered);
 }
 
