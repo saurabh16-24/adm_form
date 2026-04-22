@@ -613,7 +613,6 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_request_log JSONB",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enable_log JSONB"
     ];
-    ];
     for (const sql of alterCols) await pool.query(sql);
 
     // Create management_forms table
