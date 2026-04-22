@@ -194,7 +194,7 @@ function renderRecentTable(tbodyId, rows, type) {
   tbody.innerHTML = rows.map((r, i) => {
     let highlightClass = "";
     if (type === "enquiry") {
-      if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+      if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.2)"';
       else if (r.has_application) highlightClass = 'style="background:rgba(245, 158, 11, 0.15)"';
 
       return `<tr ${highlightClass}>
@@ -207,7 +207,7 @@ function renderRecentTable(tbodyId, rows, type) {
         <td>${r.reference || '—'}</td>
       </tr>`;
     } else {
-      if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+      if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.2)"';
 
       return `<tr ${highlightClass}>
         <td>${i + 1}</td>
@@ -251,7 +251,7 @@ function renderEnquiries(rows) {
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
     
     let highlightClass = "";
-    if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+    if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.2)"';
     else if (r.has_application) highlightClass = 'style="background:rgba(245, 158, 11, 0.15)"';
 
     return `<tr ${highlightClass}>
@@ -839,7 +839,7 @@ function renderAdmissions(rows) {
 
   tbody.innerHTML = rows.map((r, i) => {
     let highlightClass = "";
-    if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+    if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.2)"';
 
     return `<tr ${highlightClass}>
     <td>${i + 1}</td>
