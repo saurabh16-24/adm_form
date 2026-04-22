@@ -354,9 +354,15 @@
 
       <!-- Footer -->
       <footer class="dashboard-footer">
-        <div class="footer-info">
-          <span class="material-icons-round">update</span>
-          <span>Last Updated by: <strong id="updater-name">Admin</strong> on <span id="update-date"></span> at <span id="update-time"></span></span>
+        <div class="footer-info" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="material-icons-round">update</span>
+            <span>Last Updated by: <strong id="updater-name">Admin</strong> on <span id="update-date"></span> at <span id="update-time"></span></span>
+          </div>
+          <button class="btn btn-primary" onclick="openActivityLog()" style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background-color: #3b82f6; color: white; border: none; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#2563eb'" onmouseout="this.style.backgroundColor='#3b82f6'">
+            <span class="material-icons-round" style="font-size: 16px;">history</span>
+            View Activity Logs
+          </button>
         </div>
       </footer>
     </main>
@@ -434,16 +440,16 @@
             <p id="log-modal-subtitle" style="font-size:0.8rem; color:#64748b;">Detailed history of edit actions</p>
           </div>
         </div>
-        <button class="close-btn" onclick="closeLogModal()"><span class="material-icons-round">close</span></button>
+        <button class="modal-close" onclick="closeLogModal()"><span class="material-icons-round">close</span></button>
       </div>
-      <div class="modal-body" id="log-modal-body" style="padding:20px;">
+      <div class="modal-body" id="log-modal-body" style="padding:20px; max-height:60vh; overflow-y:auto;">
         <!-- Logs injected here -->
       </div>
     </div>
   </div>
 
   <div id="toast-container"></div>
-  <script src="dashboard.js?v=4"></script>
+  <script src="dashboard.js?v=7"></script>
 </body>
 
 </html>

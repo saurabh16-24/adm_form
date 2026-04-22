@@ -862,7 +862,11 @@ function renderAdmissions(rows) {
         ${r.edit_requested && !r.edit_enabled && !r.is_resubmitted ? `
           <button class="btn btn-approve-edit" onclick="enableAdmissionEdit(${r.id})" title="Approve Edit Request">
             <span class="material-icons-round">rule</span>
-            <span>Approve Edit</span>
+            <span>Approve</span>
+          </button>
+          <button class="btn btn-reject-edit" style="background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600;" onclick="rejectAdmissionEdit(${r.id})" title="Reject/Clear Request">
+            <span class="material-icons-round" style="font-size:14px">close</span>
+            <span>Reject</span>
           </button>
           <span class="status-badge tag-request" style="cursor:pointer;" onclick="openAuditLog(${r.id})" title="View Audit Log">
             <span class="dot pulse"></span> Edit Requested
@@ -892,10 +896,23 @@ async function enableAdmissionEdit(id) {
   if (!confirm('Are you sure you want to unlock this application to allow the candidate to resubmit?')) return;
   try {
     await apiFetch(`/api/admin/admissions/${id}/enable-edit`, { method: 'POST' });
-    alert('Candidate can now edit and resubmit their application.');
+    showToast('Candidate can now edit and resubmit their application.');
     loadAdmissions();
+    // Auto-open audit log after enabling
+    openAuditLog(id, 'admission');
   } catch (err) {
     alert('Failed to enable: ' + err.message);
+  }
+}
+
+async function rejectAdmissionEdit(id) {
+  if (!confirm('Are you sure you want to clear this edit request? The candidate will no longer be able to edit unless requested again.')) return;
+  try {
+    await apiFetch(`/api/admin/admissions/${id}/reject-edit`, { method: 'POST' });
+    showToast('Edit request cleared');
+    loadAdmissions();
+  } catch (err) {
+    alert('Failed to reject: ' + err.message);
   }
 }
 
@@ -1569,7 +1586,7 @@ function renderManagement(rows) {
     <td>${r.branch || '—'}</td>
     <td>${r.academic_year || '—'}</td>
     <td>₹${parseFloat(r.net_payable).toLocaleString()}</td>
-    <td>
+    <td style="cursor:pointer;" onclick="openAuditLog(${r.id}, 'management')" title="View History">
       <div style="font-size:0.8rem; font-weight:600; color:var(--text-secondary);">${formatDate(r.updated_at)}</div>
       <div style="font-size:0.7rem; color:var(--text-muted);">by ${r.updated_by || 'Admin'}</div>
     </td>
@@ -1943,69 +1960,216 @@ async function sendBulkMail() {
 }
 
 // ═══════════════ AUDIT LOGS ═══════════════
-function openAuditLog(id) {
-  const r = allAdmissions.find(x => x.id === id);
-  if (!r) return;
-
+async function openAuditLog(id, type = 'admission') {
   const modal = document.getElementById('log-modal');
   const body = document.getElementById('log-modal-body');
+  const subtitle = document.getElementById('log-modal-subtitle');
   
-  let html = `<div style="display:flex; flex-direction:column; gap:16px;">`;
+  if (subtitle) subtitle.textContent = `Detailed history for ${type === 'management' ? 'Management Form' : 'Admission Application'} #${id}`;
+  body.innerHTML = '<div style="text-align:center; padding:20px;"><div class="spinner"></div><p style="margin-top:10px; color:#64748b;">Fetching history...</p></div>';
+  modal.classList.add('open');
 
-  // 1. Request Log
-  if (r.edit_request_log) {
-    html += `
-      <div style="display:flex; gap:12px;">
-        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#f59e0b; margin-top:4px;"></div>
-        <div>
-          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Edit Requested by Candidate</p>
-          <p style="font-size:0.8rem; color:#64748b;">${new Date(r.edit_request_log.requested_at).toLocaleString('en-IN')}</p>
-          <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:#f8fafc; padding:6px; border-radius:4px;">
-            IP: ${r.edit_request_log.client_ip}
+  try {
+    const data = await apiFetch(`/api/admin/admissions/audit-log/${id}?type=${type}`);
+    const logs = data.audit_log || [];
+
+    if (!logs.length) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:30px; color:#64748b;">
+          <span class="material-icons-round" style="font-size:48px; opacity:0.2; margin-bottom:12px;">history</span>
+          <p>No audit history found for this record.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `<div style="display:flex; flex-direction:column; gap:20px; position:relative; padding-left:12px;">`;
+    // Vertical timeline line
+    html += `<div style="position:absolute; left:4px; top:10px; bottom:10px; width:2px; background:#e2e8f0; border-radius:1px;"></div>`;
+
+    logs.forEach((log, idx) => {
+      let icon = 'history';
+      let color = '#64748b';
+      let label = log.action || 'ACTION';
+
+      if (log.action === 'REQUEST') { icon = 'edit_note'; color = '#f59e0b'; label = 'Edit Requested'; }
+      if (log.action === 'ENABLE') { icon = 'check_circle'; color = '#10b981'; label = 'Edit Approved'; }
+      if (log.action === 'RESUBMIT') { icon = 'update'; color = '#3b82f6'; label = 'Resubmitted'; }
+      if (log.action === 'CREATE') { icon = 'add_circle'; color = '#10b981'; label = 'Created'; }
+      if (log.action === 'UPDATE') { icon = 'edit'; color = '#3b82f6'; label = 'Updated'; }
+
+      html += `
+        <div style="position:relative; padding-left:24px;">
+          <div style="position:absolute; left:-12px; top:2px; width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid ${color}; display:flex; align-items:center; justify-content:center; z-index:1;"></div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+              <p style="font-weight:700; font-size:0.9rem; color:#1e293b;">${label}</p>
+              <p style="font-size:0.75rem; color:#94a3b8; white-space:nowrap;">${new Date(log.at).toLocaleString('en-IN')}</p>
+            </div>
+            <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">${log.summary || 'Action performed on record'}</p>
+            <div style="margin-top:6px; display:flex; align-items:center; gap:6px; font-size:0.7rem; color:#94a3b8;">
+              <span class="material-icons-round" style="font-size:12px;">person</span>
+              <span>by ${log.by}</span>
+              ${log.client_ip ? `<span style="margin-left:8px; background:#f1f5f9; padding:2px 6px; border-radius:4px;">IP: ${log.client_ip}</span>` : ''}
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }
+      `;
+    });
 
-  // 2. Enable Log
-  if (r.edit_enable_log) {
-    html += `
-      <div style="display:flex; gap:12px; position:relative;">
-        <div style="position:absolute; left:5px; top:-20px; bottom:20px; width:2px; background:#e2e8f0; z-index:0;"></div>
-        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#10b981; margin-top:4px; z-index:1;"></div>
-        <div>
-          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Edit Approved & Email Sent</p>
-          <p style="font-size:0.8rem; color:#64748b;">${new Date(r.edit_enable_log.enabled_at).toLocaleString('en-IN')}</p>
-          <p style="margin-top:4px; font-size:0.8rem; color:#334155;"><strong>Authorized by:</strong> ${r.edit_enable_log.enabled_by}</p>
-        </div>
-      </div>
-    `;
+    html += `</div>`;
+    body.innerHTML = html;
+  } catch (err) {
+    body.innerHTML = `<p style="color:red; text-align:center;">Failed to load logs: ${err.message}</p>`;
   }
-
-  // 3. Resubmission Log
-  if (r.is_resubmitted) {
-    html += `
-      <div style="display:flex; gap:12px; position:relative;">
-        <div style="position:absolute; left:5px; top:-20px; bottom:20px; width:2px; background:#e2e8f0; z-index:0;"></div>
-        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#6366f1; margin-top:4px; z-index:1;"></div>
-        <div>
-          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Form Resubmitted (RS)</p>
-          <p style="font-size:0.8rem; color:#64748b;">Changes saved and form re-locked.</p>
-        </div>
-      </div>
-    `;
-  }
-
-  if (!r.edit_request_log && !r.edit_enable_log && !r.is_resubmitted) {
-    html += `<p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:20px;">No audit history found for this record.</p>`;
-  }
-
-  html += `</div>`;
-  body.innerHTML = html;
-  modal.classList.add('open');
 }
 
 function closeLogModal() {
   document.getElementById('log-modal').classList.remove('open');
 }
+
+// ═══════════════ GLOBAL ACTIVITY LOG ═══════════════
+async function openActivityLog() {
+  const modal = document.getElementById('log-modal');
+  const body = document.getElementById('log-modal-body');
+  const subtitle = document.getElementById('log-modal-subtitle');
+  
+  subtitle.textContent = `Global Admin Activity History`;
+  body.innerHTML = '<div style="text-align:center; padding:20px;"><div class="spinner"></div><p style="margin-top:10px; color:#64748b;">Fetching history...</p></div>';
+  modal.classList.add('open');
+
+  try {
+    const data = await apiFetch(`/api/admin/activity-log?limit=50`);
+    const logs = data.rows || [];
+
+    if (!logs.length) {
+      body.innerHTML = `
+        <div style="text-align:center; padding:30px; color:#64748b;">
+          <span class="material-icons-round" style="font-size:48px; opacity:0.2; margin-bottom:12px;">history</span>
+          <p>No activity history found.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `<div style="display:flex; flex-direction:column; gap:20px; position:relative; padding-left:12px;">`;
+    // Vertical timeline line
+    html += `<div style="position:absolute; left:4px; top:10px; bottom:10px; width:2px; background:#e2e8f0; border-radius:1px;"></div>`;
+
+    logs.forEach((log) => {
+      let icon = 'manage_accounts';
+      let color = '#3b82f6';
+      
+      if (log.action.includes('Delete')) { icon = 'delete'; color = '#ef4444'; }
+      else if (log.action.includes('Create')) { icon = 'add_circle'; color = '#10b981'; }
+      else if (log.action.includes('Reject') || log.action.includes('Clear')) { icon = 'cancel'; color = '#f59e0b'; }
+
+      html += `
+        <div style="position:relative; padding-left:24px;">
+          <div style="position:absolute; left:-12px; top:2px; width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid ${color}; display:flex; align-items:center; justify-content:center; z-index:1;"></div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+              <p style="font-weight:700; font-size:0.9rem; color:#1e293b;">${log.action}</p>
+              <p style="font-size:0.75rem; color:#94a3b8; white-space:nowrap;">${new Date(log.created_at).toLocaleString('en-IN')}</p>
+            </div>
+            <p style="font-size:0.8rem; color:#64748b; line-height:1.4;">
+              <strong>${log.target_name || 'Record'}</strong> (ID: ${log.target_id || '-'})<br>
+              ${log.details || ''}
+            </p>
+            <div style="margin-top:6px; display:flex; align-items:center; gap:6px; font-size:0.7rem; color:#94a3b8;">
+              <span class="material-icons-round" style="font-size:12px;">person</span>
+              <span>by ${log.admin_name}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+    body.innerHTML = html;
+  } catch (err) {
+    body.innerHTML = `<p style="color:red; text-align:center;">Failed to load logs: ${err.message}</p>`;
+  }
+}
+
+// Ensure the button is added even if index.html is cached
+(function injectActivityButton() {
+  const checkAndInject = () => {
+    const footerInfo = document.querySelector('.dashboard-footer .footer-info');
+    if (footerInfo && !footerInfo.querySelector('button')) {
+      footerInfo.style.display = 'flex';
+      footerInfo.style.alignItems = 'center';
+      footerInfo.style.justifyContent = 'space-between';
+      footerInfo.style.width = '100%';
+      
+      // Wrap existing content
+      const existingContent = document.createElement('div');
+      existingContent.style.display = 'flex';
+      existingContent.style.alignItems = 'center';
+      existingContent.style.gap = '8px';
+      while(footerInfo.firstChild) {
+        existingContent.appendChild(footerInfo.firstChild);
+      }
+      footerInfo.appendChild(existingContent);
+
+      // Add button
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-primary';
+      btn.onclick = openActivityLog;
+      btn.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background-color: #3b82f6; color: white; border: none; cursor: pointer; transition: background-color 0.2s;';
+      btn.onmouseover = () => btn.style.backgroundColor = '#2563eb';
+      btn.onmouseout = () => btn.style.backgroundColor = '#3b82f6';
+      btn.innerHTML = '<span class="material-icons-round" style="font-size: 16px;">history</span> View Activity Logs';
+      footerInfo.appendChild(btn);
+      
+      // Fix footer alignment
+      const footer = document.querySelector('.dashboard-footer');
+      if (footer) {
+        footer.style.justifyContent = 'stretch';
+      }
+    }
+  };
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAndInject);
+  } else {
+    checkAndInject();
+  }
+})();
+
+// Ensure the button is added even if index.html is cached
+document.addEventListener('DOMContentLoaded', () => {
+  const footerInfo = document.querySelector('.dashboard-footer .footer-info');
+  if (footerInfo && !footerInfo.querySelector('button')) {
+    footerInfo.style.display = 'flex';
+    footerInfo.style.alignItems = 'center';
+    footerInfo.style.justifyContent = 'space-between';
+    footerInfo.style.width = '100%';
+    
+    // Wrap existing content
+    const existingContent = document.createElement('div');
+    existingContent.style.display = 'flex';
+    existingContent.style.alignItems = 'center';
+    existingContent.style.gap = '8px';
+    while(footerInfo.firstChild) {
+      existingContent.appendChild(footerInfo.firstChild);
+    }
+    footerInfo.appendChild(existingContent);
+
+    // Add button
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-primary';
+    btn.onclick = openActivityLog;
+    btn.style.cssText = 'display: flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; background-color: #3b82f6; color: white; border: none; cursor: pointer; transition: background-color 0.2s;';
+    btn.onmouseover = () => btn.style.backgroundColor = '#2563eb';
+    btn.onmouseout = () => btn.style.backgroundColor = '#3b82f6';
+    btn.innerHTML = '<span class="material-icons-round" style="font-size: 16px;">history</span> View Activity Logs';
+    footerInfo.appendChild(btn);
+    
+    // Fix footer alignment
+    const footer = document.querySelector('.dashboard-footer');
+    if (footer) {
+      footer.style.justifyContent = 'stretch';
+    }
+  }
+});

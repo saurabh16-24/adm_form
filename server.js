@@ -680,10 +680,24 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100)",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS contineo_id VARCHAR(50)",
-      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS remarks TEXT"
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS remarks TEXT",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS audit_log JSONB DEFAULT '[]'"
     ];
     for (const sql of mgtAlter) await pool.query(sql);
 
+    // Create admin_activity_log table for tracking all admin actions
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_activity_log (
+        id SERIAL PRIMARY KEY,
+        admin_name VARCHAR(100) NOT NULL,
+        action VARCHAR(100) NOT NULL,
+        target_type VARCHAR(50),
+        target_id INTEGER,
+        target_name VARCHAR(200),
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
 
     // Also ensure enquiries has sequence_number + structured address columns
 
@@ -990,15 +1004,24 @@ app.post('/api/admissions/submit', (req, res) => {
 });
 
 // ── Admin Dashboard ─────────────────────────────────────────────────────────
-app.use('/admin_dashboard', express.static(path.join(__dirname, 'admin_dashboard')));
+// Serve admin dashboard with no caching so updates apply immediately
+app.use('/admin_dashboard', express.static(path.join(__dirname, 'admin_dashboard'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res, path) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+}));
 
 const ADMIN_USER  = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS  = process.env.ADMIN_PASS || 'admin123';
 // Persistent secret for JWT-like tokens (prevents logouts on restart)
 const ADMIN_SECRET = process.env.JWT_SECRET || crypto.createHash('sha256').update(process.env.ADMIN_PASS || 'svce_default_secret').digest('hex');
 
-function generateToken(role = 'admin') {
-  const payload = { user: ADMIN_USER, role: role, iat: Date.now() };
+function generateToken(role = 'admin', userName = 'Admin') {
+  const payload = { user: ADMIN_USER, role: role, userName: userName, iat: Date.now() };
   const data = Buffer.from(JSON.stringify(payload)).toString('base64');
   const sig  = crypto.createHmac('sha256', ADMIN_SECRET).update(data).digest('hex');
   return `${data}.${sig}`;
@@ -1012,17 +1035,30 @@ function verifyToken(token) {
   if (sig !== expected) return null;
   try {
     const payload = JSON.parse(Buffer.from(data, 'base64').toString('ascii'));
-    return payload.role || 'admin';
+    return { role: payload.role || 'admin', userName: payload.userName || 'Admin' };
   } catch(e) { return null; }
 }
 
 function adminAuth(req, res, next) {
   const auth = req.headers.authorization;
   const token = auth && auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  const userRole = verifyToken(token);
-  if (!userRole) return res.status(401).json({ success: false, message: 'Unauthorized' });
-  req.userRole = userRole;
+  const authData = verifyToken(token);
+  if (!authData) return res.status(401).json({ success: false, message: 'Unauthorized' });
+  req.userRole = authData.role;
+  req.userName = authData.userName;
   next();
+}
+
+// Helper: log admin activity to the database
+async function logAdminActivity(adminName, action, targetType, targetId, targetName, details) {
+  try {
+    await pool.query(
+      'INSERT INTO admin_activity_log (admin_name, action, target_type, target_id, target_name, details) VALUES ($1, $2, $3, $4, $5, $6)',
+      [adminName, action, targetType || null, targetId || null, targetName || null, details || null]
+    );
+  } catch (err) {
+    console.error('[ActivityLog] Failed to log:', err.message);
+  }
 }
 
 // Login
@@ -1041,7 +1077,7 @@ app.post('/api/admin/login', (req, res) => {
   if (adminMatch) {
     return res.json({ 
       success: true, 
-      token: generateToken('admin'), 
+      token: generateToken('admin', adminMatch.displayName), 
       username: adminMatch.displayName, 
       role: 'admin' 
     });
@@ -1058,7 +1094,7 @@ app.post('/api/admin/login', (req, res) => {
   if (counsellorMatch) {
     return res.json({ 
       success: true, 
-      token: generateToken('counsellor'), 
+      token: generateToken('counsellor', counsellorMatch.displayName), 
       username: counsellorMatch.displayName, 
       role: 'counsellor' 
     });
@@ -1121,10 +1157,18 @@ app.get('/api/admin/enquiries', adminAuth, async (req, res) => {
 app.put('/api/admin/enquiry/:id/remarks', adminAuth, async (req, res) => {
   try {
     const { follow_up_date, admin_remarks } = req.body;
+    const old = await pool.query('SELECT student_name, admin_remarks, follow_up_date FROM enquiries WHERE id = $1', [req.params.id]);
     await pool.query(
       'UPDATE enquiries SET follow_up_date = $1, admin_remarks = $2 WHERE id = $3',
       [follow_up_date || null, admin_remarks || null, req.params.id]
     );
+    const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
+    const changes = [];
+    if (old.rows.length) {
+      if ((old.rows[0].admin_remarks || '') !== (admin_remarks || '')) changes.push(`Remark → "${admin_remarks || '-'}"`);
+      if ((old.rows[0].follow_up_date || '') !== (follow_up_date || '')) changes.push(`Follow-up → ${follow_up_date || 'cleared'}`);
+    }
+    logAdminActivity(req.userName, 'Updated Enquiry', 'enquiry', parseInt(req.params.id), studentName, changes.join(', ') || 'Remark/follow-up updated');
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1142,7 +1186,9 @@ app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
 app.delete('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
+    const old = await pool.query('SELECT student_name FROM enquiries WHERE id = $1', [req.params.id]);
     await pool.query('DELETE FROM enquiries WHERE id = $1', [req.params.id]);
+    logAdminActivity(req.userName, 'Deleted Enquiry', 'enquiry', parseInt(req.params.id), old.rows[0]?.student_name, 'Record permanently deleted');
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1224,7 +1270,9 @@ app.get('/api/admin/admission/:id', adminAuth, async (req, res) => {
 app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
   if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
+    const old = await pool.query('SELECT student_name FROM admissions WHERE id = $1', [req.params.id]);
     await pool.query('DELETE FROM admissions WHERE id = $1', [req.params.id]);
+    logAdminActivity(req.userName, 'Deleted Admission', 'admission', parseInt(req.params.id), old.rows[0]?.student_name, 'Admission record deleted');
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1268,8 +1316,21 @@ app.post('/api/admin/admissions/:id/enable-edit', adminAuth, async (req, res) =>
         `
       };
       transporter.sendMail(mailOptions).catch(err => console.error('Failed to send edit-enable email:', err));
+      logAdminActivity(req.userName, 'Enabled Edit', 'admission', parseInt(req.params.id), student.student_name, `Approved edit request for ${student.application_number}`);
     }
 
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST /api/admin/admissions/:id/reject-edit
+app.post('/api/admin/admissions/:id/reject-edit', adminAuth, async (req, res) => {
+  try {
+    const old = await pool.query('SELECT student_name FROM admissions WHERE id = $1', [req.params.id]);
+    await pool.query('UPDATE admissions SET edit_requested = FALSE WHERE id = $1', [req.params.id]);
+    logAdminActivity(req.userName, 'Rejected Edit Request', 'admission', parseInt(req.params.id), old.rows[0]?.student_name, 'Edit request cleared/rejected');
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1283,12 +1344,23 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
   }
   try {
     const v = req.body;
-    const updater = v.updated_by || 'Admin';
+    const updater = req.userName || v.updated_by || 'Admin';
     
     // Check if exists
-    const existing = await pool.query('SELECT id FROM management_forms WHERE admission_id = $1', [v.admission_id]);
+    const existing = await pool.query('SELECT id, audit_log FROM management_forms WHERE admission_id = $1', [v.admission_id]);
     
+    const logEntry = {
+      action: existing.rows.length > 0 ? 'UPDATE' : 'CREATE',
+      by: updater,
+      at: new Date().toISOString(),
+      summary: existing.rows.length > 0 ? 'Updated management form details' : 'Created management form'
+    };
+
     if (existing.rows.length > 0) {
+      let auditLog = existing.rows[0].audit_log || [];
+      if (!Array.isArray(auditLog)) auditLog = [];
+      auditLog.push(logEntry);
+
       // Update
       const query = `
         UPDATE management_forms SET
@@ -1296,7 +1368,8 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
           parent_name = $6, parent_mobile = $7, branch = $8, state = $9, email = $10,
           actual_fee = $11, scholarship = $12, booking_fee = $13, net_payable = $14, reference_name = $15,
           pcm_percentage = $16, overall_percentage = $17, cet_rank = $18, comedk_rank = $19, jee_rank = $20, cet_no = $21,
-          updated_at = CURRENT_TIMESTAMP, updated_by = $22, contineo_id = $24, remarks = $25
+          updated_at = CURRENT_TIMESTAMP, updated_by = $22, contineo_id = $24, remarks = $25,
+          audit_log = $26
         WHERE admission_id = $23
         RETURNING id
       `;
@@ -1305,10 +1378,12 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
         v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
         v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
         v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
-        updater, v.admission_id, v.contineo_id, v.remarks
+        updater, v.admission_id, v.contineo_id, v.remarks, JSON.stringify(auditLog)
       ]);
+      logAdminActivity(updater, 'Updated Management Form', 'management', result.rows[0].id, v.student_name, `Branch: ${v.branch || '-'}, Fee: ${v.net_payable || '-'}`);
       res.json({ success: true, id: result.rows[0].id, type: 'update' });
     } else {
+      const auditLog = [logEntry];
       // Insert
       const query = `
         INSERT INTO management_forms (
@@ -1316,8 +1391,8 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
           parent_name, parent_mobile, branch, state, email,
           actual_fee, scholarship, booking_fee, net_payable, reference_name,
           pcm_percentage, overall_percentage, cet_rank, comedk_rank, jee_rank, cet_no,
-          updated_by, contineo_id, remarks
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+          updated_by, contineo_id, remarks, audit_log
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26)
         RETURNING id
       `;
       const result = await pool.query(query, [
@@ -1325,8 +1400,9 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
         v.parent_name, v.parent_mobile, v.branch, v.state, v.email,
         v.actual_fee, v.scholarship, v.booking_fee, v.net_payable, v.reference_name,
         v.pcm_percentage, v.overall_percentage, v.cet_rank, v.comedk_rank, v.jee_rank, v.cet_no,
-        updater, v.contineo_id, v.remarks
+        updater, v.contineo_id, v.remarks, JSON.stringify(auditLog)
       ]);
+      logAdminActivity(updater, 'Created Management Form', 'management', result.rows[0].id, v.student_name, `Branch: ${v.branch || '-'}, App: ${v.app_no || '-'}`);
       res.json({ success: true, id: result.rows[0].id, type: 'insert' });
     }
 
@@ -1400,6 +1476,18 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
 });
 
 
+// GET admin activity log (global admin actions history)
+app.get('/api/admin/activity-log', adminAuth, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const result = await pool.query(
+      'SELECT * FROM admin_activity_log ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    );
+    res.json({ rows: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 app.get('/api/admin/management-forms', adminAuth, async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM management_forms ORDER BY id DESC');
@@ -1412,6 +1500,52 @@ app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
     const result = await pool.query('SELECT * FROM management_forms WHERE id = $1', [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET Audit Log for Admission/Management
+app.get('/api/admin/admissions/audit-log/:id', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const type = req.query.type || 'admission'; // 'admission' or 'management'
+
+    if (type === 'management') {
+        const result = await pool.query('SELECT audit_log FROM management_forms WHERE id = $1', [id]);
+        if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+        return res.json({ audit_log: result.rows[0].audit_log || [] });
+    } else {
+        const result = await pool.query('SELECT edit_request_log, edit_enable_log, is_resubmitted, submitted_at FROM admissions WHERE id = $1', [id]);
+        if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+        const r = result.rows[0];
+        
+        const logs = [];
+        if (r.edit_request_log) {
+            logs.push({ 
+                action: 'REQUEST', 
+                by: 'Candidate', 
+                at: r.edit_request_log.requested_at, 
+                summary: 'Edit requested by candidate',
+                client_ip: r.edit_request_log.client_ip
+            });
+        }
+        if (r.edit_enable_log) {
+            logs.push({ 
+                action: 'ENABLE', 
+                by: r.edit_enable_log.enabled_by, 
+                at: r.edit_enable_log.enabled_at, 
+                summary: 'Admin approved edit request'
+            });
+        }
+        if (r.is_resubmitted) {
+            logs.push({ 
+                action: 'RESUBMIT', 
+                by: 'Candidate', 
+                at: r.submitted_at, 
+                summary: 'Candidate resubmitted the form'
+            });
+        }
+        return res.json({ audit_log: logs });
+    }
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
