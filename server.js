@@ -1498,10 +1498,10 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       <head>
         <title>Enquiry Form - ${r.student_name}</title>
         <style>
-          @page { size: A4; margin: 4mm 8mm; }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; }
+          @page { size: A4; margin: 4mm 10mm 4mm 8mm; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; width: 95%; }
           
-          .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; }
+          .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; max-width: 100%; }
           .qr-box { text-align: center; }
           .qr-box img { width: 80px; height: 80px; }
           .qr-box p { margin: 1px 0 0; font-size: 6.5px; color: #555; font-weight: 600; }
@@ -1511,8 +1511,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           .created-at { font-size: 7.5px; color: #888; margin-top: 1px; }
           .logo-banner { height: 45px; margin-bottom: 2px; }
 
-          table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-          th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; }
+          table { width: 98%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }
+          th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; word-wrap: break-word; }
           .section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10.5px; }
           .label { font-weight: 500; width: 18%; background: #f8fafc; }
           .value { font-weight: 500; width: 32%; }
