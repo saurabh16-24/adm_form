@@ -271,30 +271,7 @@ function renderEnquiries(rows) {
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'Booking Done')">Booking Done</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After CET')">After CET</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After COMEDK')">After COMEDK</div>
-          </div>
-
-  <!-- ═══════════════ LOG MODAL ═══════════════ -->
-  <div id="log-modal" class="modal-overlay hidden" style="z-index: 11000;">
-    <div class="modal-card" style="max-width: 500px;">
-      <div class="modal-header">
-        <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:40px; height:40px; border-radius:10px; background:#f0f7ff; color:#1e40af; display:flex; align-items:center; justify-content:center;">
-            <span class="material-icons-round">history</span>
-          </div>
-          <div>
-            <h2 style="font-size:1.1rem; font-weight:800; color:#1e293b;">Action Audit Log</h2>
-            <p id="log-modal-subtitle" style="font-size:0.8rem; color:#64748b;">Detailed history of edit actions</p>
-          </div>
-        </div>
-        <button class="close-btn" onclick="closeLogModal()"><span class="material-icons-round">close</span></button>
-      </div>
-      <div class="modal-body" id="log-modal-body" style="padding:20px;">
-        <!-- Logs injected here -->
-      </div>
-    </div>
-  </div>
-
-  <div id="toast-container"></div>
+          <div class="menu-divider"></div>
           <div class="menu-option date-opt" onclick="this.nextElementSibling.showPicker()">Set/Change Follow-up Date</div>
           <input type="date" value="${r.follow_up_date ? new Date(r.follow_up_date).toISOString().split('T')[0] : ''}" 
                  onchange="updateRemarks(${r.id}, 'follow_up_date', this.value)" 
