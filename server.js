@@ -1012,12 +1012,30 @@ function adminAuth(req, res, next) {
 // Login
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    return res.json({ success: true, token: generateToken('admin'), username: ADMIN_USER, role: 'admin' });
+  
+  // Define allowed admin accounts
+  const admins = [
+    { user: ADMIN_USER, pass: ADMIN_PASS, displayName: 'Admin' },
+    { user: 'admissions@svcengg.edu.in', pass: 'svce@2001', displayName: 'Admissions' },
+    { user: 'md@svcengg.edu.in', pass: 'svce@2001', displayName: 'MD' },
+    { user: 'director@svcengg.edu.in', pass: 'svce@2001', displayName: 'Director' }
+  ];
+
+  const adminMatch = admins.find(a => a.user === username && a.pass === password);
+  if (adminMatch) {
+    return res.json({ 
+      success: true, 
+      token: generateToken('admin'), 
+      username: adminMatch.displayName, 
+      role: 'admin' 
+    });
   }
+
+  // Counsellor check
   if (username === 'counsellor' && password === 'svce123') {
     return res.json({ success: true, token: generateToken('counsellor'), username: 'Counsellor', role: 'counsellor' });
   }
+
   res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
 
