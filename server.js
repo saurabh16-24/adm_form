@@ -756,13 +756,10 @@ app.get('/api/admissions/check/:enquiry_id', async (req, res) => {
 // POST request edit for an admission
 app.post('/api/admissions/:id/request-edit', async (req, res) => {
   try {
-    // Fetch student email for logging
-    const studentRes = await pool.query('SELECT email FROM admissions WHERE id = $1', [req.params.id]);
-    const studentEmail = studentRes.rows.length > 0 ? studentRes.rows[0].email : 'Unknown';
-
+    const { requested_by } = req.body;
     const logEntry = {
       requested_at: new Date().toISOString(),
-      requested_by: studentEmail,
+      requested_by: requested_by || 'Unknown',
       client_ip: req.ip,
       user_agent: req.headers['user-agent']
     };

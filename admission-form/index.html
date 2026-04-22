@@ -889,11 +889,18 @@
       if (submitBtn) submitBtn.style.display = 'none';
       
       // Add edit request listener
-      const reqEditBtn = document.getElementById('requestEditBtn');
       if (reqEditBtn) {
         reqEditBtn.addEventListener('click', () => {
+          const email = prompt('Please enter your email address to request an edit:');
+          if (!email) return;
+          if (!email.includes('@')) { alert('Please enter a valid email address.'); return; }
+
           reqEditBtn.textContent = 'Requesting...';
-          fetch(`/api/admissions/${adm.id}/request-edit`, { method: 'POST' })
+          fetch(`/api/admissions/${adm.id}/request-edit`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requested_by: email })
+          })
             .then(res => res.json())
             .then(d => {
               if (d.success) {
