@@ -1584,6 +1584,7 @@ async function saveAndPrintManagementForm(admissionId) {
       comedk_rank: get('ed-comedk'),
       jee_rank: get('ed-jee'),
       cet_no: get('ed-cet-no'),
+      remarks: get('ed-remarks'),
       updated_by: sessionStorage.getItem('admin_name') || 'Admin'
     };
 
