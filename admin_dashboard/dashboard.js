@@ -194,6 +194,9 @@ async function loadOverview() {
 }
 
 function renderCharts(graphs) {
+  Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
+  Chart.defaults.color = '#64748b';
+
   // Pincode Chart
   const pinCtx = document.getElementById('pincodeChart');
   if (pinCtx && graphs.admission_pincodes) {
@@ -208,16 +211,26 @@ function renderCharts(graphs) {
           data: data,
           backgroundColor: [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#64748b'
+            '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#94a3b8'
           ],
-          borderWidth: 1
+          borderWidth: 0,
+          hoverOffset: 6
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '75%',
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
+          legend: { position: 'right', labels: { boxWidth: 10, padding: 15, font: { size: 12, weight: '500' } } },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleFont: { size: 13 },
+            bodyFont: { size: 13, weight: 'bold' },
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: true
+          }
         }
       }
     });
@@ -230,20 +243,30 @@ function renderCharts(graphs) {
     const labels = graphs.admission_gender.map(g => g.gender || 'Not Specified');
     const data = graphs.admission_gender.map(g => g.count);
     genderChartInstance = new Chart(genCtx, {
-      type: 'pie',
+      type: 'doughnut',
       data: {
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#64748b'],
-          borderWidth: 1
+          backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'],
+          borderWidth: 0,
+          hoverOffset: 6
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '75%',
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
+          legend: { position: 'right', labels: { boxWidth: 10, padding: 15, font: { size: 12, weight: '500' } } },
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+            titleFont: { size: 13 },
+            bodyFont: { size: 13, weight: 'bold' },
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: true
+          }
         }
       }
     });
