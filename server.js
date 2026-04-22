@@ -1486,7 +1486,6 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       { label: pmLabel, val: r.pcm_percentage ? val(r.pcm_percentage) + '%' : null },
     ].filter(c => c.val));
 
-
     const tableEntrance = mkTable('Entrance Exam Detail', [
       { label: 'JEE Rank', val: val(r.jee_rank) },
       { label: 'COMEDK Rank', val: val(r.comedk_rank) },
@@ -1498,10 +1497,10 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       <head>
         <title>Enquiry Form - ${r.student_name}</title>
         <style>
-          @page { size: A4; margin: 4mm 10mm 4mm 8mm; }
-          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; width: 95%; }
+          @page { size: A4; margin: 8mm; }
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; width: 100%; }
           
-          .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; max-width: 100%; }
+          .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; width: 100%; }
           .qr-box { text-align: center; }
           .qr-box img { width: 80px; height: 80px; }
           .qr-box p { margin: 1px 0 0; font-size: 6.5px; color: #555; font-weight: 600; }
@@ -1510,8 +1509,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           .date-box { border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-weight: 600; font-size: 11px; }
           .created-at { font-size: 7.5px; color: #888; margin-top: 1px; }
           .logo-banner { height: 45px; margin-bottom: 2px; }
-
-          table { width: 98%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }
+ 
+          table { width: 100%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }
           th, td { border: 1px solid #64748b; padding: 3px 5px; text-align: left; word-wrap: break-word; }
           .section-header { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10.5px; }
           .label { font-weight: 500; width: 18%; background: #f8fafc; }
@@ -1522,8 +1521,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           .pref-num { width: 25px; text-align: center; }
 
           .office-section { margin-top: 5px; }
-          .office-title { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; padding: 4px 8px; border: 1px solid #64748b; border-bottom: none; }
-          .office-box { border: 1px solid #64748b; min-height: 210px; }
+          .office-title { background: #f8fafc; color: #1e40af; font-weight: 700; font-size: 10px; padding: 4px 8px; border: 1px solid #64748b; border-bottom: none; width: 100%; }
+          .office-box { border: 1px solid #64748b; min-height: 210px; width: 100%; }
 
           @media print {
             .no-print { display: none; }
@@ -1620,8 +1619,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         </table>
 
         <div class="office-section">
-          <div class="office-title">For Office Work</div>
-          <div class="office-box"></div>
+          <div class="office-title" style="width:100%; border:1px solid #64748b; border-bottom:none;">For Office Work</div>
+          <div class="office-box" style="width:100%;"></div>
         </div>
 
         <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
