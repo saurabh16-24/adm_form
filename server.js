@@ -1032,8 +1032,20 @@ app.post('/api/admin/login', (req, res) => {
   }
 
   // Counsellor check
-  if (username === 'counsellor' && password === 'svce123') {
-    return res.json({ success: true, token: generateToken('counsellor'), username: 'Counsellor', role: 'counsellor' });
+  const counsellors = [
+    { user: 'counsellor', pass: 'svce123', displayName: 'Counsellor' },
+    { user: 'enquiry@svcengg.edu.in', pass: 'svceadm', displayName: 'Enquiry SVCE' },
+    { user: 'enquiry.svce@gmail.com', pass: 'svceadm', displayName: 'Enquiry Gmail' }
+  ];
+
+  const counsellorMatch = counsellors.find(c => c.user === username && c.pass === password);
+  if (counsellorMatch) {
+    return res.json({ 
+      success: true, 
+      token: generateToken('counsellor'), 
+      username: counsellorMatch.displayName, 
+      role: 'counsellor' 
+    });
   }
 
   res.status(401).json({ success: false, message: 'Invalid username or password' });
