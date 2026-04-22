@@ -1497,7 +1497,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       <head>
         <title>Enquiry Form - ${r.student_name}</title>
         <style>
-          @page { size: A4; margin: 8mm 17mm 8mm 8mm; }
+          @page { size: A4; margin: 8mm 15mm 8mm 8mm; }
           body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 9.8px; line-height: 1.22; width: 100%; }
           
           .top-bar { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 3px; width: 100%; }

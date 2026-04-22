@@ -1655,7 +1655,7 @@ async function printManagementFromRecord(id) {
           <head>
             <title>Management Form - ${m.student_name}</title>
             <style>
-              @page { size: A4; margin: 8mm 17mm 8mm 8mm; }
+              @page { size: A4; margin: 8mm 15mm 8mm 8mm; }
               * { box-sizing: border-box; }
               body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
               
