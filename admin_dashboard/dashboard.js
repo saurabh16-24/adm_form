@@ -844,7 +844,7 @@ function renderAdmissions(rows) {
     return `<tr ${highlightClass}>
     <td>${i + 1}</td>
     <td>${r.id}</td>
-    <td>${r.application_number || '—'} ${r.edit_requested ? '<span class="status-badge" style="background:var(--accent-orange-glow);color:var(--accent-orange);margin-left:5px;">Edit Requested</span>' : ''}</td>
+    <td>${r.application_number || '—'}</td>
     <td>${r.student_name || '—'}</td>
     <td>${r.email || '—'}</td>
     <td>${r.mobile_no || '—'}</td>
@@ -859,7 +859,7 @@ function renderAdmissions(rows) {
       
       <!-- Edit Lifecycle Actions & Status -->
       <div class="edit-lifecycle-wrap" style="display:inline-flex; align-items:center; gap:6px; margin:0 4px; vertical-align:middle;">
-        ${r.edit_requested && !r.edit_enabled ? `
+        ${r.edit_requested && !r.edit_enabled && !r.is_resubmitted ? `
           <button class="btn btn-approve-edit" onclick="enableAdmissionEdit(${r.id})" title="Approve Edit Request">
             <span class="material-icons-round">rule</span>
             <span>Approve Edit</span>
@@ -875,7 +875,7 @@ function renderAdmissions(rows) {
           </span>
         ` : ''}
 
-        ${r.is_resubmitted && !r.edit_enabled && !r.edit_requested ? `
+        ${r.is_resubmitted && !r.edit_enabled ? `
           <span class="status-badge tag-resubmitted" style="cursor:pointer;" onclick="openAuditLog(${r.id})" title="View Audit Log">
             <span class="material-icons-round" style="font-size:14px">update</span> RS
           </span>
