@@ -1618,10 +1618,10 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
           </tr>
         </table>
 
-        <div class="office-section">
-          <div class="office-title">For Office Work</div>
-          <div class="office-box"></div>
-        </div>
+        <table class="office-section">
+          <tr><th class="office-title" style="border-bottom:none">For Office Work</th></tr>
+          <tr><td class="office-box" style="min-height:210px; height:210px"></td></tr>
+        </table>
 
         <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
           <div style="text-align:center; width:30%; border-top:1px solid #000; padding-top:5px;">Student Signature</div>
