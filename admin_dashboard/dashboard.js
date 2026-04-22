@@ -1655,7 +1655,8 @@ async function printManagementFromRecord(id) {
           <head>
             <title>Management Form - ${m.student_name}</title>
             <style>
-              @page { size: A4; margin: 8mm 15mm; }
+            <style>
+              @page { size: A4; margin: 8mm 17mm 8mm 15mm; }
               * { box-sizing: border-box; }
               body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
               
@@ -1689,7 +1690,8 @@ async function printManagementFromRecord(id) {
               .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { border: 1.5px solid #000; padding: 10px 12px; font-size: 11px; margin-bottom: 20px; line-height: 1.4; text-align: justify; }
+              .guidelines { border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; width: 100%; border: 1.5px solid #000; }
+              .guidelines-content { padding: 10px 12px; font-size: 11px; line-height: 1.4; text-align: justify; }
               .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
               .guidelines ol { padding-left: 18px; margin: 0; }
               .guidelines li { margin-bottom: 3px; }
@@ -1762,15 +1764,17 @@ async function printManagementFromRecord(id) {
 
             <table class="section-table" style="height: 120px;"><tr><td><span class="section-label">Remarks:</span><div style="font-style:italic; font-weight:800; padding-top:4px;">${val(r.admin_remarks)}</div></td></tr></table>
 
-            <div class="guidelines">
-              <h3>Admissions Guidelines:</h3>
-              <ol>
-                <li>Hostel, transportation, skill development, exam and uniform fees are not included in net fees.</li>
-                <li>Blocked seat amount is non-refundable in case of cancellation for any reason.</li>
-                <li>Final admission confirmed upon submission of original documents and university approval.</li>
-                <li>Entrance exam appearance (KCET/COMEDK/JEE) is mandatory for eligibility else approval fees are applicable.</li>
-              </ol>
-            </div>
+            <table class="guidelines">
+              <tr><td class="guidelines-content">
+                <h3>Admissions Guidelines:</h3>
+                <ol>
+                  <li>Hostel, transportation, skill development, exam and uniform fees are not included in net fees.</li>
+                  <li>Blocked seat amount is non-refundable in case of cancellation for any reason.</li>
+                  <li>Final admission confirmed upon submission of original documents and university approval.</li>
+                  <li>Entrance exam appearance (KCET/COMEDK/JEE) is mandatory for eligibility else approval fees are applicable.</li>
+                </ol>
+              </td></tr>
+            </table>
 
 
             <div class="footer-signs">
