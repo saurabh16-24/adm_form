@@ -611,7 +611,8 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS view_enabled BOOLEAN DEFAULT TRUE",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_request_log JSONB",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enable_log JSONB"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enable_log JSONB",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS is_resubmitted BOOLEAN DEFAULT FALSE"
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -838,7 +839,7 @@ app.post('/api/admissions/submit', (req, res) => {
             payment_utr_no = COALESCE($42, payment_utr_no),
             signature_path = COALESCE($43, signature_path),
             course_preferences = $44,
-            edit_enabled = FALSE, edit_requested = FALSE
+            edit_enabled = FALSE, edit_requested = FALSE, is_resubmitted = TRUE
           WHERE id = $45
         `;
         const values = [

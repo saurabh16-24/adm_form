@@ -271,7 +271,30 @@ function renderEnquiries(rows) {
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'Booking Done')">Booking Done</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After CET')">After CET</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After COMEDK')">After COMEDK</div>
-          <div class="menu-divider"></div>
+          </div>
+
+  <!-- ═══════════════ LOG MODAL ═══════════════ -->
+  <div id="log-modal" class="modal-overlay hidden" style="z-index: 11000;">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:#f0f7ff; color:#1e40af; display:flex; align-items:center; justify-content:center;">
+            <span class="material-icons-round">history</span>
+          </div>
+          <div>
+            <h2 style="font-size:1.1rem; font-weight:800; color:#1e293b;">Action Audit Log</h2>
+            <p id="log-modal-subtitle" style="font-size:0.8rem; color:#64748b;">Detailed history of edit actions</p>
+          </div>
+        </div>
+        <button class="close-btn" onclick="closeLogModal()"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="modal-body" id="log-modal-body" style="padding:20px;">
+        <!-- Logs injected here -->
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
           <div class="menu-option date-opt" onclick="this.nextElementSibling.showPicker()">Set/Change Follow-up Date</div>
           <input type="date" value="${r.follow_up_date ? new Date(r.follow_up_date).toISOString().split('T')[0] : ''}" 
                  onchange="updateRemarks(${r.id}, 'follow_up_date', this.value)" 
@@ -864,14 +887,20 @@ function renderAdmissions(rows) {
             <span class="material-icons-round">rule</span>
             <span>Approve Edit</span>
           </button>
-          <span class="status-badge tag-request" title="Requested at: ${r.edit_request_log?.requested_at ? new Date(r.edit_request_log.requested_at).toLocaleString() : 'N/A'}">
+          <span class="status-badge tag-request" style="cursor:pointer;" onclick="openAuditLog(${r.id})" title="View Audit Log">
             <span class="dot pulse"></span> Edit Requested
           </span>
         ` : ''}
         
         ${r.edit_enabled ? `
-          <span class="status-badge tag-enabled" title="Enabled by ${r.edit_enable_log?.enabled_by || 'Admin'} at ${r.edit_enable_log?.enabled_at ? new Date(r.edit_enable_log.enabled_at).toLocaleString() : 'N/A'}">
+          <span class="status-badge tag-enabled" style="cursor:pointer;" onclick="openAuditLog(${r.id})" title="View Audit Log">
             <span class="material-icons-round" style="font-size:14px">check_circle</span> Edit Enabled
+          </span>
+        ` : ''}
+
+        ${r.is_resubmitted && !r.edit_enabled && !r.edit_requested ? `
+          <span class="status-badge tag-resubmitted" style="cursor:pointer;" onclick="openAuditLog(${r.id})" title="View Audit Log">
+            <span class="material-icons-round" style="font-size:14px">update</span> RS
           </span>
         ` : ''}
       </div>
@@ -1918,4 +1947,72 @@ async function sendBulkMail() {
     btn.innerHTML = ogHtml;
     btn.disabled = false;
   }
+}
+
+// ═══════════════ AUDIT LOGS ═══════════════
+function openAuditLog(id) {
+  const r = allAdmissions.find(x => x.id === id);
+  if (!r) return;
+
+  const modal = document.getElementById('log-modal');
+  const body = document.getElementById('log-modal-body');
+  
+  let html = `<div style="display:flex; flex-direction:column; gap:16px;">`;
+
+  // 1. Request Log
+  if (r.edit_request_log) {
+    html += `
+      <div style="display:flex; gap:12px;">
+        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#f59e0b; margin-top:4px;"></div>
+        <div>
+          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Edit Requested by Candidate</p>
+          <p style="font-size:0.8rem; color:#64748b;">${new Date(r.edit_request_log.requested_at).toLocaleString('en-IN')}</p>
+          <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:#f8fafc; padding:6px; border-radius:4px;">
+            IP: ${r.edit_request_log.client_ip}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. Enable Log
+  if (r.edit_enable_log) {
+    html += `
+      <div style="display:flex; gap:12px; position:relative;">
+        <div style="position:absolute; left:5px; top:-20px; bottom:20px; width:2px; background:#e2e8f0; z-index:0;"></div>
+        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#10b981; margin-top:4px; z-index:1;"></div>
+        <div>
+          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Edit Approved & Email Sent</p>
+          <p style="font-size:0.8rem; color:#64748b;">${new Date(r.edit_enable_log.enabled_at).toLocaleString('en-IN')}</p>
+          <p style="margin-top:4px; font-size:0.8rem; color:#334155;"><strong>Authorized by:</strong> ${r.edit_enable_log.enabled_by}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // 3. Resubmission Log
+  if (r.is_resubmitted) {
+    html += `
+      <div style="display:flex; gap:12px; position:relative;">
+        <div style="position:absolute; left:5px; top:-20px; bottom:20px; width:2px; background:#e2e8f0; z-index:0;"></div>
+        <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#6366f1; margin-top:4px; z-index:1;"></div>
+        <div>
+          <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Form Resubmitted (RS)</p>
+          <p style="font-size:0.8rem; color:#64748b;">Changes saved and form re-locked.</p>
+        </div>
+      </div>
+    `;
+  }
+
+  if (!r.edit_request_log && !r.edit_enable_log && !r.is_resubmitted) {
+    html += `<p style="text-align:center; color:#94a3b8; font-size:0.9rem; padding:20px;">No audit history found for this record.</p>`;
+  }
+
+  html += `</div>`;
+  body.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+function closeLogModal() {
+  document.getElementById('log-modal').classList.add('hidden');
 }
