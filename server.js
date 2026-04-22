@@ -1227,9 +1227,7 @@ app.post('/api/admin/enquiries/bulk-email', adminAuth, upload.array('attachments
 
     await transporter.sendMail(mailOptions);
 
-    // Optional: delete temporary attachments after sending to free up space
-    // (though they might be useful to keep in UPLOADS_DIR if we want a record)
-    // For now, let's keep them as they are in the uploads folder.
+    logAdminActivity(req.userName, 'Sent Bulk Email', 'bulk_email', null, `${emails.length} recipients`, `Subject: "${subject || 'Message from Admission Team'}"`);
 
     res.json({ success: true, count: emails.length });
   } catch (err) {
@@ -1552,7 +1550,11 @@ app.get('/api/admin/admissions/audit-log/:id', adminAuth, async (req, res) => {
 app.delete('/api/admin/management-form/:id', adminAuth, async (req, res) => {
   if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
   try {
+    const old = await pool.query('SELECT student_name, app_no FROM management_forms WHERE id = $1', [req.params.id]);
     await pool.query('DELETE FROM management_forms WHERE id = $1', [req.params.id]);
+    const studentName = old.rows[0]?.student_name || 'Unknown';
+    const appNo = old.rows[0]?.app_no || '-';
+    logAdminActivity(req.userName, 'Deleted Management Form', 'management', parseInt(req.params.id), studentName, `App No: ${appNo}`);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
