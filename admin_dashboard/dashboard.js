@@ -1655,9 +1655,9 @@ async function printManagementFromRecord(id) {
           <head>
             <title>Management Form - ${m.student_name}</title>
             <style>
-              @page { size: A4; margin: 8mm 15mm 8mm 12mm; }
+              @page { size: A4; margin: 8mm 15mm; }
               * { box-sizing: border-box; }
-              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 96%; }
+              body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
               
               .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
               .header-left-wrap { background: #000; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); flex: 1.4; padding-right: 3px; }
