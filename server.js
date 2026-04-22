@@ -1064,6 +1064,16 @@ app.post('/api/admin/login', (req, res) => {
   res.status(401).json({ success: false, message: 'Invalid username or password' });
 });
 
+// Temporary Maintenance Endpoint (DELETE after use)
+app.post('/api/admin/maintenance/reset-edits', adminAuth, async (req, res) => {
+  try {
+    await pool.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
+    res.json({ success: true, message: 'Records 24 and 22 reset successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Stats
 app.get('/api/admin/stats', adminAuth, async (req, res) => {
   try {
