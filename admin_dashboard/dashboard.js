@@ -1987,9 +1987,9 @@ function openAuditLog(id) {
 
   html += `</div>`;
   body.innerHTML = html;
-  modal.classList.remove('hidden');
+  modal.classList.add('open');
 }
 
 function closeLogModal() {
-  document.getElementById('log-modal').classList.add('hidden');
+  document.getElementById('log-modal').classList.remove('open');
 }
