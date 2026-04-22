@@ -856,8 +856,26 @@ function renderAdmissions(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewAdmission(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printAdmission(${r.id})" title="Print Confirmation"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      ${r.edit_requested && !r.edit_enabled ? `<button class="btn" style="background:#fef3c7; color:#d97706; padding: 6px;" onclick="enableAdmissionEdit(${r.id})" title="Enable Editing"><span class="material-icons-round" style="font-size:14px">edit</span> Approve Edit</button>` : ''}
-      ${r.edit_enabled ? `<span class="status-badge" style="background:#d1fae5; color:#059669; font-size:10px;">Edit Enabled</span>` : ''}
+      
+      <!-- Edit Lifecycle Actions & Status -->
+      <div class="edit-lifecycle-wrap" style="display:inline-flex; align-items:center; gap:6px; margin:0 4px; vertical-align:middle;">
+        ${r.edit_requested && !r.edit_enabled ? `
+          <button class="btn btn-approve-edit" onclick="enableAdmissionEdit(${r.id})" title="Approve Edit Request">
+            <span class="material-icons-round">rule</span>
+            <span>Approve Edit</span>
+          </button>
+          <span class="status-badge tag-request" title="Requested at: ${r.edit_request_log?.requested_at ? new Date(r.edit_request_log.requested_at).toLocaleString() : 'N/A'}">
+            <span class="dot pulse"></span> Edit Requested
+          </span>
+        ` : ''}
+        
+        ${r.edit_enabled ? `
+          <span class="status-badge tag-enabled" title="Enabled by ${r.edit_enable_log?.enabled_by || 'Admin'} at ${r.edit_enable_log?.enabled_at ? new Date(r.edit_enable_log.enabled_at).toLocaleString() : 'N/A'}">
+            <span class="material-icons-round" style="font-size:14px">check_circle</span> Edit Enabled
+          </span>
+        ` : ''}
+      </div>
+
       ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
       ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
     </td>

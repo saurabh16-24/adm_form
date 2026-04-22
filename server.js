@@ -609,7 +609,10 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_requested BOOLEAN DEFAULT FALSE",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enabled BOOLEAN DEFAULT FALSE",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS view_enabled BOOLEAN DEFAULT TRUE",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_request_log JSONB",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enable_log JSONB"
+    ];
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -750,7 +753,17 @@ app.get('/api/admissions/check/:enquiry_id', async (req, res) => {
 // POST request edit for an admission
 app.post('/api/admissions/:id/request-edit', async (req, res) => {
   try {
-    await pool.query('UPDATE admissions SET edit_requested = TRUE WHERE id = $1', [req.params.id]);
+    const logEntry = {
+      requested_at: new Date().toISOString(),
+      client_ip: req.ip,
+      user_agent: req.headers['user-agent']
+    };
+    await pool.query(`
+      UPDATE admissions 
+      SET edit_requested = TRUE, 
+          edit_request_log = $1 
+      WHERE id = $2
+    `, [JSON.stringify(logEntry), req.params.id]);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -1216,7 +1229,44 @@ app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
 // POST /api/admin/admissions/:id/enable-edit
 app.post('/api/admin/admissions/:id/enable-edit', adminAuth, async (req, res) => {
   try {
-    await pool.query('UPDATE admissions SET edit_enabled = TRUE WHERE id = $1', [req.params.id]);
+    const enabledBy = req.userName || 'Admin';
+    const logEntry = {
+      enabled_by: enabledBy,
+      enabled_at: new Date().toISOString()
+    };
+
+    // 1. Update DB
+    const result = await pool.query(`
+      UPDATE admissions 
+      SET edit_enabled = TRUE, 
+          edit_enable_log = $1 
+      WHERE id = $2 
+      RETURNING student_name, email, application_number
+    `, [JSON.stringify(logEntry), req.params.id]);
+
+    if (result.rows.length > 0) {
+      const student = result.rows[0];
+      // 2. Send Automatic Email to Candidate
+      const mailOptions = {
+        from: `"SVCE Admissions" <${process.env.EMAIL_USER || 'enquiry.svce@gmail.com'}>`,
+        to: student.email,
+        subject: `Application Edit Enabled - ${student.application_number}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
+            <h2 style="color: #1a365d; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">Application Access Restored</h2>
+            <p>Dear <strong>${student.student_name}</strong>,</p>
+            <p>Your request to edit your admission application (<strong>${student.application_number}</strong>) has been approved by the Admissions Department.</p>
+            <p>You can now visit the admission portal and update your details. Once you re-submit, the form will be locked again for final processing.</p>
+            <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af;"><strong>Action Required:</strong> Please complete your edits at your earliest convenience to avoid delays in your admission process.</p>
+            </div>
+            <p>Best Regards,<br><strong>Admissions Team</strong><br>Sri Venkateshwara College of Engineering (SVCE)</p>
+          </div>
+        `
+      };
+      transporter.sendMail(mailOptions).catch(err => console.error('Failed to send edit-enable email:', err));
+    }
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
