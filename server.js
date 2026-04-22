@@ -756,10 +756,8 @@ app.get('/api/admissions/check/:enquiry_id', async (req, res) => {
 // POST request edit for an admission
 app.post('/api/admissions/:id/request-edit', async (req, res) => {
   try {
-    const { requested_by } = req.body;
     const logEntry = {
       requested_at: new Date().toISOString(),
-      requested_by: requested_by || 'Unknown',
       client_ip: req.ip,
       user_agent: req.headers['user-agent']
     };

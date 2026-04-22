@@ -1943,7 +1943,6 @@ function openAuditLog(id) {
         <div style="flex-shrink:0; width:12px; height:12px; border-radius:50%; background:#f59e0b; margin-top:4px;"></div>
         <div>
           <p style="font-weight:700; font-size:0.9rem; color:#1e293b; margin-bottom:2px;">Edit Requested by Candidate</p>
-          <p style="font-size:0.8rem; color:#64748b; margin-bottom:4px;">${r.edit_request_log.requested_by || 'Unknown'}</p>
           <p style="font-size:0.8rem; color:#64748b;">${new Date(r.edit_request_log.requested_at).toLocaleString('en-IN')}</p>
           <div style="margin-top:6px; font-size:0.75rem; color:#94a3b8; background:#f8fafc; padding:6px; border-radius:4px;">
             IP: ${r.edit_request_log.client_ip}
