@@ -144,7 +144,29 @@
               <span class="stat-label">Today's Applications</span>
             </div>
           </div>
+          </div>
         </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px;">
+          <div class="card chart-card" style="padding: 16px;">
+            <div class="card-header" style="margin-bottom: 12px; padding: 0; border: none;">
+              <h3 style="font-size: 1rem;"><span class="material-icons-round" style="font-size: 18px;">pie_chart</span> Area / Pincode Distribution (Admissions)</h3>
+            </div>
+            <div style="position: relative; height: 250px;">
+              <canvas id="pincodeChart"></canvas>
+            </div>
+          </div>
+          <div class="card chart-card" style="padding: 16px;">
+            <div class="card-header" style="margin-bottom: 12px; padding: 0; border: none;">
+              <h3 style="font-size: 1rem;"><span class="material-icons-round" style="font-size: 18px;">people</span> Gender Distribution (Admissions)</h3>
+            </div>
+            <div style="position: relative; height: 250px;">
+              <canvas id="genderChart"></canvas>
+            </div>
+          </div>
+        </div>
+
         <!-- Recent activity -->
         <div class="card recent-card">
           <div class="card-header">
@@ -449,7 +471,8 @@
   </div>
 
   <div id="toast-container"></div>
-  <script src="dashboard.js?v=7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="dashboard.js?v=8"></script>
 </body>
 
 </html>

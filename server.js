@@ -1125,6 +1125,12 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       FROM admissions a 
       ORDER BY a.id DESC LIMIT 5
     `);
+
+    // Graph Stats
+    const enqPincodes = await pool.query("SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries WHERE address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10");
+    const admPincodes = await pool.query("SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions WHERE comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10");
+    const admGender = await pool.query("SELECT gender, COUNT(*) as count FROM admissions WHERE gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC");
+
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
       total_admissions:  parseInt(totalAdm.rows[0].c),
@@ -1132,7 +1138,12 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       today_enquiries:   parseInt(todayEnq.rows[0].c),
       today_admissions:  parseInt(todayAdm.rows[0].c),
       recent_enquiries:  recentEnq.rows,
-      recent_admissions: recentAdm.rows
+      recent_admissions: recentAdm.rows,
+      graphs: {
+        enquiry_pincodes: enqPincodes.rows,
+        admission_pincodes: admPincodes.rows,
+        admission_gender: admGender.rows
+      }
     });
 
   } catch (err) { res.status(500).json({ error: err.message }); }

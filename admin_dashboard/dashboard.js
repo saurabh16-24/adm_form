@@ -165,6 +165,9 @@ async function apiFetch(path, options = {}) {
 }
 
 // ═══════════════ OVERVIEW ═══════════════
+let pincodeChartInstance = null;
+let genderChartInstance = null;
+
 async function loadOverview() {
   try {
     const stats = await apiFetch('/api/admin/stats');
@@ -178,11 +181,73 @@ async function loadOverview() {
 
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
 
+    // Render Charts
+    if (stats.graphs) {
+      renderCharts(stats.graphs);
+    }
+
     // Recent tables
     renderRecentTable('recent-enquiries-body', stats.recent_enquiries || [], 'enquiry');
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
+}
+
+function renderCharts(graphs) {
+  // Pincode Chart
+  const pinCtx = document.getElementById('pincodeChart');
+  if (pinCtx && graphs.admission_pincodes) {
+    if (pincodeChartInstance) pincodeChartInstance.destroy();
+    const labels = graphs.admission_pincodes.map(p => p.pincode || 'Unknown');
+    const data = graphs.admission_pincodes.map(p => p.count);
+    pincodeChartInstance = new Chart(pinCtx, {
+      type: 'doughnut',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: [
+            '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+            '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#64748b'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
+
+  // Gender Chart
+  const genCtx = document.getElementById('genderChart');
+  if (genCtx && graphs.admission_gender) {
+    if (genderChartInstance) genderChartInstance.destroy();
+    const labels = graphs.admission_gender.map(g => g.gender || 'Not Specified');
+    const data = graphs.admission_gender.map(g => g.count);
+    genderChartInstance = new Chart(genCtx, {
+      type: 'pie',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#64748b'],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  }
 }
 
 function renderRecentTable(tbodyId, rows, type) {
