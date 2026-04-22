@@ -1678,19 +1678,19 @@ async function printManagementFromRecord(id) {
               .year-boxes span { border: 1.5px solid #000; padding: 0px 4px; font-family: monospace; font-size: 11px; font-weight: 800; min-width: 16px; text-align: center; }
 
               table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1.5px solid #000; table-layout: fixed; }
-              th, td { border: 1.5px solid #000; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
+              th, td { border: 1.5px solid #000 !important; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
               .label { font-weight: 700; width: 28%; background: #f8fafc; font-size: 10px; }
               .value, .val { width: 22%; font-weight: 800; font-size: 10.5px; }
 
               .entrance-table th { background: #f8fafc; font-size: 8.5px; padding: 3px; text-align: center; font-weight: 800; line-height: 1.1; height: 28px; }
               .entrance-table td { text-align: center; padding: 3px; height: 24px; font-weight: 800; }
               
-              .section-table { margin-bottom: 12px; width: 100%; border-collapse: collapse; table-layout: fixed; }
-              .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; border: 1.5px solid #000; }
+              .section-table { margin-bottom: 12px; width: 100%; border-collapse: collapse; table-layout: fixed; border: 1.5px solid #000; }
+              .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; border: 1.5px solid #000 !important; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
-              .guidelines { border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; width: 100%; border: 1.5px solid #000; }
-              .guidelines-content { padding: 10px 12px; font-size: 11px; line-height: 1.4; text-align: justify; }
+              .guidelines { border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; width: 100%; border: 1.5px solid #000 !important; }
+              .guidelines-content { padding: 10px 12px; font-size: 11px; line-height: 1.4; text-align: justify; border: 1.5px solid #000 !important; }
               .guidelines h3 { font-size: 13px; margin-top: 0; margin-bottom: 6px; text-decoration: underline; font-weight: 800; }
               .guidelines ol { padding-left: 18px; margin: 0; }
               .guidelines li { margin-bottom: 3px; }
