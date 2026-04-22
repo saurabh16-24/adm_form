@@ -1029,8 +1029,19 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const totalMgt  = await pool.query('SELECT COUNT(*) AS c FROM management_forms');
     const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
     const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
-    const recentEnq = await pool.query('SELECT * FROM enquiries  ORDER BY id DESC LIMIT 5');
-    const recentAdm = await pool.query('SELECT * FROM admissions ORDER BY id DESC LIMIT 5');
+    const recentEnq = await pool.query(`
+      SELECT e.*, 
+        EXISTS(SELECT 1 FROM admissions a WHERE a.enquiry_id = e.id) as has_application,
+        EXISTS(SELECT 1 FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE a.enquiry_id = e.id) as has_management
+      FROM enquiries e 
+      ORDER BY e.id DESC LIMIT 5
+    `);
+    const recentAdm = await pool.query(`
+      SELECT a.*, 
+        EXISTS(SELECT 1 FROM management_forms m WHERE m.admission_id = a.id) as has_management
+      FROM admissions a 
+      ORDER BY a.id DESC LIMIT 5
+    `);
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
       total_admissions:  parseInt(totalAdm.rows[0].c),
@@ -1047,7 +1058,14 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 // All enquiries
 app.get('/api/admin/enquiries', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM enquiries ORDER BY id DESC');
+    const query = `
+      SELECT e.*, 
+        EXISTS(SELECT 1 FROM admissions a WHERE a.enquiry_id = e.id) as has_application,
+        EXISTS(SELECT 1 FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE a.enquiry_id = e.id) as has_management
+      FROM enquiries e 
+      ORDER BY e.id DESC
+    `;
+    const result = await pool.query(query);
     res.json({ rows: result.rows });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1129,7 +1147,13 @@ app.post('/api/admin/enquiries/bulk-email', adminAuth, upload.array('attachments
 // All admissions
 app.get('/api/admin/admissions', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM admissions ORDER BY id DESC');
+    const query = `
+      SELECT a.*, 
+        EXISTS(SELECT 1 FROM management_forms m WHERE m.admission_id = a.id) as has_management
+      FROM admissions a 
+      ORDER BY a.id DESC
+    `;
+    const result = await pool.query(query);
     res.json({ rows: result.rows });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

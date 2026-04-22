@@ -191,9 +191,14 @@ function renderRecentTable(tbodyId, rows, type) {
     tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><span class="material-icons-round">inbox</span><p>No records yet</p></td></tr>`;
     return;
   }
-  tbody.innerHTML = rows.map(r => {
-    if (type === 'enquiry') {
-      return `<tr>
+  tbody.innerHTML = rows.map((r, i) => {
+    let highlightClass = "";
+    if (type === "enquiry") {
+      if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+      else if (r.has_application) highlightClass = 'style="background:rgba(245, 158, 11, 0.15)"';
+
+      return `<tr ${highlightClass}>
+        <td>${i + 1}</td>
         <td>${r.token_number || '—'}</td>
         <td>${r.student_name || '—'}</td>
         <td>${r.student_email || '—'}</td>
@@ -202,7 +207,10 @@ function renderRecentTable(tbodyId, rows, type) {
         <td>${r.reference || '—'}</td>
       </tr>`;
     } else {
-      return `<tr>
+      if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+
+      return `<tr ${highlightClass}>
+        <td>${i + 1}</td>
         <td>${r.application_number || '—'}</td>
         <td>${r.student_name || '—'}</td>
         <td>${r.email || '—'}</td>
@@ -238,11 +246,16 @@ function renderEnquiries(rows) {
   
   const role = sessionStorage.getItem('admin_role');
   
-  tbody.innerHTML = rows.map(r => {
+  tbody.innerHTML = rows.map((r, i) => {
     const remark = r.admin_remarks || '— Select Action —';
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
     
-    return `<tr>
+    let highlightClass = "";
+    if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+    else if (r.has_application) highlightClass = 'style="background:rgba(245, 158, 11, 0.15)"';
+
+    return `<tr ${highlightClass}>
+    <td>${i + 1}</td>
     <td>${r.id}</td>
     <td>${r.token_number || '—'}</td>
     <td>${r.student_name || '—'}</td>
@@ -391,6 +404,7 @@ function filterEnquiries() {
 
   const actionFilter = document.getElementById('enq-filter-action').value;
   const courseFilter = document.getElementById('enq-filter-course').value;
+  const statusFilter = document.getElementById('enq-filter-status').value;
   let filtered = allEnquiries;
 
   if (search) {
@@ -408,6 +422,12 @@ function filterEnquiries() {
   if (dateFilter) filtered = filterByDate(filtered, 'enquiry_date', dateFilter);
   if (followupFilter) filtered = filterByDate(filtered, 'follow_up_date', followupFilter);
   if (actionFilter) filtered = filtered.filter(r => (r.admin_remarks || '') === actionFilter);
+
+  if (statusFilter) {
+    if (statusFilter === 'applied') filtered = filtered.filter(r => r.has_application);
+    if (statusFilter === 'management') filtered = filtered.filter(r => r.has_management);
+    if (statusFilter === 'none') filtered = filtered.filter(r => !r.has_application && !r.has_management);
+  }
 
   if (courseFilter) {
     filtered = filtered.filter(r => {
@@ -817,7 +837,12 @@ function renderAdmissions(rows) {
 
   const role = sessionStorage.getItem('admin_role');
 
-  tbody.innerHTML = rows.map(r => `<tr>
+  tbody.innerHTML = rows.map((r, i) => {
+    let highlightClass = "";
+    if (r.has_management) highlightClass = 'style="background:rgba(16, 185, 129, 0.15)"';
+
+    return `<tr ${highlightClass}>
+    <td>${i + 1}</td>
     <td>${r.id}</td>
     <td>${r.application_number || '—'} ${r.edit_requested ? '<span class="status-badge" style="background:var(--accent-orange-glow);color:var(--accent-orange);margin-left:5px;">Edit Requested</span>' : ''}</td>
     <td>${r.student_name || '—'}</td>
@@ -836,7 +861,7 @@ function renderAdmissions(rows) {
       ${role !== 'counsellor' ? `<button class="btn btn-print" style="background: var(--accent-purple-glow); color: var(--accent-purple);" onclick="openManagementFormEditor(${r.id})" title="Generate Management Form"><span class="material-icons-round" style="font-size:16px">description</span></button>` : ''}
       ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteAdmission(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
     </td>
-  </tr>`).join('');
+  </tr>`}).join('');
 }
 
 async function enableAdmissionEdit(id) {
@@ -1512,7 +1537,8 @@ function renderManagement(rows) {
     return;
   }
 
-  tbody.innerHTML = rows.map(r => `<tr>
+  tbody.innerHTML = rows.map((r, i) => `<tr>
+    <td>${i + 1}</td>
     <td>${r.id}</td>
     <td>${r.app_no || '—'}</td>
     <td>${r.student_name || '—'}</td>

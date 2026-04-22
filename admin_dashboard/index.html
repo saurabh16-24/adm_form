@@ -153,7 +153,7 @@
             <table class="data-table" id="recent-enquiries-table">
               <thead>
                 <tr>
-                  <th>Token</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Reference</th>
+                  <th>Sr.No</th><th>Token</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Reference</th>
                 </tr>
               </thead>
               <tbody id="recent-enquiries-body"></tbody>
@@ -168,7 +168,7 @@
             <table class="data-table" id="recent-admissions-table">
               <thead>
                 <tr>
-                  <th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Course</th>
+                  <th>Sr.No</th><th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>Date</th><th>Course</th>
                 </tr>
               </thead>
               <tbody id="recent-admissions-body"></tbody>
@@ -219,6 +219,12 @@
               <option value="BE Mechanical Engineering">BE Mechanical Engineering</option>
               <option value="BE Civil Engineering">BE Civil Engineering</option>
             </select>
+            <select id="enq-filter-status" onchange="filterEnquiries()">
+              <option value="">All Status</option>
+              <option value="applied">Application Filled</option>
+              <option value="management">Management Filled</option>
+              <option value="none">Not Applied</option>
+            </select>
             <button class="btn btn-export" onclick="exportEnquiriesCSV()" id="export-enq-btn">
               <span class="material-icons-round">download</span>
               Export CSV
@@ -234,7 +240,7 @@
             <table class="data-table" id="enquiries-table">
               <thead>
                 <tr>
-                  <th>ID</th><th>Token</th><th>Name</th><th>Mobile</th><th>Reference</th><th>Remarks</th><th>Date</th><th class="actions-header">Actions</th>
+                  <th>Sr.No</th><th>ID</th><th>Token</th><th>Name</th><th>Mobile</th><th>Reference</th><th>Remarks</th><th>Date</th><th class="actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody id="enquiries-body"></tbody>
@@ -283,7 +289,7 @@
             <table class="data-table" id="admissions-table">
               <thead>
                 <tr>
-                  <th>ID</th><th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>DOB</th><th>Course</th><th>Programme</th><th>UTR No.</th><th>Date</th><th>Actions</th>
+                  <th>Sr.No</th><th>ID</th><th>App No.</th><th>Name</th><th>Email</th><th>Mobile</th><th>DOB</th><th>Course</th><th>Programme</th><th>UTR No.</th><th>Date</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="admissions-body"></tbody>
@@ -314,7 +320,7 @@
             <table class="data-table" id="management-table">
               <thead>
                 <tr>
-                  <th>ID</th><th>App No.</th><th>Name</th><th>Branch</th><th>Ac. Year</th><th>Net Payable</th><th>Last Updated</th><th>Actions</th>
+                  <th>Sr.No</th><th>ID</th><th>App No.</th><th>Name</th><th>Branch</th><th>Ac. Year</th><th>Net Payable</th><th>Last Updated</th><th>Actions</th>
                 </tr>
               </thead>
               <tbody id="management-body"></tbody>
