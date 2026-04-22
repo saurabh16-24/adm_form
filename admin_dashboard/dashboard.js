@@ -1678,9 +1678,9 @@ async function printManagementFromRecord(id) {
               .year-boxes span { border: 1.5px solid #000; padding: 0px 4px; font-family: monospace; font-size: 11px; font-weight: 800; min-width: 16px; text-align: center; }
 
               table { width: 100%; border-collapse: collapse; margin-bottom: 12px; border: 1.5px solid #000; table-layout: fixed; }
-              th, td { border: 1.2px solid #000; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
+              th, td { border: 1.5px solid #000; padding: 4px 10px; height: 26px; vertical-align: middle; word-wrap: break-word; }
               .label { font-weight: 700; width: 28%; background: #f8fafc; font-size: 10px; }
-              .value { width: 22%; font-weight: 800; font-size: 10.5px; }
+              .value, .val { width: 22%; font-weight: 800; font-size: 10.5px; }
 
               .entrance-table th { background: #f8fafc; font-size: 8.5px; padding: 3px; text-align: center; font-weight: 800; line-height: 1.1; height: 28px; }
               .entrance-table td { text-align: center; padding: 3px; height: 24px; font-weight: 800; }
@@ -1761,7 +1761,7 @@ async function printManagementFromRecord(id) {
               ${val([r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_state, r.comm_pincode].filter(Boolean).join(', ')) || val([r.address_line1, r.address_line2, r.address_city, r.address_state, r.address_pincode].filter(Boolean).join(', '))}
             </div></td></tr></table>
 
-            <table class="section-table" style="height: 120px;"><tr><td><span class="section-label">Remarks:</span><div style="font-style:italic; font-weight:800; padding-top:4px;">${val(r.admin_remarks)}</div></td></tr></table>
+            <table class="section-table" style="height: 120px;"><tr><td><span class="section-label">Remarks:</span><div style="font-style:italic; font-weight:800; padding-top:4px;">${val(m.remarks || r.admin_remarks)}</div></td></tr></table>
 
             <table class="guidelines">
               <tr><td class="guidelines-content">
