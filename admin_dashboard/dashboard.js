@@ -1656,7 +1656,7 @@ async function printManagementFromRecord(id) {
             <title>Management Form - ${m.student_name}</title>
             <style>
             <style>
-              @page { size: A4; margin: 8mm 17mm 8mm 15mm; }
+              @page { size: A4; margin: 8mm 14mm 8mm 8mm; }
               * { box-sizing: border-box; }
               body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; color: #000; font-size: 10.5px; line-height: 1.3; width: 100%; }
               
@@ -1686,8 +1686,8 @@ async function printManagementFromRecord(id) {
               .entrance-table th { background: #f8fafc; font-size: 8.5px; padding: 3px; text-align: center; font-weight: 800; line-height: 1.1; height: 28px; }
               .entrance-table td { text-align: center; padding: 3px; height: 24px; font-weight: 800; }
               
-              .section-table { margin-bottom: 12px; }
-              .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; }
+              .section-table { margin-bottom: 12px; width: 100%; border-collapse: collapse; table-layout: fixed; }
+              .section-table td { vertical-align: top; padding: 12px 10px 6px; position: relative; border: 1.5px solid #000; }
               .section-label { position: absolute; top: 2px; left: 10px; font-weight: 800; font-size: 9px; text-transform: uppercase; }
 
               .guidelines { border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; width: 100%; border: 1.5px solid #000; }
