@@ -513,6 +513,9 @@ async function viewEnquiry(id) {
         ${detailItem('Math 12 A', r.math_12a)}
         ${detailItem('Math 12 B', r.math_12b)}
         ${detailItem('Math Standard', r.mathematics_marks)}
+        ${detailItem('English 12th', r.english_12)}
+        ${detailItem('Kannada/Sanskrit/Hindi', r.kannada_12)}
+        ${detailItem('Other Subjects', r.other_12)}
         ${detailHeader('Entrance Exams')}
         ${detailItem('JEE Rank', r.jee_rank)}
         ${detailItem('COMEDK Rank', r.comedk_rank)}
