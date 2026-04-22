@@ -1114,7 +1114,7 @@ async function openManagementFormEditor(id) {
 
         <div style="border: 1px solid #000; padding: 5px; margin-bottom: 5px;">
           <div style="font-weight: 800; font-size: 10px;">Remarks:</div>
-          <input type="text" id="ed-remarks" value="">
+          <input type="text" id="ed-remarks" value="${val(r.admin_remarks)}">
         </div>
 
         <div class="action-footer">
