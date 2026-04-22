@@ -1424,7 +1424,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         <td class="pref-num">${i + 1}.</td>
         <td style="white-space:normal">${courseName}</td>
         <td style="text-align:center">${fee ? '₹' + Number(fee).toLocaleString('en-IN') : '—'}</td>
-        ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background:#fff"></td>` : ''}
+        ${i === 0 ? `<td rowspan="${prefsArray.length}" style="background:#fff; border: 1px solid #64748b;"></td>` : ''}
       </tr>`;
     }).join('') || '<tr><td colspan="4">No preferences selected</td></tr>';
 
@@ -1619,8 +1619,8 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
         </table>
 
         <div class="office-section">
-          <div class="office-title" style="width:100%; border:1px solid #64748b; border-bottom:none;">For Office Work</div>
-          <div class="office-box" style="width:100%;"></div>
+          <div class="office-title">For Office Work</div>
+          <div class="office-box"></div>
         </div>
 
         <div style="display:flex; justify-content:space-between; margin-top:40px; font-weight:700; font-size:10px;">
