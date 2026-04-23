@@ -322,7 +322,7 @@ function updateStatsRow(el) {
   const courseId = row.dataset.id;
   const config = ADMITTED_COURSES.find(c => c.id === courseId);
   
-  const getVal = (field) => parseInt(row.querySelector(\`[data-field="\${field}"]\`).textContent) || 0;
+  const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`).textContent) || 0;
   
   const cet_fill = getVal('cet_fill');
   const cet_snq = getVal('cet_snq');
@@ -357,7 +357,7 @@ function updateStatsTotals() {
   };
 
   document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const getVal = (f) => parseInt(row.querySelector(\`[data-field="\${f}"]\`)?.textContent || row.querySelector(\`[data-calc="\${f}"]\`)?.textContent) || 0;
+    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.textContent || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
     
     totals.cet_fill += getVal('cet_fill');
     totals.cet_snq += getVal('cet_snq');
