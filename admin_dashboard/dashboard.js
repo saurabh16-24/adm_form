@@ -10,6 +10,10 @@ let lastGraphs     = null;
 let pincodeChartInstance = null;
 let genderChartInstance = null;
 let ratioChartInstance   = null;
+let timelineChartInstance = null;
+let sourceChartInstance = null;
+let stateChartInstance = null;
+let courseChartInstance = null;
 
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -645,6 +649,127 @@ function renderCharts(graphs, stats) {
         }
       });
     }
+    }
+  }
+
+  // 4. Timeline Chart (Line Chart)
+  const timeCtx = document.getElementById('timelineChart');
+  if (timeCtx) {
+    if (timelineChartInstance) timelineChartInstance.destroy();
+    
+    // Merge dates
+    const dateMap = {};
+    (graphs.enquiry_timeline || []).forEach(t => { dateMap[t.date] = { enq: parseInt(t.count) || 0, adm: 0 }; });
+    (graphs.admission_timeline || []).forEach(t => { 
+      if (!dateMap[t.date]) dateMap[t.date] = { enq: 0, adm: 0 };
+      dateMap[t.date].adm = parseInt(t.count) || 0;
+    });
+
+    const sortedDates = Object.keys(dateMap).sort();
+    const enqData = sortedDates.map(d => dateMap[d].enq);
+    const admData = sortedDates.map(d => dateMap[d].adm);
+
+    timelineChartInstance = new Chart(timeCtx, {
+      type: 'line',
+      data: {
+        labels: sortedDates,
+        datasets: [
+          { label: 'Enquiries', data: enqData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#f59e0b' },
+          { label: 'Applications', data: admData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#3b82f6' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { weight: '600' } } } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] }, ticks: { precision: 0 } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 5. Source of Lead Chart (Doughnut)
+  const srcCtx = document.getElementById('sourceChart');
+  if (srcCtx) {
+    if (sourceChartInstance) sourceChartInstance.destroy();
+    const srcData = graphs.lead_sources || [];
+    sourceChartInstance = new Chart(srcCtx, {
+      type: 'doughnut',
+      data: {
+        labels: srcData.map(s => s.reference),
+        datasets: [{
+          data: srcData.map(s => s.count),
+          backgroundColor: ['#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#3b82f6', '#10b981', '#6366f1'],
+          borderWidth: 3, borderColor: '#ffffff', hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, font: { size: 10 } } } }
+      }
+    });
+  }
+
+  // 6. Geographic Distribution Chart (Horizontal Bar)
+  const stateCtx = document.getElementById('stateChart');
+  if (stateCtx) {
+    if (stateChartInstance) stateChartInstance.destroy();
+    const stateData = graphs.application_states || [];
+    stateChartInstance = new Chart(stateCtx, {
+      type: 'bar',
+      data: {
+        labels: stateData.map(s => s.state),
+        datasets: [{
+          label: 'Applications',
+          data: stateData.map(s => s.count),
+          backgroundColor: 'rgba(139, 92, 246, 0.8)',
+          borderRadius: 6,
+          barPercentage: 0.6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] }, ticks: { precision: 0 } },
+          y: { grid: { display: false }, ticks: { font: { weight: '600' } } }
+        }
+      }
+    });
+  }
+
+  // 7. Course Demand Chart (Bar)
+  const courseCtx = document.getElementById('courseChart');
+  if (courseCtx) {
+    if (courseChartInstance) courseChartInstance.destroy();
+    const courseType = document.getElementById('course-data-type')?.value || 'application';
+    let cData = courseType === 'application' ? graphs.application_courses : graphs.admission_courses;
+    cData = cData || [];
+
+    courseChartInstance = new Chart(courseCtx, {
+      type: 'bar',
+      data: {
+        labels: cData.map(c => c.course),
+        datasets: [{
+          label: courseType === 'application' ? 'Applications' : 'Admissions',
+          data: cData.map(c => c.count),
+          backgroundColor: courseType === 'application' ? 'rgba(14, 165, 233, 0.8)' : 'rgba(16, 185, 129, 0.8)',
+          borderRadius: 6,
+          barPercentage: 0.6
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] }, ticks: { precision: 0 } },
+          x: { grid: { display: false }, ticks: { font: { weight: '600', size: 10 }, maxRotation: 45, minRotation: 45 } }
+        }
+      }
+    });
   }
 }
 

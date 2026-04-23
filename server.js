@@ -1259,6 +1259,48 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       mgtParams
     );
 
+    // Advanced Stats: Course Demand
+    const appCourse = await pool.query(
+      `SELECT program_preference as course, COUNT(*) as count FROM admissions${admWhere} AND program_preference IS NOT NULL AND program_preference != '' GROUP BY program_preference ORDER BY count DESC`,
+      admParams
+    );
+    
+    const admCourse = await pool.query(
+      `SELECT branch as course, COUNT(*) as count FROM management_forms m WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND branch IS NOT NULL AND branch != '' GROUP BY branch ORDER BY count DESC`,
+      mgtParams
+    );
+
+    // Advanced Stats: Lead Sources
+    const references = await pool.query(
+      `SELECT reference, COUNT(*) as count FROM enquiries${enqWhere} AND reference IS NOT NULL AND reference != '' GROUP BY reference ORDER BY count DESC`,
+      enqParams
+    );
+
+    // Advanced Stats: State Geographic Distribution
+    const appStates = await pool.query(
+      `SELECT comm_state as state, COUNT(*) as count FROM admissions${admWhere} AND comm_state IS NOT NULL AND comm_state != '' GROUP BY comm_state ORDER BY count DESC LIMIT 10`,
+      admParams
+    );
+
+    // Advanced Stats: Timeline Velocity (Last 30 Days)
+    const enqTimeline = await pool.query(
+      `SELECT TO_CHAR(enquiry_date, 'YYYY-MM-DD') as date, COUNT(*) as count FROM enquiries${enqWhere} AND enquiry_date >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(enquiry_date, 'YYYY-MM-DD') ORDER BY date ASC`,
+      enqParams
+    );
+    const admTimeline = await pool.query(
+      `SELECT TO_CHAR(application_date, 'YYYY-MM-DD') as date, COUNT(*) as count FROM admissions${admWhere} AND application_date >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(application_date, 'YYYY-MM-DD') ORDER BY date ASC`,
+      admParams
+    );
+
+    // Advanced Stats: Academic Quality
+    const academicQuality = await pool.query(
+      `SELECT 
+         ROUND(AVG(NULLIF(regexp_replace(pcm_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+         ROUND(AVG(NULLIF(regexp_replace(overall_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+       FROM management_forms m WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''}`,
+      mgtParams
+    );
+
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
       total_admissions:  parseInt(totalAdm.rows[0].c),
@@ -1272,8 +1314,15 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         application_pincodes: appPincodes.rows,
         admission_pincodes:   mgtPincodes.rows,
         application_gender:   appGender.rows,
-        admission_gender:     admGender.rows
-      }
+        admission_gender:     admGender.rows,
+        application_courses:  appCourse.rows,
+        admission_courses:    admCourse.rows,
+        lead_sources:         references.rows,
+        application_states:   appStates.rows,
+        enquiry_timeline:     enqTimeline.rows,
+        admission_timeline:   admTimeline.rows
+      },
+      quality: academicQuality.rows[0]
     });
 
   } catch (err) { console.error('Stats error:', err); res.status(500).json({ error: err.message }); }
