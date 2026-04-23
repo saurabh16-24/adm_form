@@ -1114,10 +1114,11 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 
     if (year) {
       const startYear = year.split('-')[0];
-      // For enquiries, we use the year of the date (matching the Jan switch logic)
+      // For enquiries and admissions, filter by calendar year (Jan switch)
       yearFilterEnq = ' WHERE EXTRACT(YEAR FROM enquiry_date)::TEXT = $1';
       yearFilterAdm = ' WHERE EXTRACT(YEAR FROM application_date)::TEXT = $1';
-      yearFilterMgt = ' WHERE academic_year = $1'; 
+      // For management, check session string OR the calendar year of form_date
+      yearFilterMgt = ' WHERE (academic_year = $1 OR (academic_year IS NULL AND EXTRACT(YEAR FROM form_date)::TEXT = $2))'; 
       params.push(startYear);
     }
 
@@ -1125,9 +1126,9 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const totalEnq  = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${yearFilterEnq}`, params);
     const totalAdm  = await pool.query(`SELECT COUNT(*) AS c FROM admissions${yearFilterAdm}`, params);
     
-    // Management stats usually use the session string "2026-27"
-    const mgtParams = year ? [year] : [];
-    const totalMgt  = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${yearFilterMgt}`, mgtParams);
+    // Management stats
+    const mgtQueryParams = year ? [year, year.split('-')[0]] : [];
+    const totalMgt  = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${yearFilterMgt}`, mgtQueryParams);
     
     const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
     const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
@@ -1151,7 +1152,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const appPincodes = await pool.query(`SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions${yearFilterAdm} AND comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10`, params.map(p => p.toString()));
     
     // Management Pincodes (using Admissions table joined with Management Forms)
-    const mgtPincodes = await pool.query(`SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${yearFilterMgt.replace('academic_year', 'm.academic_year')} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`, mgtParams);
+    const mgtPincodes = await pool.query(`SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${yearFilterMgt.replace('academic_year', 'm.academic_year')} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`, mgtQueryParams);
     
     const admGender = await pool.query(`SELECT gender, COUNT(*) as count FROM admissions${yearFilterAdm} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`, params.map(p => p.toString()));
 
