@@ -1124,8 +1124,10 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       admWhere += ` AND EXTRACT(YEAR FROM application_date) = $${admParams.length + 1}`;
       admParams.push(parseInt(startYear));
       
-      mgtWhere += ` AND academic_year = $${mgtParams.length + 1}`;
-      mgtParams.push(year); // e.g. "2026-27"
+      // Management forms store academic_year as "26-27" (short) or "2026-27" (full)
+      const shortYear = startYear.slice(-2) + '-' + year.split('-')[1]; // "26-27"
+      mgtWhere += ` AND (academic_year = $${mgtParams.length + 1} OR academic_year = $${mgtParams.length + 2})`;
+      mgtParams.push(year, shortYear); // e.g. "2026-27" and "26-27"
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -1167,7 +1169,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     
     // Graph: Management pincodes (join with admissions for address)
     const mgtPincodes = await pool.query(
-      `SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND m.academic_year = $1' : ''} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`,
+      `SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`,
       mgtParams
     );
     
