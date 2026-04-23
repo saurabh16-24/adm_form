@@ -1271,10 +1271,10 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       `SELECT course, SUM(score) as count FROM (
          -- 1. Preferences from JSON list (weighted 1-8)
          SELECT 
-           CASE 
+           TRIM(CASE 
              WHEN jsonb_typeof(p.pref) = 'object' THEN p.pref->>'course'
              ELSE p.pref#>>'{}'
-           END as course,
+           END) as course,
            (9 - p.ord) as score
          FROM admissions a
          CROSS JOIN LATERAL jsonb_array_elements(
@@ -1290,7 +1290,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
          
          -- 2. Fallback for legacy records (8 pts)
          SELECT 
-           COALESCE(program_preference, course_preference) as course,
+           TRIM(COALESCE(program_preference, course_preference)) as course,
            8 as score
          FROM admissions
          ${admWhere}
