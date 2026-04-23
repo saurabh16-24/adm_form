@@ -1173,10 +1173,16 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       mgtParams
     );
     
-    // Graph: Gender distribution (from admissions)
-    const admGender = await pool.query(
+    // Graph: Gender distribution (Applications)
+    const appGender = await pool.query(
       `SELECT gender, COUNT(*) as count FROM admissions${admWhere} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`,
       admParams
+    );
+
+    // Graph: Gender distribution (Actual Admissions via Management Forms)
+    const admGender = await pool.query(
+      `SELECT a.gender, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND a.gender IS NOT NULL AND a.gender != '' GROUP BY a.gender ORDER BY count DESC`,
+      mgtParams
     );
 
     res.json({
@@ -1191,6 +1197,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         enquiry_pincodes:     enqPincodes.rows,
         application_pincodes: appPincodes.rows,
         admission_pincodes:   mgtPincodes.rows,
+        application_gender:   appGender.rows,
         admission_gender:     admGender.rows
       }
     });

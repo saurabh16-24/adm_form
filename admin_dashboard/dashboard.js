@@ -594,14 +594,16 @@ function renderCharts(graphs, stats) {
   
   if (genCtx) {
     if (genderChartInstance) genderChartInstance.destroy();
-    // For now, Gender is primarily tracked in Applications/Admissions
-    const genData = (genType === 'enquiry') ? [] : (graphs.admission_gender || []);
+    let genData = [];
+    if (genType === 'application') genData = graphs.application_gender || [];
+    else if (genType === 'admission') genData = graphs.admission_gender || [];
     
-    if (genData.length === 0 && genType === 'enquiry') {
-      // Show empty state for enquiry gender
+    if (genData.length === 0) {
+      // Show empty state
+      const labelMsg = genType === 'enquiry' ? 'No Gender Data for Enquiries' : `No Gender Data for ${genType}s`;
       genderChartInstance = new Chart(genCtx, {
         type: 'doughnut',
-        data: { labels: ['No Gender Data for Enquiries'], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'] }] },
+        data: { labels: [labelMsg], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'] }] },
         options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
       });
     } else {
