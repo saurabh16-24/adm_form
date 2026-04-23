@@ -1613,8 +1613,15 @@ async function viewAdmission(id) {
 
         ${detailHeader('Course Selection')}
         ${detailItem('Institute', r.selected_institute || 'Engineering - SVCE')}
-        ${detailItem('Primary Course', r.course_preference)}
-        ${detailItem('Programme', r.program_preference)}
+        ${(() => {
+          let firstPref = '—';
+          try {
+            const ps = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
+            if (ps && ps[0]) firstPref = typeof ps[0] === 'object' ? ps[0].course : ps[0];
+          } catch(e) {}
+          return detailItem('Primary Course', r.course_preference || firstPref);
+        })()}
+        ${detailItem('Programme', r.program_preference || '—')}
 
         ${detailHeader('Preference List (Preferential Order)')}
         <div class="detail-item" style="grid-column: 1/-1; padding: 10px; background: rgba(59, 130, 246, 0.03); border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 5px;">

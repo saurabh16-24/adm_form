@@ -1265,29 +1265,40 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
     // 1st Preference = 8 points, 2nd = 7 points, ..., 8th = 1 point
     // Fallback: If no preference array exists, use program_preference or course_preference as 1st choice (8 points)
-    // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
+    // Advanced Stats: Course Demand (Weighted Preferential Ranking)
+    // 1st Preference = 8 pts, 2nd = 7 pts, ..., 8th = 1 pt
     const appCourse = await pool.query(
-      `SELECT 
-         COALESCE(
-           program_preference, 
-           course_preference, 
+      `SELECT course, SUM(score) as count FROM (
+         -- 1. Preferences from JSON list (weighted 1-8)
+         SELECT 
            CASE 
-             WHEN jsonb_typeof(course_preferences->0) = 'object' THEN course_preferences->0->>'course'
-             ELSE course_preferences->>0
+             WHEN jsonb_typeof(p.pref) = 'object' THEN p.pref->>'course'
+             ELSE p.pref#>>'{}'
+           END as course,
+           (9 - p.ord) as score
+         FROM admissions a
+         CROSS JOIN LATERAL jsonb_array_elements(
+           CASE 
+             WHEN jsonb_typeof(a.course_preferences) = 'array' AND jsonb_array_length(a.course_preferences) > 0 
+             THEN a.course_preferences 
+             ELSE '[]'::jsonb 
            END
-         ) as course,
-         COUNT(*) * 8 as count
-       FROM admissions
-       ${admWhere}
-       GROUP BY 1
-       HAVING COALESCE(
-         program_preference, 
-         course_preference, 
-         CASE 
-           WHEN jsonb_typeof(course_preferences->0) = 'object' THEN course_preferences->0->>'course'
-           ELSE course_preferences->>0
-         END
-       ) IS NOT NULL
+         ) WITH ORDINALITY as p(pref, ord)
+         ${admWhere}
+         
+         UNION ALL
+         
+         -- 2. Fallback for legacy records (8 pts)
+         SELECT 
+           COALESCE(program_preference, course_preference) as course,
+           8 as score
+         FROM admissions
+         ${admWhere}
+         AND (course_preferences IS NULL OR jsonb_typeof(course_preferences) != 'array' OR jsonb_array_length(course_preferences) = 0)
+         AND (program_preference IS NOT NULL OR course_preference IS NOT NULL)
+       ) as t
+       WHERE course IS NOT NULL AND course != ''
+       GROUP BY course
        ORDER BY count DESC`,
       admParams
     );
