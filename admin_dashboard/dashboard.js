@@ -707,12 +707,12 @@ function renderCharts(graphs, stats) {
       let target = s.reference; // fallback
       
       // Grouping logic
-      if (ref.includes('family') || ref.includes('relative') || ref.includes('friend')) {
+      if (ref.includes('family') || ref.includes('relative') || ref.includes('friend') || ref.includes('yuvaraj') || ref.includes('crpf')) {
         target = 'Family & Friends';
       } else if (ref === 'direct') {
         target = 'Direct';
-      } else if (ref.includes('student') || ref.includes('passed') || ref.includes(' Reddy') || ref.includes('yuvaraj') || ref.includes('crpf')) {
-        // Grouping specific names/terms into 'Student / Referral'
+      } else if (ref.includes('student') || ref.includes('passed') || ref.includes(' reddy') || ref.includes('divaya') || ref.includes('varshini')) {
+        // Grouping specific names/terms into 'Student Referral'
         target = 'Student Referral';
       } else if (ref === 'online' || ref === 'website') {
         target = 'Online';
