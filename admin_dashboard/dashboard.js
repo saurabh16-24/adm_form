@@ -1623,20 +1623,38 @@ async function viewAdmission(id) {
         })()}
         ${detailItem('Programme', r.program_preference || '—')}
 
-        ${detailHeader('Preference List (Preferential Order)')}
-        <div class="detail-item" style="grid-column: 1/-1; padding: 10px; background: rgba(59, 130, 246, 0.03); border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 5px;">
+        ${detailHeader('Course Preferences & Fees')}
+        <div class="detail-item" style="grid-column: 1/-1; margin-top: 5px;">
           ${(() => {
-            let prefs = [];
+            let prefsArray = [];
             try {
-              prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
-            } catch(e) { prefs = []; }
-            if (!prefs || !Array.isArray(prefs) || prefs.length === 0) return '<div style="color:#64748b; font-style:italic; font-size:0.85rem;">No preferences selected</div>';
-            return prefs.map((p, i) => `
-              <div style="display:flex; align-items:center; gap:12px; padding:6px 0; border-bottom: ${i === prefs.length - 1 ? 'none' : '1px solid #f1f5f9'};">
-                <span style="font-weight:800; color:var(--primary); font-size:0.8rem; min-width:22px; background: #eff6ff; height:22px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid #bfdbfe;">${i + 1}</span>
-                <span style="font-weight:600; color:#1e293b; font-size:0.9rem;">${typeof p === 'object' ? p.course : p}</span>
-              </div>
-            `).join('');
+              prefsArray = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences || '[]') : (r.course_preferences || []);
+            } catch(e) { prefsArray = []; }
+            
+            if (!Array.isArray(prefsArray) || prefsArray.length === 0) {
+              return '<div style="color:#64748b; font-style:italic;">No preferences selected</div>';
+            }
+
+            return `
+              <table style="width:100%; border-collapse: collapse; font-size: 0.85rem; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">
+                <thead>
+                  <tr style="background: #f8fafc; text-align: left;">
+                    <th style="padding: 8px 12px; border: 1px solid #e2e8f0; width: 40px;">#</th>
+                    <th style="padding: 8px 12px; border: 1px solid #e2e8f0;">Course</th>
+                    <th style="padding: 8px 12px; border: 1px solid #e2e8f0; width: 100px;">Fee</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${prefsArray.map((p, i) => `
+                    <tr>
+                      <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 600; color: #64748b;">${i+1}</td>
+                      <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 500; color: #1e293b;">${typeof p === 'object' ? p.course : p}</td>
+                      <td style="padding: 8px 12px; border: 1px solid #e2e8f0; font-weight: 600; color: #0f172a;">${typeof p === 'object' && p.fee ? '₹' + p.fee : '—'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
           })()}
         </div>
 
