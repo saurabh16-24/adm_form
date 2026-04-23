@@ -1107,32 +1107,38 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/stats', adminAuth, async (req, res) => {
   try {
     const year = req.query.year; // e.g. "2026-27"
-    let yearFilterEnq = '';
-    let yearFilterAdm = '';
-    let yearFilterMgt = '';
-    const params = [];
+    
+    // Build WHERE clauses and params for each table type
+    let enqWhere = ' WHERE 1=1';
+    let admWhere = ' WHERE 1=1';
+    let mgtWhere = ' WHERE 1=1';
+    const enqParams = [];
+    const admParams = [];
+    const mgtParams = [];
 
     if (year) {
       const startYear = year.split('-')[0];
-      // For enquiries and admissions, filter by calendar year (Jan switch)
-      yearFilterEnq = ' WHERE EXTRACT(YEAR FROM enquiry_date)::TEXT = $1';
-      yearFilterAdm = ' WHERE EXTRACT(YEAR FROM application_date)::TEXT = $1';
-      // For management, check session string OR the calendar year of form_date
-      yearFilterMgt = ' WHERE (academic_year = $1 OR (academic_year IS NULL AND EXTRACT(YEAR FROM form_date::DATE)::TEXT = $2))'; 
-      params.push(startYear);
+      enqWhere += ` AND EXTRACT(YEAR FROM enquiry_date) = $${enqParams.length + 1}`;
+      enqParams.push(parseInt(startYear));
+      
+      admWhere += ` AND EXTRACT(YEAR FROM application_date) = $${admParams.length + 1}`;
+      admParams.push(parseInt(startYear));
+      
+      mgtWhere += ` AND academic_year = $${mgtParams.length + 1}`;
+      mgtParams.push(year); // e.g. "2026-27"
     }
 
     const today = new Date().toISOString().split('T')[0];
-    const totalEnq  = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${yearFilterEnq}`, params);
-    const totalAdm  = await pool.query(`SELECT COUNT(*) AS c FROM admissions${yearFilterAdm}`, params);
     
-    // Management stats
-    const mgtQueryParams = year ? [year, year.split('-')[0]] : [];
-    const totalMgt  = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${yearFilterMgt}`, mgtQueryParams);
+    // Counts
+    const totalEnq = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${enqWhere}`, enqParams);
+    const totalAdm = await pool.query(`SELECT COUNT(*) AS c FROM admissions${admWhere}`, admParams);
+    const totalMgt = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${mgtWhere}`, mgtParams);
     
-    const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
-    const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
+    const todayEnq = await pool.query('SELECT COUNT(*) AS c FROM enquiries WHERE enquiry_date = $1', [today]);
+    const todayAdm = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
     
+    // Recent records (always show latest, not filtered)
     const recentEnq = await pool.query(`
       SELECT e.*, 
         EXISTS(SELECT 1 FROM admissions a WHERE a.enquiry_id = e.id) as has_application,
@@ -1147,15 +1153,29 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       ORDER BY a.id DESC LIMIT 5
     `);
 
-    // Graph Stats with Year Filtering (Robust INT casting)
-    const enqPincodes = await pool.query(`SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries${yearFilterEnq} AND address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10`, params.map(p => p.toString()));
-    const appPincodes = await pool.query(`SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions${yearFilterAdm} AND comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10`, params.map(p => p.toString()));
+    // Graph: Enquiry pincodes
+    const enqPincodes = await pool.query(
+      `SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries${enqWhere} AND address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10`,
+      enqParams
+    );
     
-    // Management Pincodes (using Admissions table joined with Management Forms)
-    const mgtFilter = yearFilterMgt.replace(/academic_year/g, 'm.academic_year').replace(/form_date/g, 'm.form_date');
-    const mgtPincodes = await pool.query(`SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${mgtFilter} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`, mgtQueryParams);
+    // Graph: Application (admissions table) pincodes
+    const appPincodes = await pool.query(
+      `SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions${admWhere} AND comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10`,
+      admParams
+    );
     
-    const admGender = await pool.query(`SELECT gender, COUNT(*) as count FROM admissions${yearFilterAdm} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`, params.map(p => p.toString()));
+    // Graph: Management pincodes (join with admissions for address)
+    const mgtPincodes = await pool.query(
+      `SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND m.academic_year = $1' : ''} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`,
+      mgtParams
+    );
+    
+    // Graph: Gender distribution (from admissions)
+    const admGender = await pool.query(
+      `SELECT gender, COUNT(*) as count FROM admissions${admWhere} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`,
+      admParams
+    );
 
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
@@ -1166,14 +1186,14 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       recent_enquiries:  recentEnq.rows,
       recent_admissions: recentAdm.rows,
       graphs: {
-        enquiry_pincodes: enqPincodes.rows,
+        enquiry_pincodes:     enqPincodes.rows,
         application_pincodes: appPincodes.rows,
-        admission_pincodes: mgtPincodes.rows,
-        admission_gender: admGender.rows
+        admission_pincodes:   mgtPincodes.rows,
+        admission_gender:     admGender.rows
       }
     });
 
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { console.error('Stats error:', err); res.status(500).json({ error: err.message }); }
 });
 
 // All enquiries
