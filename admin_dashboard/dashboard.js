@@ -649,7 +649,6 @@ function renderCharts(graphs, stats) {
         }
       });
     }
-    }
   }
 
   // 4. Timeline Chart (Line Chart)
