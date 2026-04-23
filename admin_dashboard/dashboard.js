@@ -775,7 +775,7 @@ function renderCharts(graphs, stats) {
     });
   }
 
-  // 7. Course Demand Chart (Bar)
+  // 7. Course Demand Chart (Horizontal Bar - Modern 3D Style)
   const courseCtx = document.getElementById('courseChart');
   if (courseCtx) {
     if (courseChartInstance) courseChartInstance.destroy();
@@ -788,19 +788,55 @@ function renderCharts(graphs, stats) {
       data: {
         labels: cData.map(c => c.course),
         datasets: [{
-          label: courseType === 'application' ? 'Applications' : 'Admissions',
+          label: courseType === 'application' ? 'Weighted Demand' : 'Confirmed Admissions',
           data: cData.map(c => c.count),
-          backgroundColor: courseType === 'application' ? 'rgba(14, 165, 233, 0.8)' : 'rgba(16, 185, 129, 0.8)',
-          borderRadius: 6,
-          barPercentage: 0.6
+          backgroundColor: createChartGradient(courseCtx, 
+            courseType === 'application' ? 'rgba(14, 165, 233, 0.95)' : 'rgba(16, 185, 129, 0.95)', 
+            courseType === 'application' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(52, 211, 153, 0.3)'
+          ),
+          borderColor: courseType === 'application' ? '#0ea5e9' : '#10b981',
+          borderWidth: 1.5,
+          borderRadius: { topRight: 12, bottomRight: 12, topLeft: 4, bottomLeft: 4 },
+          barPercentage: 0.7,
+          categoryPercentage: 0.8
         }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        indexAxis: 'y', // Horizontal bars for long labels
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 12,
+            cornerRadius: 10,
+            titleFont: { size: 12, weight: 'bold' },
+            bodyFont: { size: 12 },
+            displayColors: false,
+            callbacks: {
+              label: (ctx) => ` Total Score: ${ctx.parsed.x}`
+            }
+          }
+        },
         scales: {
-          y: { beginAtZero: true, grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] }, ticks: { precision: 0 } },
-          x: { grid: { display: false }, ticks: { font: { weight: '600', size: 10 }, maxRotation: 45, minRotation: 45 } }
+          x: { 
+            beginAtZero: true, 
+            grid: { color: 'rgba(226, 232, 240, 0.6)', borderDash: [5, 5], drawBorder: false },
+            ticks: { font: { size: 10, weight: '600' }, color: '#64748b' }
+          },
+          y: { 
+            grid: { display: false },
+            ticks: { 
+              font: { weight: '700', size: 11, family: "'Inter', sans-serif" },
+              color: '#334155',
+              padding: 10
+            }
+          }
+        },
+        animation: {
+          duration: 2000,
+          easing: 'easeOutQuart'
         }
       }
     });
