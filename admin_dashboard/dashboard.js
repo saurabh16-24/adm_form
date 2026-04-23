@@ -614,8 +614,8 @@ function renderCharts(graphs, stats) {
 }
 
 // Helper for 3D-like gradients
-function createChartGradient(ctx, color1, color2) {
-  const canvas = ctx.canvas;
+function createChartGradient(canvas, color1, color2) {
+  if (!canvas) return color1;
   const chartCtx = canvas.getContext('2d');
   const gradient = chartCtx.createLinearGradient(0, 0, 0, 400);
   gradient.addColorStop(0, color1);
