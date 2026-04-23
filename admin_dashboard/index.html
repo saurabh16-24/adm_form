@@ -230,16 +230,9 @@
           </div>
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Session:</span>
-              <select id="chart-session" onchange="loadOverview()" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 120px;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Academic Session:</span>
+              <select id="chart-session" onchange="loadOverview()" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 140px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <!-- Dynamic options -->
-              </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Data Type:</span>
-              <select id="chart-data-type" onchange="renderCharts(lastGraphs)" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 150px;">
-                <option value="admission">Admission Data</option>
-                <option value="enquiry">Enquiry Data</option>
               </select>
             </div>
           </div>
@@ -262,22 +255,36 @@
             </div>
           </div>
           <div class="card chart-card" style="padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8);">
-            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; align-items: center;">
-              <div style="background: rgba(59, 130, 246, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
-                <span class="material-icons-round" style="color: #3b82f6; font-size: 20px;">pie_chart</span>
+            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center;">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
+                  <span class="material-icons-round" style="color: #3b82f6; font-size: 20px;">pie_chart</span>
+                </div>
+                <h3 style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin: 0;">Area / Pincode Distribution</h3>
               </div>
-              <h3 style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin: 0;">Area / Pincode Distribution</h3>
+              <select id="pincode-data-type" onchange="renderCharts(lastGraphs)" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-weight: 600; background: #f8fafc;">
+                <option value="enquiry">Enquiry</option>
+                <option value="application">Application</option>
+                <option value="admission">Admission</option>
+              </select>
             </div>
             <div style="position: relative; height: 260px; width: 100%;">
               <canvas id="pincodeChart"></canvas>
             </div>
           </div>
           <div class="card chart-card" style="padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8);">
-            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; align-items: center;">
-              <div style="background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
-                <span class="material-icons-round" style="color: #6366f1; font-size: 20px;">people</span>
+            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center;">
+                <div style="background: rgba(99, 102, 241, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
+                  <span class="material-icons-round" style="color: #6366f1; font-size: 20px;">people</span>
+                </div>
+                <h3 style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin: 0;">Gender Distribution</h3>
               </div>
-              <h3 style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin: 0;">Gender Distribution</h3>
+              <select id="gender-data-type" onchange="renderCharts(lastGraphs)" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; font-size: 0.75rem; font-weight: 600; background: #f8fafc;">
+                <option value="enquiry">Enquiry</option>
+                <option value="application" selected>Application</option>
+                <option value="admission">Admission</option>
+              </select>
             </div>
             <div style="position: relative; height: 260px; width: 100%;">
               <canvas id="genderChart"></canvas>

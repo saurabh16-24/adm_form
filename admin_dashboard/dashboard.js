@@ -470,10 +470,7 @@ function renderCharts(graphs, stats) {
   Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
   Chart.defaults.color = '#64748b';
 
-  const typeToggle = document.getElementById('chart-data-type');
-  const type = typeToggle ? typeToggle.value : 'admission';
-
-  // 1. Ratio Chart (Comparison)
+  // 1. Ratio Chart (Conversion) - Modern Area Chart
   const ratioCtx = document.getElementById('ratioChart');
   if (ratioCtx && stats) {
     if (ratioChartInstance) ratioChartInstance.destroy();
@@ -496,20 +493,23 @@ function renderCharts(graphs, stats) {
     }
 
     ratioChartInstance = new Chart(ratioCtx, {
-      type: 'bar',
+      type: 'line',
       data: {
-        labels: ['Enquiries', 'Applications', 'Provisional Admissions'],
+        labels: ['Phase 1: Enquiries', 'Phase 2: Applications', 'Phase 3: Provisional Admissions'],
         datasets: [{
-          label: 'Count',
+          label: 'Student Count',
           data: [enqCount, admCount, mgtCount],
-          backgroundColor: [
-            createChartGradient(ratioCtx, '#3b82f6', '#2563eb'),
-            createChartGradient(ratioCtx, '#10b981', '#059669'),
-            createChartGradient(ratioCtx, '#8b5cf6', '#7c3aed')
-          ],
-          borderRadius: 12,
-          borderWidth: 0,
-          barThickness: 60,
+          borderColor: '#3b82f6',
+          borderWidth: 4,
+          backgroundColor: createChartGradient(ratioCtx, 'rgba(59, 130, 246, 0.4)', 'rgba(59, 130, 246, 0)'),
+          fill: true,
+          tension: 0.4, // Smooth curve
+          pointBackgroundColor: '#ffffff',
+          pointBorderColor: '#3b82f6',
+          pointBorderWidth: 3,
+          pointRadius: 6,
+          pointHoverRadius: 9,
+          pointHoverBorderWidth: 4
         }]
       },
       options: {
@@ -519,25 +519,36 @@ function renderCharts(graphs, stats) {
           legend: { display: false },
           tooltip: {
             backgroundColor: '#1e293b',
-            padding: 12,
-            cornerRadius: 10,
+            padding: 15,
+            cornerRadius: 12,
+            titleFont: { size: 14, weight: 'bold' },
+            bodyFont: { size: 14 },
             displayColors: false,
             callbacks: {
-              label: (ctx) => ` Total: ${ctx.parsed.y} records`
+              label: (ctx) => ` Total Count: ${ctx.parsed.y}`
             }
           }
         },
         scales: {
-          y: { beginAtZero: true, grid: { display: true, color: '#f1f5f9', drawBorder: false } },
+          y: { 
+            beginAtZero: true, 
+            grid: { display: true, color: '#f1f5f9', drawBorder: false },
+            ticks: { stepSize: 5 }
+          },
           x: { grid: { display: false } }
         }
       }
     });
   }
 
-  // 2. Pincode Chart
+  // 2. Pincode Chart (Individual Filter)
   const pinCtx = document.getElementById('pincodeChart');
-  const pinDataRaw = type === 'enquiry' ? graphs.enquiry_pincodes : graphs.admission_pincodes;
+  const pinType = document.getElementById('pincode-data-type')?.value || 'enquiry';
+  let pinDataRaw = [];
+  
+  if (pinType === 'enquiry') pinDataRaw = graphs.enquiry_pincodes || [];
+  else if (pinType === 'application') pinDataRaw = graphs.application_pincodes || [];
+  else pinDataRaw = graphs.admission_pincodes || [];
   
   if (pinCtx && pinDataRaw) {
     if (pincodeChartInstance) pincodeChartInstance.destroy();
@@ -576,42 +587,52 @@ function renderCharts(graphs, stats) {
     });
   }
 
-  // 3. Gender Chart
+  // 3. Gender Chart (Individual Filter)
   const genCtx = document.getElementById('genderChart');
-  // Note: Gender is mostly collected in Admissions
-  if (genCtx && graphs.admission_gender) {
+  const genType = document.getElementById('gender-data-type')?.value || 'application';
+  
+  if (genCtx) {
     if (genderChartInstance) genderChartInstance.destroy();
-    const labels = graphs.admission_gender.map(g => g.gender || 'Not Specified');
-    const data = graphs.admission_gender.map(g => g.count);
-    genderChartInstance = new Chart(genCtx, {
-      type: 'doughnut',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: data,
-          backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'],
-          borderWidth: 4,
-          borderColor: '#ffffff',
-          hoverOffset: 15,
-          spacing: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '70%',
-        plugins: {
-          legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
-          tooltip: {
-            backgroundColor: '#1e293b',
-            padding: 12,
-            cornerRadius: 10
+    // For now, Gender is primarily tracked in Applications/Admissions
+    const genData = (genType === 'enquiry') ? [] : (graphs.admission_gender || []);
+    
+    if (genData.length === 0 && genType === 'enquiry') {
+      // Show empty state for enquiry gender
+      genderChartInstance = new Chart(genCtx, {
+        type: 'doughnut',
+        data: { labels: ['No Gender Data for Enquiries'], datasets: [{ data: [1], backgroundColor: ['#f1f5f9'] }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+      });
+    } else {
+      const labels = genData.map(g => g.gender || 'Not Specified');
+      const data = genData.map(g => g.count);
+      genderChartInstance = new Chart(genCtx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'],
+            borderWidth: 4,
+            borderColor: '#ffffff',
+            hoverOffset: 15,
+            spacing: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '70%',
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
+            tooltip: { backgroundColor: '#1e293b', padding: 12, cornerRadius: 10 }
           }
         }
-      }
-    });
+      });
+    }
   }
 }
+
 
 // Helper for 3D-like gradients
 function createChartGradient(canvas, color1, color2) {
