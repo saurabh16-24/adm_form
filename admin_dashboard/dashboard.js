@@ -73,17 +73,21 @@ function showDashboard() {
 
   const role = sessionStorage.getItem('admin_role');
   const navMgmt = document.getElementById('nav-management');
+  const navOverview = document.getElementById('nav-overview');
   const panelTitle = document.getElementById('panel-title-role');
   
   if (role === 'counsellor') {
     if (navMgmt) navMgmt.style.display = 'none';
+    if (navOverview) navOverview.style.display = 'none';
     if (panelTitle) panelTitle.textContent = 'Counsellor Panel';
+    switchTab('enquiries');
   } else {
     if (navMgmt) navMgmt.style.display = 'flex';
+    if (navOverview) navOverview.style.display = 'flex';
     if (panelTitle) panelTitle.textContent = 'Admin Panel';
+    switchTab('overview');
   }
 
-  loadOverview();
   updateClock();
   setInterval(updateClock, 1000);
   updateLastRefreshInfo();
@@ -135,10 +139,20 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 function switchTab(tab) {
+  const role = sessionStorage.getItem('admin_role');
+  // Restriction: Counsellors cannot access Overview
+  if (role === 'counsellor' && tab === 'overview') {
+    switchTab('enquiries');
+    return;
+  }
+
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  const activeNav = document.querySelector(`[data-tab="${tab}"]`);
+  if (activeNav) activeNav.classList.add('active');
+  
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.getElementById(`tab-${tab}`).classList.add('active');
+  const activeTab = document.getElementById(`tab-${tab}`);
+  if (activeTab) activeTab.classList.add('active');
 
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
