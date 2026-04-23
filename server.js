@@ -12,6 +12,18 @@ const generateAdmissionPdf = require('./generateAdmissionPdf');
 const generateReceiptPdf = require('./generateReceiptPdf');
 const Jimp = require('jimp');  // v0.22 — stable compositing API
 
+// ── Timezone Helper (IST) ─────────────────────────────────────────────────────
+function getISTDate() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() + 330);
+  return d;
+}
+
+function getISTDateString() {
+  return getISTDate().toISOString().split('T')[0];
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // ── Email Transporter Shared Configuration ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
@@ -238,7 +250,7 @@ initDB();
 // Endpoint to get next token number for today (preview only – final is assigned at submit)
 app.get('/api/next-token', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getISTDateString();
     const result = await pool.query(
       "SELECT COALESCE(MAX(sequence_number), 0) AS max_seq FROM enquiries WHERE enquiry_date = $1",
       [today]
@@ -275,7 +287,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
   try {
     await client.query('BEGIN');
     const d = req.body;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getISTDateString();
 
     // ── Atomically assign token number (advisory lock prevents duplicates) ──
     await client.query('SELECT pg_advisory_xact_lock(1001)'); // lock id 1001 = enquiry tokens
@@ -285,7 +297,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
       [today]
     );
     const seq = parseInt(seqResult.rows[0].max_seq, 10) + 1;
-    const dt = new Date();
+    const dt = getISTDate();
     const dd  = String(dt.getDate()).padStart(2, '0');
     const mm  = String(dt.getMonth() + 1).padStart(2, '0');
     const yy  = dt.getFullYear();
@@ -751,7 +763,7 @@ app.get('/api/enquiry/:id', async (req, res) => {
 // GET next application number for today (preview)
 app.get('/api/admissions/next-token', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getISTDateString();
     const result = await pool.query(
       'SELECT COALESCE(MAX(sequence_number), 0) AS max_seq FROM admissions WHERE application_date = $1', [today]
     );
@@ -809,7 +821,7 @@ app.post('/api/admissions/submit', (req, res) => {
     }
     try {
       const v = req.body;
-      const today = new Date().toISOString().split('T')[0];
+      const today = getISTDateString();
 
       // ── Atomically assign sequence number (advisory lock prevents duplicates) ──
       const adm_client = await pool.connect();
@@ -823,7 +835,7 @@ app.post('/api/admissions/submit', (req, res) => {
         const adm_seq = parseInt(seqRes.rows[0].max_seq, 10) + 1;
         await adm_client.query('COMMIT');
         adm_client.release();
-        const dt = new Date();
+        const dt = getISTDate();
         const ddd = String(dt.getDate()).padStart(2, '0');
         const mmm = String(dt.getMonth() + 1).padStart(2, '0');
         const yyy = dt.getFullYear();
@@ -1191,8 +1203,9 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       mgtParams.push(year, shortYear); // e.g. "2026-27" and "26-27"
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getISTDateString();
     
+
     // Counts
     const totalEnq = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${enqWhere}`, enqParams);
     const totalAdm = await pool.query(`SELECT COUNT(*) AS c FROM admissions${admWhere}`, admParams);
