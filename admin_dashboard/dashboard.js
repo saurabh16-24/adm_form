@@ -209,8 +209,8 @@ function initStatsYearDropdown() {
   // Switch default session as calendar year changes (January)
   const activeYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
 
-  // Populate options from 2026-27 up to currentYear + 3 (providing a wider range for future years)
-  const endYear = Math.max(startYear, currentYear) + 3;
+  // Populate options from 2026-27 up to currentYear + 10 (fully future-proof)
+  const endYear = Math.max(startYear, currentYear) + 10;
   for (let y = startYear; y <= endYear; y++) {
     const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
     const opt = new Option(yearStr, yearStr);
