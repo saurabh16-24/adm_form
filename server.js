@@ -1106,12 +1106,34 @@ app.post('/api/admin/login', (req, res) => {
 // Stats
 app.get('/api/admin/stats', adminAuth, async (req, res) => {
   try {
+    const year = req.query.year; // e.g. "2026-27"
+    let yearFilterEnq = '';
+    let yearFilterAdm = '';
+    let yearFilterMgt = '';
+    const params = [];
+
+    if (year) {
+      const startYear = year.split('-')[0];
+      // For enquiries, we use the year of the date (matching the Jan switch logic)
+      yearFilterEnq = ' WHERE EXTRACT(YEAR FROM enquiry_date) = $1';
+      // For admissions, we'll check if academic_year column exists or just use date if not
+      // Actually, let's check academic_year for management and admissions if we add it
+      yearFilterAdm = ' WHERE EXTRACT(YEAR FROM application_date) = $1';
+      yearFilterMgt = ' WHERE academic_year = $1'; 
+      params.push(startYear);
+    }
+
     const today = new Date().toISOString().split('T')[0];
-    const totalEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries');
-    const totalAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions');
-    const totalMgt  = await pool.query('SELECT COUNT(*) AS c FROM management_forms');
+    const totalEnq  = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${yearFilterEnq}`, params);
+    const totalAdm  = await pool.query(`SELECT COUNT(*) AS c FROM admissions${yearFilterAdm}`, params);
+    
+    // Management stats usually use the session string "2026-27"
+    const mgtParams = year ? [year] : [];
+    const totalMgt  = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${yearFilterMgt}`, mgtParams);
+    
     const todayEnq  = await pool.query('SELECT COUNT(*) AS c FROM enquiries  WHERE enquiry_date = $1', [today]);
     const todayAdm  = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
+    
     const recentEnq = await pool.query(`
       SELECT e.*, 
         EXISTS(SELECT 1 FROM admissions a WHERE a.enquiry_id = e.id) as has_application,
@@ -1126,10 +1148,10 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       ORDER BY a.id DESC LIMIT 5
     `);
 
-    // Graph Stats
-    const enqPincodes = await pool.query("SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries WHERE address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10");
-    const admPincodes = await pool.query("SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions WHERE comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10");
-    const admGender = await pool.query("SELECT gender, COUNT(*) as count FROM admissions WHERE gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC");
+    // Graph Stats with Year Filtering
+    const enqPincodes = await pool.query(`SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries${yearFilterEnq} AND address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10`, params);
+    const admPincodes = await pool.query(`SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions${yearFilterAdm} AND comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10`, params);
+    const admGender = await pool.query(`SELECT gender, COUNT(*) as count FROM admissions${yearFilterAdm} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`, params);
 
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),

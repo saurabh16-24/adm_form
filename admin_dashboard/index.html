@@ -221,8 +221,46 @@
         </div>
 
         <!-- Charts Section -->
+        <div class="card" style="margin-bottom: 24px; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
+              <span class="material-icons-round" style="font-size: 20px;">insights</span>
+            </div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Analytics Overview</h3>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Session:</span>
+              <select id="chart-session" onchange="loadOverview()" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 120px;">
+                <!-- Dynamic options -->
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Data Type:</span>
+              <select id="chart-data-type" onchange="renderCharts(lastGraphs)" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 150px;">
+                <option value="admission">Admission Data</option>
+                <option value="enquiry">Enquiry Data</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 30px;">
+          <!-- Comparison Chart (Ratio) -->
+          <div class="card chart-card" style="padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border: 1px solid rgba(226, 232, 240, 0.8); grid-column: 1 / -1;">
+            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center;">
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
+                  <span class="material-icons-round" style="color: #10b981; font-size: 20px;">assessment</span>
+                </div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Conversion Ratio (Enquiry vs Application vs Admission)</h3>
+              </div>
+              <div id="conversion-stats" style="font-size: 0.85rem; font-weight: 600; color: #64748b;"></div>
+            </div>
+            <div style="position: relative; height: 320px; width: 100%;">
+              <canvas id="ratioChart"></canvas>
+            </div>
+          </div>
           <div class="card chart-card" style="padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8);">
             <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; align-items: center;">
               <div style="background: rgba(59, 130, 246, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">

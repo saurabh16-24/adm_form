@@ -6,6 +6,10 @@ const API = window.location.origin; // same origin
 let allEnquiries  = [];
 let allAdmissions = [];
 let allManagement = [];
+let lastGraphs     = null;
+let pincodeChartInstance = null;
+let genderChartInstance = null;
+let ratioChartInstance   = null;
 
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -170,20 +174,27 @@ let genderChartInstance = null;
 
 async function loadOverview() {
   try {
-    const stats = await apiFetch('/api/admin/stats');
+    const sessionSelect = document.getElementById('chart-session');
+    if (sessionSelect && sessionSelect.options.length === 0) {
+      initChartSessionDropdown();
+    }
+    const selectedYear = sessionSelect ? sessionSelect.value : '';
+
+    const stats = await apiFetch(`/api/admin/stats${selectedYear ? '?year=' + selectedYear : ''}`);
+    
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
-    // Update a placeholder if it exists or just keep code clean
+    
     if (document.getElementById('stat-management')) {
       document.getElementById('stat-management').textContent = stats.total_management || 0;
     }
     document.getElementById('stat-today-enq').textContent    = stats.today_enquiries    || 0;
-
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
 
     // Render Charts
     if (stats.graphs) {
-      renderCharts(stats.graphs);
+      lastGraphs = stats.graphs;
+      renderCharts(stats.graphs, stats);
     }
 
     // Recent tables
@@ -197,6 +208,27 @@ async function loadOverview() {
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
+
+function initChartSessionDropdown() {
+  const select = document.getElementById('chart-session');
+  if (!select) return;
+  const startYear = 2026;
+  const currentYear = new Date().getFullYear();
+  const endYear = currentYear + 3;
+  
+  // Add "All Sessions" option
+  const allOpt = new Option("All Sessions", "");
+  select.add(allOpt);
+
+  for (let y = startYear; y <= endYear; y++) {
+    const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
+    const opt = new Option(yearStr, yearStr);
+    // Auto-select current based on Jan switch logic
+    if (yearStr === `${currentYear}-${(currentYear+1).toString().slice(-2)}`) opt.selected = true;
+    select.add(opt);
+  }
+}
+
 
 function initStatsYearDropdown() {
   const select = document.getElementById('stats-academic-year');
@@ -435,16 +467,85 @@ function saveAdmittedStats() {
 }
 
 
-function renderCharts(graphs) {
+function renderCharts(graphs, stats) {
+  if (!graphs) return;
   Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
   Chart.defaults.color = '#64748b';
 
-  // Pincode Chart
+  const typeToggle = document.getElementById('chart-data-type');
+  const type = typeToggle ? typeToggle.value : 'admission';
+
+  // 1. Ratio Chart (Comparison)
+  const ratioCtx = document.getElementById('ratioChart');
+  if (ratioCtx && stats) {
+    if (ratioChartInstance) ratioChartInstance.destroy();
+    
+    const enqCount = stats.total_enquiries || 0;
+    const admCount = stats.total_admissions || 0;
+    const mgtCount = stats.total_management || 0;
+    
+    // Percentage stats
+    const convRate = enqCount > 0 ? ((admCount / enqCount) * 100).toFixed(1) : 0;
+    const mgtRate = admCount > 0 ? ((mgtCount / admCount) * 100).toFixed(1) : 0;
+    
+    const statsEl = document.getElementById('conversion-stats');
+    if (statsEl) {
+      statsEl.innerHTML = `
+        <span style="color:#3b82f6">Enq → App: <b>${convRate}%</b></span>
+        <span style="margin:0 10px; color:#e2e8f0">|</span>
+        <span style="color:#10b981">App → Mgt: <b>${mgtRate}%</b></span>
+      `;
+    }
+
+    ratioChartInstance = new Chart(ratioCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Enquiries', 'Applications', 'Provisional Admissions'],
+        datasets: [{
+          label: 'Count',
+          data: [enqCount, admCount, mgtCount],
+          backgroundColor: [
+            createChartGradient(ratioCtx, '#3b82f6', '#2563eb'),
+            createChartGradient(ratioCtx, '#10b981', '#059669'),
+            createChartGradient(ratioCtx, '#8b5cf6', '#7c3aed')
+          ],
+          borderRadius: 12,
+          borderWidth: 0,
+          barThickness: 60,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            padding: 12,
+            cornerRadius: 10,
+            displayColors: false,
+            callbacks: {
+              label: (ctx) => ` Total: ${ctx.parsed.y} records`
+            }
+          }
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { display: true, color: '#f1f5f9', drawBorder: false } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  // 2. Pincode Chart
   const pinCtx = document.getElementById('pincodeChart');
-  if (pinCtx && graphs.admission_pincodes) {
+  const pinDataRaw = type === 'enquiry' ? graphs.enquiry_pincodes : graphs.admission_pincodes;
+  
+  if (pinCtx && pinDataRaw) {
     if (pincodeChartInstance) pincodeChartInstance.destroy();
-    const labels = graphs.admission_pincodes.map(p => p.pincode || 'Unknown');
-    const data = graphs.admission_pincodes.map(p => p.count);
+    const labels = pinDataRaw.map(p => p.pincode || 'Unknown');
+    const data = pinDataRaw.map(p => p.count);
+    
     pincodeChartInstance = new Chart(pinCtx, {
       type: 'doughnut',
       data: {
@@ -455,31 +556,31 @@ function renderCharts(graphs) {
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
             '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#94a3b8'
           ],
-          borderWidth: 0,
-          hoverOffset: 6
+          borderWidth: 4,
+          borderColor: '#ffffff',
+          hoverOffset: 15,
+          spacing: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '75%',
+        cutout: '70%',
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 10, padding: 15, font: { size: 12, weight: '500' } } },
+          legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-            titleFont: { size: 13 },
-            bodyFont: { size: 13, weight: 'bold' },
+            backgroundColor: '#1e293b',
             padding: 12,
-            cornerRadius: 8,
-            displayColors: true
+            cornerRadius: 10,
           }
         }
       }
     });
   }
 
-  // Gender Chart
+  // 3. Gender Chart
   const genCtx = document.getElementById('genderChart');
+  // Note: Gender is mostly collected in Admissions
   if (genCtx && graphs.admission_gender) {
     if (genderChartInstance) genderChartInstance.destroy();
     const labels = graphs.admission_gender.map(g => g.gender || 'Not Specified');
@@ -491,29 +592,39 @@ function renderCharts(graphs) {
         datasets: [{
           data: data,
           backgroundColor: ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#94a3b8'],
-          borderWidth: 0,
-          hoverOffset: 6
+          borderWidth: 4,
+          borderColor: '#ffffff',
+          hoverOffset: 15,
+          spacing: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '75%',
+        cutout: '70%',
         plugins: {
-          legend: { position: 'right', labels: { boxWidth: 10, padding: 15, font: { size: 12, weight: '500' } } },
+          legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
           tooltip: {
-            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-            titleFont: { size: 13 },
-            bodyFont: { size: 13, weight: 'bold' },
+            backgroundColor: '#1e293b',
             padding: 12,
-            cornerRadius: 8,
-            displayColors: true
+            cornerRadius: 10
           }
         }
       }
     });
   }
 }
+
+// Helper for 3D-like gradients
+function createChartGradient(ctx, color1, color2) {
+  const canvas = ctx.canvas;
+  const chartCtx = canvas.getContext('2d');
+  const gradient = chartCtx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  return gradient;
+}
+
 
 function renderRecentTable(tbodyId, rows, type) {
   const tbody = document.getElementById(tbodyId);
