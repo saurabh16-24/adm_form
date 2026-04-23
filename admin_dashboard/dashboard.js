@@ -698,13 +698,43 @@ function renderCharts(graphs, stats) {
   const srcCtx = document.getElementById('sourceChart');
   if (srcCtx) {
     if (sourceChartInstance) sourceChartInstance.destroy();
-    const srcData = graphs.lead_sources || [];
+    
+    const rawSrcData = graphs.lead_sources || [];
+    const normalizedMap = {};
+    
+    rawSrcData.forEach(s => {
+      let ref = (s.reference || '').toLowerCase().trim();
+      let target = s.reference; // fallback
+      
+      // Grouping logic
+      if (ref.includes('family') || ref.includes('relative') || ref.includes('friend')) {
+        target = 'Family & Friends';
+      } else if (ref === 'direct') {
+        target = 'Direct';
+      } else if (ref.includes('student') || ref.includes('passed') || ref.includes(' Reddy') || ref.includes('yuvaraj') || ref.includes('crpf')) {
+        // Grouping specific names/terms into 'Student / Referral'
+        target = 'Student Referral';
+      } else if (ref === 'online' || ref === 'website') {
+        target = 'Online';
+      } else if (ref.length > 0) {
+        // Title case for others
+        target = s.reference.charAt(0).toUpperCase() + s.reference.slice(1);
+      } else {
+        target = 'Unknown';
+      }
+      
+      normalizedMap[target] = (normalizedMap[target] || 0) + parseInt(s.count || 0);
+    });
+
+    const srcLabels = Object.keys(normalizedMap);
+    const srcCounts = Object.values(normalizedMap);
+
     sourceChartInstance = new Chart(srcCtx, {
       type: 'doughnut',
       data: {
-        labels: srcData.map(s => s.reference),
+        labels: srcLabels,
         datasets: [{
-          data: srcData.map(s => s.count),
+          data: srcCounts,
           backgroundColor: ['#ec4899', '#8b5cf6', '#14b8a6', '#f59e0b', '#3b82f6', '#10b981', '#6366f1'],
           borderWidth: 3, borderColor: '#ffffff', hoverOffset: 10
         }]
