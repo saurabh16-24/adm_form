@@ -699,6 +699,20 @@ app.get('/api/enquiry/:id', async (req, res) => {
       );
     `);
 
+    // Create table for Admitted Students Statistics manual entries
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS course_manual_stats (
+        id SERIAL PRIMARY KEY,
+        academic_year VARCHAR(20) NOT NULL,
+        course_id VARCHAR(50) NOT NULL,
+        cet_fill INTEGER DEFAULT 0,
+        cet_snq INTEGER DEFAULT 0,
+        comed_fill INTEGER DEFAULT 0,
+        aicte INTEGER DEFAULT 0,
+        UNIQUE(academic_year, course_id)
+      );
+    `);
+
     // Also ensure enquiries has sequence_number + structured address columns
 
     const enquiryAlterCols = [
@@ -1101,6 +1115,53 @@ app.post('/api/admin/login', (req, res) => {
   }
 
   res.status(401).json({ success: false, message: 'Invalid username or password' });
+});
+
+// ══════════ ADMITTED STUDENTS MANUAL STATS ══════════
+app.get('/api/admin/stats/manual', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year;
+    if (!year) return res.json({});
+    const { rows } = await pool.query('SELECT * FROM course_manual_stats WHERE academic_year = $1', [year]);
+    const data = {};
+    rows.forEach(r => {
+      data[r.course_id] = { cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_fill: r.comed_fill, aicte: r.aicte };
+    });
+    res.json(data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
+  try {
+    const { year, data } = req.body;
+    if (!year || !data) return res.status(400).json({ error: 'Missing year or data' });
+    
+    await pool.query('BEGIN');
+    for (const [course_id, stats] of Object.entries(data)) {
+      await pool.query(`
+        INSERT INTO course_manual_stats (academic_year, course_id, cet_fill, cet_snq, comed_fill, aicte)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (academic_year, course_id) DO UPDATE SET
+          cet_fill = EXCLUDED.cet_fill,
+          cet_snq = EXCLUDED.cet_snq,
+          comed_fill = EXCLUDED.comed_fill,
+          aicte = EXCLUDED.aicte
+      `, [year, course_id, stats.cet_fill, stats.cet_snq, stats.comed_fill, stats.aicte]);
+    }
+    
+    // Log activity
+    await pool.query(`
+      INSERT INTO admin_activity_log (admin_name, action, target_type, target_name, details)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [req.user.username, 'update', 'admitted_stats', `Session ${year}`, 'Updated manual admission counts in statistics table']);
+    
+    await pool.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) { 
+    await pool.query('ROLLBACK');
+    console.error('Stats update error:', err);
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 // Stats

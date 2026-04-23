@@ -286,8 +286,11 @@ async function renderAdmittedStats() {
     mgtCounts[b] = (mgtCounts[b] || 0) + 1;
   });
 
-  // Load saved manual data
-  const savedData = JSON.parse(localStorage.getItem(`admitted_stats_manual_${selectedYear}`) || '{}');
+  // Load saved manual data from backend
+  let savedData = {};
+  try {
+    savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`);
+  } catch(e) { console.error('Failed to fetch manual stats', e); }
 
   let totals = {
     cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
@@ -447,7 +450,7 @@ function updateStatsTotals() {
   document.getElementById('tot-actual-pct').textContent = final_pct + '%';
 }
 
-function saveAdmittedStats() {
+async function saveAdmittedStats() {
   const yearSelect = document.getElementById('stats-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
@@ -461,8 +464,17 @@ function saveAdmittedStats() {
       aicte: parseInt(row.querySelector('[data-field="aicte"]').textContent) || 0
     };
   });
-  localStorage.setItem(`admitted_stats_manual_${selectedYear}`, JSON.stringify(data));
-  showToast(`Statistics for ${selectedYear} saved successfully`);
+  
+  try {
+    await apiFetch('/api/admin/stats/manual', {
+      method: 'POST',
+      body: JSON.stringify({ year: selectedYear, data })
+    });
+    showToast(`Statistics for ${selectedYear} saved successfully`);
+  } catch (e) {
+    console.error('Failed to save manual stats', e);
+    alert('Failed to save statistics');
+  }
 }
 
 
