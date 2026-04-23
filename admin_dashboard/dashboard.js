@@ -205,18 +205,12 @@ function initStatsYearDropdown() {
   const startYear = 2026;
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); 
   
-  // Academic year typically starts around June (month 5)
-  let activeYear;
-  if (currentMonth >= 5) { 
-    activeYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
-  } else {
-    activeYear = `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
-  }
+  // Switch default session as calendar year changes (January)
+  const activeYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
 
-  // Populate options from 2026-27 up to currentYear + 1
-  const endYear = Math.max(startYear, currentYear) + 1;
+  // Populate options from 2026-27 up to currentYear + 3 (providing a wider range for future years)
+  const endYear = Math.max(startYear, currentYear) + 3;
   for (let y = startYear; y <= endYear; y++) {
     const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
     const opt = new Option(yearStr, yearStr);
