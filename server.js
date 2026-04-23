@@ -1118,7 +1118,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       yearFilterEnq = ' WHERE EXTRACT(YEAR FROM enquiry_date)::TEXT = $1';
       yearFilterAdm = ' WHERE EXTRACT(YEAR FROM application_date)::TEXT = $1';
       // For management, check session string OR the calendar year of form_date
-      yearFilterMgt = ' WHERE (academic_year = $1 OR (academic_year IS NULL AND EXTRACT(YEAR FROM form_date)::TEXT = $2))'; 
+      yearFilterMgt = \' WHERE (academic_year = $1 OR (academic_year IS NULL AND EXTRACT(YEAR FROM form_date::DATE)::TEXT = $2))\'; 
       params.push(startYear);
     }
 
