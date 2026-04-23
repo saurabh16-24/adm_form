@@ -707,7 +707,7 @@ function renderCharts(graphs, stats) {
       let target = s.reference; // fallback
       
       // Grouping logic
-      if (ref.includes('family') || ref.includes('relative') || ref.includes('friend') || ref.includes('yuvaraj') || ref.includes('crpf')) {
+      if (ref.includes('family') || ref.includes('relative') || ref.includes('friend') || ref.includes('yuvaraj') || ref.includes('crpf') || ref.includes('driver')) {
         target = 'Family & Friends';
       } else if (ref === 'direct') {
         target = 'Direct';
