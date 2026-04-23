@@ -1265,22 +1265,15 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
     // 1st Preference = 8 points, 2nd = 7 points, ..., 8th = 1 point
     // Fallback: If no preference array exists, use program_preference or course_preference as 1st choice (8 points)
+    // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
     const appCourse = await pool.query(
       `SELECT 
-         COALESCE(p.pref->>'course', program_preference, course_preference) as course,
-         SUM(COALESCE(9 - p.ord, 8)) as count
-       FROM admissions a
-       LEFT JOIN LATERAL jsonb_array_elements(
-         CASE 
-           WHEN jsonb_typeof(a.course_preferences) = 'array' AND jsonb_array_length(a.course_preferences) > 0 
-           THEN a.course_preferences 
-           ELSE NULL 
-         END
-       ) WITH ORDINALITY as p(pref, ord) ON TRUE
-       ${admWhere.replace('WHERE', 'WHERE')} 
-       GROUP BY course
-       HAVING COALESCE(p.pref->>'course', program_preference, course_preference) IS NOT NULL
-       AND COALESCE(p.pref->>'course', program_preference, course_preference) != ''
+         COALESCE(program_preference, course_preference, (course_preferences->0->>'course')) as course,
+         COUNT(*) * 8 as count
+       FROM admissions
+       ${admWhere}
+       GROUP BY 1
+       HAVING COALESCE(program_preference, course_preference, (course_preferences->0->>'course')) IS NOT NULL
        ORDER BY count DESC`,
       admParams
     );
