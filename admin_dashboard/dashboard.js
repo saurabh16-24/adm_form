@@ -14,6 +14,7 @@ let timelineChartInstance = null;
 let sourceChartInstance = null;
 let stateChartInstance = null;
 let courseChartInstance = null;
+let qualityChartInstance = null;
 
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -837,6 +838,88 @@ function renderCharts(graphs, stats) {
         animation: {
           duration: 2000,
           easing: 'easeOutQuart'
+        }
+      }
+    });
+  }
+
+  // 8. Academic Quality Comparison Chart (Modern Bar Style)
+  const qualityCtx = document.getElementById('qualityChart');
+  if (qualityCtx) {
+    if (qualityChartInstance) qualityChartInstance.destroy();
+    
+    // Use values directly from UI elements populated in loadOverview
+    const pcmVal = parseFloat(document.getElementById('stat-avg-pcm').textContent) || 0;
+    const overallVal = parseFloat(document.getElementById('stat-avg-overall').textContent) || 0;
+
+    qualityChartInstance = new Chart(qualityCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Current Batch Quality'],
+        datasets: [
+          {
+            label: 'Avg PCM %',
+            data: [pcmVal],
+            backgroundColor: createChartGradient(qualityCtx, '#10b981', 'rgba(16, 185, 129, 0.1)'),
+            borderColor: '#10b981',
+            borderWidth: 1.5,
+            borderRadius: { topRight: 15, bottomRight: 15, topLeft: 8, bottomLeft: 8 },
+            barPercentage: 0.5,
+            categoryPercentage: 0.6
+          },
+          {
+            label: 'Avg Overall %',
+            data: [overallVal],
+            backgroundColor: createChartGradient(qualityCtx, '#6366f1', 'rgba(99, 102, 241, 0.1)'),
+            borderColor: '#6366f1',
+            borderWidth: 1.5,
+            borderRadius: { topRight: 15, bottomRight: 15, topLeft: 8, bottomLeft: 8 },
+            barPercentage: 0.5,
+            categoryPercentage: 0.6
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { 
+            position: 'bottom', 
+            labels: { 
+              usePointStyle: true, 
+              boxWidth: 8, 
+              padding: 20,
+              font: { size: 11, weight: '700' } 
+            } 
+          },
+          tooltip: {
+            backgroundColor: '#0f172a',
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: {
+              label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.x}%`
+            }
+          }
+        },
+        scales: {
+          x: { 
+            max: 100, 
+            beginAtZero: true, 
+            grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] },
+            ticks: { 
+              font: { size: 10, weight: '600' },
+              callback: v => v + '%' 
+            }
+          },
+          y: { 
+            display: false,
+            grid: { display: false } 
+          }
+        },
+        animation: {
+          duration: 1800,
+          easing: 'easeOutBounce'
         }
       }
     });

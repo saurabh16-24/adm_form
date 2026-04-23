@@ -144,20 +144,6 @@
               <span class="stat-label">Today's Applications</span>
             </div>
           </div>
-          <div class="stat-card stat-emerald" style="border-left-color: #059669;">
-            <div class="stat-icon" style="color: #059669; background: rgba(5, 150, 105, 0.1);"><span class="material-icons-round">school</span></div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-avg-pcm">0%</span>
-              <span class="stat-label">Avg PCM Quality</span>
-            </div>
-          </div>
-          <div class="stat-card stat-teal" style="border-left-color: #0d9488;">
-            <div class="stat-icon" style="color: #0d9488; background: rgba(13, 148, 136, 0.1);"><span class="material-icons-round">emoji_events</span></div>
-            <div class="stat-info">
-              <span class="stat-value" id="stat-avg-overall">0%</span>
-              <span class="stat-label">Avg Overall Quality</span>
-            </div>
-          </div>
         </div>
         <!-- Admitted Students Statistics Table -->
         <div class="card" style="margin-bottom: 30px; overflow-x: auto;">
@@ -379,6 +365,34 @@
             </div>
           </div>
 
+        <!-- Batch Quality Graph Section -->
+        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 30px;">
+          <div class="card chart-card" style="flex: 1 1 100%; padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8); display: flex; flex-direction: column;">
+            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center;">
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
+                  <span class="material-icons-round" style="color: #10b981; font-size: 20px;">military_tech</span>
+                </div>
+                <div>
+                  <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Batch Quality Analysis</h3>
+                  <p style="font-size: 0.75rem; color: #64748b; margin: 0; font-weight: 500;">Average academic performance of admitted students</p>
+                </div>
+              </div>
+              <div style="display: flex; gap: 30px;">
+                <div style="text-align: right;">
+                  <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Avg PCM</div>
+                  <div id="stat-avg-pcm" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">0%</div>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Avg Overall</div>
+                  <div id="stat-avg-overall" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">0%</div>
+                </div>
+              </div>
+            </div>
+            <div style="position: relative; height: 160px; width: 100%;">
+              <canvas id="qualityChart"></canvas>
+            </div>
+          </div>
         </div>
 
         <!-- Recent activity -->
