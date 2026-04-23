@@ -1259,9 +1259,22 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       mgtParams
     );
 
-    // Advanced Stats: Course Demand
+    // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order - Preferential Voting Logic)
+    // 1st Preference = 8 points, 2nd = 7 points, ..., 8th = 1 point
     const appCourse = await pool.query(
-      `SELECT program_preference as course, COUNT(*) as count FROM admissions${admWhere} AND program_preference IS NOT NULL AND program_preference != '' GROUP BY program_preference ORDER BY count DESC`,
+      `SELECT 
+         pref->>'course' as course, 
+         SUM(9 - ord) as count 
+       FROM 
+         admissions, 
+         jsonb_array_elements(course_preferences) WITH ORDINALITY as p(pref, ord)
+       ${admWhere}
+       AND course_preferences IS NOT NULL 
+       AND jsonb_typeof(course_preferences) = 'array'
+       GROUP BY 
+         pref->>'course' 
+       ORDER BY 
+         count DESC`,
       admParams
     );
     
