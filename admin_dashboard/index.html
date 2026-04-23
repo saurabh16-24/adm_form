@@ -366,30 +366,51 @@
           </div>
 
         <!-- Batch Quality Graph Section -->
-        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 30px;">
-          <div class="card chart-card" style="flex: 1 1 100%; padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8); display: flex; flex-direction: column;">
-            <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; position: relative;">
+          <!-- Subtle Glow Effect Background -->
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.05) 0%, transparent 40%), radial-gradient(circle at 90% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 40%); pointer-events: none; border-radius: 16px;"></div>
+
+          <div class="card chart-card" style="flex: 1 1 100%; padding: 24px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03); border: 1px solid rgba(226, 232, 240, 1); display: flex; flex-direction: column; position: relative; z-index: 1;">
+            <div class="card-header" style="margin-bottom: 24px; padding: 0; border: none; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
               <div style="display: flex; align-items: center;">
-                <div style="background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 10px; margin-right: 12px; display: flex;">
-                  <span class="material-icons-round" style="color: #10b981; font-size: 20px;">military_tech</span>
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 10px; border-radius: 12px; margin-right: 16px; display: flex; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+                  <span class="material-icons-round" style="color: white; font-size: 22px;">military_tech</span>
                 </div>
                 <div>
-                  <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Batch Quality Analysis</h3>
-                  <p style="font-size: 0.75rem; color: #64748b; margin: 0; font-weight: 500;">Average academic performance of admitted students</p>
+                  <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em;">Academic Batch Quality</h3>
+                  <p style="font-size: 0.8rem; color: #64748b; margin: 2px 0 0 0; font-weight: 600;">Average score analysis of confirmed admissions</p>
                 </div>
               </div>
-              <div style="display: flex; gap: 30px;">
-                <div style="text-align: right;">
-                  <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Avg PCM</div>
-                  <div id="stat-avg-pcm" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">0%</div>
+              
+              <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 4px 4px 4px 12px; display: flex; align-items: center; gap: 8px;">
+                   <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Branch Filter:</span>
+                   <select id="quality-course-filter" onchange="loadOverview()" style="border: none; background: transparent; font-size: 0.85rem; font-weight: 700; color: #1e293b; outline: none; padding: 4px 8px; cursor: pointer;">
+                      <option value="">All Branches</option>
+                      <option value="BE Computer Science and Engineering">Computer Science (CSE)</option>
+                      <option value="BE Computer Science and Engineering (Artificial Intelligence)">AI & ML</option>
+                      <option value="BE Computer Science and Engineering (Data Science)">Data Science</option>
+                      <option value="BE Computer Science and Engineering (Cyber Security)">Cyber Security</option>
+                      <option value="BE Electronics and Communication Engineering">Electronics (ECE)</option>
+                      <option value="BE Information Science and Engineering">Information Science (ISE)</option>
+                      <option value="BE Civil Engineering">Civil Engineering</option>
+                      <option value="BE Mechanical Engineering">Mechanical Engineering</option>
+                   </select>
                 </div>
-                <div style="text-align: right;">
-                  <div style="font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Avg Overall</div>
-                  <div id="stat-avg-overall" style="font-size: 1.25rem; font-weight: 800; color: #1e293b;">0%</div>
+
+                <div style="display: flex; gap: 24px; padding: 4px 20px; background: white; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                  <div style="text-align: center; border-right: 1px solid #f1f5f9; padding-right: 20px;">
+                    <div style="font-size: 0.65rem; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">PCM Avg</div>
+                    <div id="stat-avg-pcm" style="font-size: 1.4rem; font-weight: 900; color: #0f172a; font-variant-numeric: tabular-nums;">0%</div>
+                  </div>
+                  <div style="text-align: center;">
+                    <div style="font-size: 0.65rem; color: #6366f1; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Overall Avg</div>
+                    <div id="stat-avg-overall" style="font-size: 1.4rem; font-weight: 900; color: #0f172a; font-variant-numeric: tabular-nums;">0%</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div style="position: relative; height: 160px; width: 100%;">
+            <div style="position: relative; height: 180px; width: 100%; padding-top: 10px;">
               <canvas id="qualityChart"></canvas>
             </div>
           </div>

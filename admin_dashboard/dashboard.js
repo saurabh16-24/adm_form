@@ -182,8 +182,13 @@ async function loadOverview() {
       initChartSessionDropdown();
     }
     const selectedYear = sessionSelect ? sessionSelect.value : '';
+    const selectedCourse = document.getElementById('quality-course-filter')?.value || '';
 
-    const stats = await apiFetch(`/api/admin/stats${selectedYear ? '?year=' + selectedYear : ''}`);
+    let url = `/api/admin/stats?`;
+    if (selectedYear) url += `year=${selectedYear}&`;
+    if (selectedCourse) url += `course=${encodeURIComponent(selectedCourse)}&`;
+
+    const stats = await apiFetch(url);
     
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
