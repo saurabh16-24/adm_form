@@ -1165,7 +1165,7 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     await pool.query(`
       INSERT INTO admin_activity_log (admin_name, action, target_type, target_name, details)
       VALUES ($1, $2, $3, $4, $5)
-    `, [req.user.username, 'update', 'admitted_stats', `Session ${year}`, 'Updated manual admission counts in statistics table']);
+    `, [req.userName, 'update', 'admitted_stats', `Session ${year}`, 'Updated manual admission counts in statistics table']);
     
     await pool.query('COMMIT');
     res.json({ success: true });
