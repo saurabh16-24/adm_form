@@ -193,6 +193,11 @@ async function loadOverview() {
     document.getElementById('stat-today-enq').textContent    = stats.today_enquiries    || 0;
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
 
+    if (stats.quality) {
+      if (document.getElementById('stat-avg-pcm')) document.getElementById('stat-avg-pcm').textContent = (stats.quality.avg_pcm || 0) + '%';
+      if (document.getElementById('stat-avg-overall')) document.getElementById('stat-avg-overall').textContent = (stats.quality.avg_overall || 0) + '%';
+    }
+
     // Render Charts
     if (stats.graphs) {
       lastGraphs = stats.graphs;
