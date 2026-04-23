@@ -145,7 +145,80 @@
             </div>
           </div>
         </div>
+        <!-- Admitted Students Statistics Table -->
+        <div class="card" style="margin-bottom: 30px; overflow-x: auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 12px 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
+                <span class="material-icons-round" style="font-size: 20px;">table_chart</span>
+              </div>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Admitted Students Statistics - 2026-27</h3>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" onclick="renderAdmittedStats()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 16px;">refresh</span> Refresh
+              </button>
+              <button class="btn btn-primary" onclick="saveAdmittedStats()" style="padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; background: #1e40af;">
+                <span class="material-icons-round" style="font-size: 16px;">save</span> Save Changes
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap" style="padding: 0;">
+            <style>
+              .stats-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+              .stats-table th, .stats-table td { border: 1px solid #e2e8f0; padding: 8px 6px; text-align: center; }
+              .stats-table thead th { background: #f1f5f9; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.025em; }
+              .stats-table .editable-cell { background: #fff; cursor: text; transition: background 0.2s; min-width: 40px; }
+              .stats-table .editable-cell:hover { background: #f8fafc; }
+              .stats-table .editable-cell:focus { background: #fff; outline: 2px solid #3b82f6; border-radius: 2px; }
+              .stats-table .auto-cell { background: #f8fafc; font-weight: 600; color: #1e293b; }
+              .stats-table .total-row { background: #f1f5f9; font-weight: 800; }
+              .stats-table .course-name { text-align: left; padding-left: 15px; font-weight: 700; color: #1e293b; background: #f8fafc; }
+            </style>
+            <table class="stats-table" id="admitted-stats-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" style="width: 40px;">Sl.No</th>
+                  <th rowspan="2">Courses</th>
+                  <th colspan="4" style="background: #e0e7ff; color: #3730a3;">CET</th>
+                  <th colspan="2" style="background: #dcfce7; color: #166534;">Comed K</th>
+                  <th colspan="2" style="background: #ffedd5; color: #9a3412;">Management</th>
+                  <th colspan="3" style="background: #3b82f6; color: white;">Actual Admissions</th>
+                  <th rowspan="2" style="background: #fef9c3; color: #854d0e;">Total with SNQ</th>
+                  <th rowspan="2" style="background: #fef3c7; color: #92400e;">AICTE J&K</th>
+                  <th rowspan="2" style="background: #bbf7d0; color: #166534;">OVERALL TOTAL</th>
+                  <th rowspan="2" style="background: #fee2e2; color: #991b1b;">ACTUAL %</th>
+                </tr>
+                <tr>
+                  <th style="background: #eef2ff;">Intake</th>
+                  <th style="background: #eef2ff;">Filled</th>
+                  <th style="background: #eef2ff;">SNQ</th>
+                  <th style="background: #eef2ff;">Total</th>
+                  <th style="background: #f0fdf4;">Intake</th>
+                  <th style="background: #f0fdf4;">Filled</th>
+                  <th style="background: #fff7ed;">Intake</th>
+                  <th style="background: #fff7ed;">Filled</th>
+                  <th style="background: #2563eb; color: white;">Intake</th>
+                  <th style="background: #2563eb; color: white;">Filled</th>
+                  <th style="background: #2563eb; color: white;">Vac</th>
+                </tr>
+              </thead>
+              <tbody id="admitted-stats-body">
+                <!-- Injected via JS -->
+              </tbody>
+              <tfoot id="admitted-stats-footer" class="total-row">
+                <!-- Injected via JS -->
+              </tfoot>
+            </table>
+          </div>
+          <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons-round" style="font-size: 14px;">info</span>
+            <span>Tip: Management "Filled" seats are fetched automatically. Other fields can be edited directly. Click "Save Changes" to persist manually entered data.</span>
+          </div>
+        </div>
+
         <!-- Charts Section -->
+
         <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 30px;">
           <div class="card chart-card" style="padding: 24px; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid rgba(226, 232, 240, 0.8);">
             <div class="card-header" style="margin-bottom: 20px; padding: 0; border: none; display: flex; align-items: center;">

@@ -189,9 +189,220 @@ async function loadOverview() {
     // Recent tables
     renderRecentTable('recent-enquiries-body', stats.recent_enquiries || [], 'enquiry');
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
+    
+    // Admitted Stats
+    renderAdmittedStats();
+    
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
+
+// ═══════════════ ADMITTED STATS LOGIC ═══════════════
+const ADMITTED_COURSES = [
+  { id: 'ECE', name: 'ECE', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Electronics and Communication Engineering' },
+  { id: 'CSE', name: 'CSE', cet_int: 108, comed_int: 72, mgt_int: 60, branch: 'BE Computer Science and Engineering' },
+  { id: 'ISE', name: 'IS&E', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Information Science and Engineering' },
+  { id: 'ME', name: 'ME', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Mechanical Engineering' },
+  { id: 'CE', name: 'CE', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Civil Engineering' },
+  { id: 'CSCA', name: 'CS-CA', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Artificial Intelligence)' },
+  { id: 'CSCY', name: 'CS-CY', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Computer Science and Engineering (Cyber Security)' },
+  { id: 'CSDS', name: 'CS-DS', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Data Science)' }
+];
+
+async function renderAdmittedStats() {
+  const tbody = document.getElementById('admitted-stats-body');
+  const tfoot = document.getElementById('admitted-stats-footer');
+  if (!tbody) return;
+
+  // Fetch management counts
+  let mgtData = [];
+  try {
+    const res = await apiFetch('/api/admin/management-forms');
+    mgtData = res.rows || [];
+  } catch (e) { console.error('Failed to fetch management forms for stats', e); }
+
+  const mgtCounts = {};
+  mgtData.forEach(m => {
+    const b = m.branch;
+    mgtCounts[b] = (mgtCounts[b] || 0) + 1;
+  });
+
+  // Load saved manual data
+  const savedData = JSON.parse(localStorage.getItem('admitted_stats_manual') || '{}');
+
+  let totals = {
+    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
+    comed_int: 0, comed_fill: 0,
+    mgt_int: 0, mgt_fill: 0,
+    act_int: 0, act_fill: 0, act_vac: 0,
+    tot_snq: 0, aicte: 0, overall: 0
+  };
+
+  tbody.innerHTML = ADMITTED_COURSES.map((c, i) => {
+    const manual = savedData[c.id] || { cet_fill: 0, cet_snq: 0, comed_fill: 0, aicte: 0 };
+    
+    const mgt_fill = mgtCounts[c.branch] || 0;
+    const cet_fill_val = parseInt(manual.cet_fill) || 0;
+    const cet_snq_val = parseInt(manual.cet_snq) || 0;
+    const comed_fill_val = parseInt(manual.comed_fill) || 0;
+    const aicte_val = parseInt(manual.aicte) || 0;
+
+    const cet_tot = cet_fill_val + cet_snq_val;
+    const act_int = c.cet_int + c.comed_int + c.mgt_int;
+    const act_fill = cet_fill_val + comed_fill_val + mgt_fill;
+    const act_vac = act_int - act_fill;
+    const tot_snq = act_fill + cet_snq_val;
+    const overall = tot_snq + aicte_val;
+    const actual_pct = act_int > 0 ? ((overall / act_int) * 100).toFixed(2) : '0.00';
+
+    // Update totals
+    totals.cet_int += c.cet_int;
+    totals.cet_fill += cet_fill_val;
+    totals.cet_snq += cet_snq_val;
+    totals.cet_tot += cet_tot;
+    totals.comed_int += c.comed_int;
+    totals.comed_fill += comed_fill_val;
+    totals.mgt_int += c.mgt_int;
+    totals.mgt_fill += mgt_fill;
+    totals.act_int += act_int;
+    totals.act_fill += act_fill;
+    totals.act_vac += act_vac;
+    totals.tot_snq += tot_snq;
+    totals.aicte += aicte_val;
+    totals.overall += overall;
+
+    return `
+      <tr data-id="${c.id}">
+        <td>${i + 1}</td>
+        <td class="course-name">${c.name}</td>
+        <td class="auto-cell">${c.cet_int}</td>
+        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="cet_fill">${cet_fill_val}</td>
+        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="cet_snq">${cet_snq_val}</td>
+        <td class="auto-cell" data-calc="cet_tot">${cet_tot}</td>
+        <td class="auto-cell">${c.comed_int}</td>
+        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="comed_fill">${comed_fill_val}</td>
+        <td class="auto-cell">${c.mgt_int}</td>
+        <td class="auto-cell" data-calc="mgt_fill">${mgt_fill}</td>
+        <td class="auto-cell" data-calc="act_int">${act_int}</td>
+        <td class="auto-cell" data-calc="act_fill">${act_fill}</td>
+        <td class="auto-cell" data-calc="act_vac">${act_vac}</td>
+        <td class="auto-cell" data-calc="tot_snq">${tot_snq}</td>
+        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="aicte">${aicte_val}</td>
+        <td class="auto-cell" data-calc="overall">${overall}</td>
+        <td class="auto-cell" data-calc="actual_pct">${actual_pct}%</td>
+      </tr>
+    `;
+  }).join('');
+
+  const final_pct = totals.act_int > 0 ? ((totals.overall / totals.act_int) * 100).toFixed(2) : '0.00';
+  tfoot.innerHTML = `
+    <tr>
+      <td colspan="2">TOTAL</td>
+      <td>${totals.cet_int}</td>
+      <td id="tot-cet-fill">${totals.cet_fill}</td>
+      <td id="tot-cet-snq">${totals.cet_snq}</td>
+      <td id="tot-cet-tot">${totals.cet_tot}</td>
+      <td>${totals.comed_int}</td>
+      <td id="tot-comed-fill">${totals.comed_fill}</td>
+      <td>${totals.mgt_int}</td>
+      <td id="tot-mgt-fill">${totals.mgt_fill}</td>
+      <td id="tot-act-int">${totals.act_int}</td>
+      <td id="tot-act-fill">${totals.act_fill}</td>
+      <td id="tot-act-vac">${totals.act_vac}</td>
+      <td id="tot-tot-snq">${totals.tot_snq}</td>
+      <td id="tot-aicte">${totals.aicte}</td>
+      <td id="tot-overall">${totals.overall}</td>
+      <td id="tot-actual-pct">${final_pct}%</td>
+    </tr>
+  `;
+}
+
+function updateStatsRow(el) {
+  const row = el.closest('tr');
+  const courseId = row.dataset.id;
+  const config = ADMITTED_COURSES.find(c => c.id === courseId);
+  
+  const getVal = (field) => parseInt(row.querySelector(\`[data-field="\${field}"]\`).textContent) || 0;
+  
+  const cet_fill = getVal('cet_fill');
+  const cet_snq = getVal('cet_snq');
+  const comed_fill = getVal('comed_fill');
+  const aicte = getVal('aicte');
+  const mgt_fill = parseInt(row.querySelector('[data-calc="mgt_fill"]').textContent) || 0;
+  
+  const cet_tot = cet_fill + cet_snq;
+  const act_int = config.cet_int + config.comed_int + config.mgt_int;
+  const act_fill = cet_fill + comed_fill + mgt_fill;
+  const act_vac = act_int - act_fill;
+  const tot_snq = act_fill + cet_snq;
+  const overall = tot_snq + aicte;
+  const actual_pct = act_int > 0 ? ((overall / act_int) * 100).toFixed(2) : '0.00';
+
+  row.querySelector('[data-calc="cet_tot"]').textContent = cet_tot;
+  row.querySelector('[data-calc="act_fill"]').textContent = act_fill;
+  row.querySelector('[data-calc="act_vac"]').textContent = act_vac;
+  row.querySelector('[data-calc="tot_snq"]').textContent = tot_snq;
+  row.querySelector('[data-calc="overall"]').textContent = overall;
+  row.querySelector('[data-calc="actual_pct"]').textContent = actual_pct + '%';
+  
+  updateStatsTotals();
+}
+
+function updateStatsTotals() {
+  let totals = {
+    cet_fill: 0, cet_snq: 0, cet_tot: 0,
+    comed_fill: 0, mgt_fill: 0,
+    act_int: 0, act_fill: 0, act_vac: 0,
+    tot_snq: 0, aicte: 0, overall: 0
+  };
+
+  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
+    const getVal = (f) => parseInt(row.querySelector(\`[data-field="\${f}"]\`)?.textContent || row.querySelector(\`[data-calc="\${f}"]\`)?.textContent) || 0;
+    
+    totals.cet_fill += getVal('cet_fill');
+    totals.cet_snq += getVal('cet_snq');
+    totals.cet_tot += getVal('cet_tot');
+    totals.comed_fill += getVal('comed_fill');
+    totals.mgt_fill += getVal('mgt_fill');
+    totals.act_int += getVal('act_int');
+    totals.act_fill += getVal('act_fill');
+    totals.act_vac += getVal('act_vac');
+    totals.tot_snq += getVal('tot_snq');
+    totals.aicte += getVal('aicte');
+    totals.overall += getVal('overall');
+  });
+
+  const final_pct = totals.act_int > 0 ? ((totals.overall / totals.act_int) * 100).toFixed(2) : '0.00';
+
+  document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
+  document.getElementById('tot-cet-snq').textContent = totals.cet_snq;
+  document.getElementById('tot-cet-tot').textContent = totals.cet_tot;
+  document.getElementById('tot-comed-fill').textContent = totals.comed_fill;
+  document.getElementById('tot-mgt-fill').textContent = totals.mgt_fill;
+  document.getElementById('tot-act-int').textContent = totals.act_int;
+  document.getElementById('tot-act-fill').textContent = totals.act_fill;
+  document.getElementById('tot-act-vac').textContent = totals.act_vac;
+  document.getElementById('tot-tot-snq').textContent = totals.tot_snq;
+  document.getElementById('tot-aicte').textContent = totals.aicte;
+  document.getElementById('tot-overall').textContent = totals.overall;
+  document.getElementById('tot-actual-pct').textContent = final_pct + '%';
+}
+
+function saveAdmittedStats() {
+  const data = {};
+  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
+    const id = row.dataset.id;
+    data[id] = {
+      cet_fill: parseInt(row.querySelector('[data-field="cet_fill"]').textContent) || 0,
+      cet_snq: parseInt(row.querySelector('[data-field="cet_snq"]').textContent) || 0,
+      comed_fill: parseInt(row.querySelector('[data-field="comed_fill"]').textContent) || 0,
+      aicte: parseInt(row.querySelector('[data-field="aicte"]').textContent) || 0
+    };
+  });
+  localStorage.setItem('admitted_stats_manual', JSON.stringify(data));
+  showToast('Statistics saved successfully');
+}
+
 
 function renderCharts(graphs) {
   Chart.defaults.font.family = "'Inter', 'Segoe UI', sans-serif";
