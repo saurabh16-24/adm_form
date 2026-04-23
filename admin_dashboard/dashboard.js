@@ -275,17 +275,9 @@ async function renderAdmittedStats() {
   try {
     const res = await apiFetch('/api/admin/management-forms');
     mgtData = res.rows || [];
-    // Filter by academic year (Robust: check string OR year of form_date)
-    mgtData = mgtData.filter(m => {
-      if (m.academic_year === selectedYear) return true;
-      if (!m.academic_year && m.form_date) {
-        // Fallback: Check if form_date (YYYY-MM-DD) matches the start year of session
-        const formYear = m.form_date.split('-')[0];
-        const sessionYear = selectedYear.split('-')[0];
-        return formYear === sessionYear;
-      }
-      return false;
-    });
+    // Filter by academic year (check both full and short formats)
+    const shortYear = selectedYear.split('-')[0].slice(-2) + '-' + selectedYear.split('-')[1];
+    mgtData = mgtData.filter(m => m.academic_year === selectedYear || m.academic_year === shortYear);
   } catch (e) { console.error('Failed to fetch management forms for stats', e); }
 
   const mgtCounts = {};
