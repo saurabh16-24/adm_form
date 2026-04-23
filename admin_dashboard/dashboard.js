@@ -169,8 +169,6 @@ async function apiFetch(path, options = {}) {
 }
 
 // ═══════════════ OVERVIEW ═══════════════
-let pincodeChartInstance = null;
-let genderChartInstance = null;
 
 async function loadOverview() {
   try {
