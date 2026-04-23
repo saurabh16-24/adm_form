@@ -203,9 +203,20 @@
 
             
             <div class="form-grid">
-                <div class="form-group">
-                    <label for="reference"><i class="fas fa-user-friends"></i> Reference:</label>
-                    <input type="text" id="reference" name="reference" placeholder="How did you hear about us?">
+                <div class="form-group" style="grid-column: 1/-1;">
+                    <label for="referenceCategory"><i class="fas fa-user-friends"></i> Source of Lead / Reference: <span style="color:#ef4444;">*</span></label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="referenceCategory" name="referenceCategory" class="form-select" style="flex: 1; min-width: 200px;" required onchange="handleReferenceChange(this.value)">
+                            <option value="">-- Select Source Category --</option>
+                            <option value="Family & Friends">Family & Friends</option>
+                            <option value="Direct">Direct</option>
+                            <option value="Student Referral">Student Referral</option>
+                            <option value="Staff">Staff</option>
+                            <option value="Online">Online</option>
+                            <option value="Others">Others</option>
+                        </select>
+                        <input type="text" id="reference" name="reference" placeholder="Enter Name / Referral Detail" style="flex: 2; min-width: 250px; display: none;" oninput="this.value = this.value.toUpperCase()">
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -587,6 +598,19 @@
             // Load token from server (sequential per day, resets each day)
             fetchAndDisplayNextToken();
             
+            // Handle Reference Category Toggle
+            window.handleReferenceChange = function(val) {
+                const refInput = document.getElementById('reference');
+                if (val === 'Direct' || val === 'Online' || val === '') {
+                    refInput.style.display = 'none';
+                    refInput.required = false;
+                } else {
+                    refInput.style.display = 'block';
+                    refInput.required = true;
+                    refInput.placeholder = `Enter ${val} Name / Detail`;
+                }
+            };
+
             document.getElementById('educationalQualification').addEventListener('change', function() {
                 const diplomaFields = document.getElementById('diplomaFields');
                 if (this.value === 'Diploma') {
@@ -925,7 +949,12 @@
                         address_state: document.getElementById('state').value,
                         address_country: document.getElementById('country').value,
                         address_pincode: document.getElementById('pincode').value,
-                        reference: document.getElementById('reference').value,
+                        reference: (() => {
+                            const cat = document.getElementById('referenceCategory').value;
+                            const detail = document.getElementById('reference').value;
+                            if (cat === 'Direct' || cat === 'Online') return cat;
+                            return detail ? `${cat}: ${detail}` : cat;
+                        })(),
                         education_qualification: document.getElementById('educationalQualification').value,
                         education_board: document.getElementById('educationBoard').value,
                         result_status: document.getElementById('resultStatus').value,
