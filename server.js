@@ -1262,32 +1262,25 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order - Preferential Voting Logic)
     // 1st Preference = 8 points, 2nd = 7 points, ..., 8th = 1 point
     // Fallback: If no preference array exists (legacy data), use program_preference as 1st choice (8 points)
+    // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
+    // 1st Preference = 8 points, 2nd = 7 points, ..., 8th = 1 point
+    // Fallback: If no preference array exists, use program_preference or course_preference as 1st choice (8 points)
     const appCourse = await pool.query(
-      `SELECT course, SUM(score) as count FROM (
-         SELECT 
-           pref->>'course' as course, 
-           (9 - ord) as score 
-         FROM 
-           admissions, 
-           jsonb_array_elements(course_preferences) WITH ORDINALITY as p(pref, ord)
-         ${admWhere}
-         AND course_preferences IS NOT NULL 
-         AND jsonb_typeof(course_preferences) = 'array'
-         AND jsonb_array_length(course_preferences) > 0
-
-         UNION ALL
-
-         SELECT 
-           program_preference as course, 
-           8 as score 
-         FROM 
-           admissions
-         ${admWhere}
-         AND (course_preferences IS NULL OR jsonb_typeof(course_preferences) != 'array' OR jsonb_array_length(course_preferences) = 0)
-         AND program_preference IS NOT NULL 
-         AND program_preference != ''
-       ) as combined
-       GROUP BY course 
+      `SELECT 
+         COALESCE(p.pref->>'course', program_preference, course_preference) as course,
+         SUM(COALESCE(9 - p.ord, 8)) as count
+       FROM admissions a
+       LEFT JOIN LATERAL jsonb_array_elements(
+         CASE 
+           WHEN jsonb_typeof(a.course_preferences) = 'array' AND jsonb_array_length(a.course_preferences) > 0 
+           THEN a.course_preferences 
+           ELSE NULL 
+         END
+       ) WITH ORDINALITY as p(pref, ord) ON TRUE
+       ${admWhere.replace('WHERE', 'WHERE')} 
+       GROUP BY course
+       HAVING COALESCE(p.pref->>'course', program_preference, course_preference) IS NOT NULL
+       AND COALESCE(p.pref->>'course', program_preference, course_preference) != ''
        ORDER BY count DESC`,
       admParams
     );
