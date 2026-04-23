@@ -1611,10 +1611,27 @@ async function viewAdmission(id) {
         ${detailItem('Gender', r.gender)}
         ${detailItem('Aadhaar No.', r.aadhaar_no || '—')}
 
-        ${detailHeader('Course Preferences')}
+        ${detailHeader('Course Selection')}
         ${detailItem('Institute', r.selected_institute || 'Engineering - SVCE')}
-        ${detailItem('Course', r.course_preference)}
+        ${detailItem('Primary Course', r.course_preference)}
         ${detailItem('Programme', r.program_preference)}
+
+        ${detailHeader('Preference List (Preferential Order)')}
+        <div class="detail-item" style="grid-column: 1/-1; padding: 10px; background: rgba(59, 130, 246, 0.03); border-radius: 8px; border: 1px dashed #cbd5e1; margin-top: 5px;">
+          ${(() => {
+            let prefs = [];
+            try {
+              prefs = typeof r.course_preferences === 'string' ? JSON.parse(r.course_preferences) : (r.course_preferences || []);
+            } catch(e) { prefs = []; }
+            if (!prefs || !Array.isArray(prefs) || prefs.length === 0) return '<div style="color:#64748b; font-style:italic; font-size:0.85rem;">No preferences selected</div>';
+            return prefs.map((p, i) => `
+              <div style="display:flex; align-items:center; gap:12px; padding:6px 0; border-bottom: ${i === prefs.length - 1 ? 'none' : '1px solid #f1f5f9'};">
+                <span style="font-weight:800; color:var(--primary); font-size:0.8rem; min-width:22px; background: #eff6ff; height:22px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; border:1px solid #bfdbfe;">${i + 1}</span>
+                <span style="font-weight:600; color:#1e293b; font-size:0.9rem;">${typeof p === 'object' ? p.course : p}</span>
+              </div>
+            `).join('');
+          })()}
+        </div>
 
         ${detailHeader('Address Details')}
         ${detailItem('Comm. Address', [r.comm_address_line1, r.comm_address_line2, r.comm_city, r.comm_district, r.comm_state, r.comm_country, r.comm_pincode].filter(Boolean).join(', '), true)}

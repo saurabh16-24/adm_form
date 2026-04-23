@@ -1268,12 +1268,26 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     // Advanced Stats: Course Demand (Weighted Ranking based on Preference Order)
     const appCourse = await pool.query(
       `SELECT 
-         COALESCE(program_preference, course_preference, (course_preferences->0->>'course')) as course,
+         COALESCE(
+           program_preference, 
+           course_preference, 
+           CASE 
+             WHEN jsonb_typeof(course_preferences->0) = 'object' THEN course_preferences->0->>'course'
+             ELSE course_preferences->>0
+           END
+         ) as course,
          COUNT(*) * 8 as count
        FROM admissions
        ${admWhere}
        GROUP BY 1
-       HAVING COALESCE(program_preference, course_preference, (course_preferences->0->>'course')) IS NOT NULL
+       HAVING COALESCE(
+         program_preference, 
+         course_preference, 
+         CASE 
+           WHEN jsonb_typeof(course_preferences->0) = 'object' THEN course_preferences->0->>'course'
+           ELSE course_preferences->>0
+         END
+       ) IS NOT NULL
        ORDER BY count DESC`,
       admParams
     );
