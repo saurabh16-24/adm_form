@@ -191,11 +191,40 @@ async function loadOverview() {
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
     
     // Admitted Stats
+    initStatsYearDropdown();
     renderAdmittedStats();
     
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
+
+function initStatsYearDropdown() {
+  const select = document.getElementById('stats-academic-year');
+  if (!select || select.options.length > 0) return;
+
+  const startYear = 2026;
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth(); 
+  
+  // Academic year typically starts around June (month 5)
+  let activeYear;
+  if (currentMonth >= 5) { 
+    activeYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+  } else {
+    activeYear = `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
+  }
+
+  // Populate options from 2026-27 up to currentYear + 1
+  const endYear = Math.max(startYear, currentYear) + 1;
+  for (let y = startYear; y <= endYear; y++) {
+    const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
+    const opt = new Option(yearStr, yearStr);
+    if (yearStr === activeYear) opt.selected = true;
+    select.add(opt);
+  }
+}
+
 
 // ═══════════════ ADMITTED STATS LOGIC ═══════════════
 const ADMITTED_COURSES = [
@@ -210,6 +239,9 @@ const ADMITTED_COURSES = [
 ];
 
 async function renderAdmittedStats() {
+  const yearSelect = document.getElementById('stats-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
   const tbody = document.getElementById('admitted-stats-body');
   const tfoot = document.getElementById('admitted-stats-footer');
   if (!tbody) return;
@@ -219,6 +251,8 @@ async function renderAdmittedStats() {
   try {
     const res = await apiFetch('/api/admin/management-forms');
     mgtData = res.rows || [];
+    // Filter by academic year
+    mgtData = mgtData.filter(m => m.academic_year === selectedYear);
   } catch (e) { console.error('Failed to fetch management forms for stats', e); }
 
   const mgtCounts = {};
@@ -228,7 +262,7 @@ async function renderAdmittedStats() {
   });
 
   // Load saved manual data
-  const savedData = JSON.parse(localStorage.getItem('admitted_stats_manual') || '{}');
+  const savedData = JSON.parse(localStorage.getItem(`admitted_stats_manual_${selectedYear}`) || '{}');
 
   let totals = {
     cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
@@ -389,6 +423,9 @@ function updateStatsTotals() {
 }
 
 function saveAdmittedStats() {
+  const yearSelect = document.getElementById('stats-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
   const data = {};
   document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
     const id = row.dataset.id;
@@ -399,8 +436,8 @@ function saveAdmittedStats() {
       aicte: parseInt(row.querySelector('[data-field="aicte"]').textContent) || 0
     };
   });
-  localStorage.setItem('admitted_stats_manual', JSON.stringify(data));
-  showToast('Statistics saved successfully');
+  localStorage.setItem(`admitted_stats_manual_${selectedYear}`, JSON.stringify(data));
+  showToast(`Statistics for ${selectedYear} saved successfully`);
 }
 
 
