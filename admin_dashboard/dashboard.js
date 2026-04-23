@@ -338,18 +338,18 @@ async function renderAdmittedStats() {
         <td>${i + 1}</td>
         <td class="course-name">${c.name}</td>
         <td class="auto-cell">${c.cet_int}</td>
-        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="cet_fill">${cet_fill_val}</td>
-        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="cet_snq">${cet_snq_val}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_fill" value="${cet_fill_val}"></td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_snq" value="${cet_snq_val}"></td>
         <td class="auto-cell" data-calc="cet_tot">${cet_tot}</td>
         <td class="auto-cell">${c.comed_int}</td>
-        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="comed_fill">${comed_fill_val}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="comed_fill" value="${comed_fill_val}"></td>
         <td class="auto-cell">${c.mgt_int}</td>
         <td class="auto-cell" data-calc="mgt_fill">${mgt_fill}</td>
         <td class="auto-cell" data-calc="act_int">${act_int}</td>
         <td class="auto-cell" data-calc="act_fill">${act_fill}</td>
         <td class="auto-cell" data-calc="act_vac">${act_vac}</td>
         <td class="auto-cell" data-calc="tot_snq">${tot_snq}</td>
-        <td class="editable-cell" contenteditable="true" oninput="updateStatsRow(this)" data-field="aicte">${aicte_val}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="aicte" value="${aicte_val}"></td>
         <td class="auto-cell" data-calc="overall">${overall}</td>
         <td class="auto-cell" data-calc="actual_pct">${actual_pct}%</td>
       </tr>
@@ -384,7 +384,7 @@ function updateStatsRow(el) {
   const courseId = row.dataset.id;
   const config = ADMITTED_COURSES.find(c => c.id === courseId);
   
-  const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`).textContent) || 0;
+  const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`).value) || 0;
   
   const cet_fill = getVal('cet_fill');
   const cet_snq = getVal('cet_snq');
@@ -419,7 +419,7 @@ function updateStatsTotals() {
   };
 
   document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.textContent || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
+    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.value || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
     
     totals.cet_fill += getVal('cet_fill');
     totals.cet_snq += getVal('cet_snq');
@@ -458,10 +458,10 @@ async function saveAdmittedStats() {
   document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
     const id = row.dataset.id;
     data[id] = {
-      cet_fill: parseInt(row.querySelector('[data-field="cet_fill"]').textContent) || 0,
-      cet_snq: parseInt(row.querySelector('[data-field="cet_snq"]').textContent) || 0,
-      comed_fill: parseInt(row.querySelector('[data-field="comed_fill"]').textContent) || 0,
-      aicte: parseInt(row.querySelector('[data-field="aicte"]').textContent) || 0
+      cet_fill: parseInt(row.querySelector('[data-field="cet_fill"]').value) || 0,
+      cet_snq: parseInt(row.querySelector('[data-field="cet_snq"]').value) || 0,
+      comed_fill: parseInt(row.querySelector('[data-field="comed_fill"]').value) || 0,
+      aicte: parseInt(row.querySelector('[data-field="aicte"]').value) || 0
     };
   });
   

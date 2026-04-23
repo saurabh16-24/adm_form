@@ -171,9 +171,11 @@
               .stats-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
               .stats-table th, .stats-table td { border: 1px solid #e2e8f0; padding: 8px 6px; text-align: center; }
               .stats-table thead th { background: #f1f5f9; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.025em; }
-              .stats-table .editable-cell { background: #fff; cursor: text; transition: background 0.2s; min-width: 40px; }
-              .stats-table .editable-cell:hover { background: #f8fafc; }
-              .stats-table .editable-cell:focus { background: #fff; outline: 2px solid #3b82f6; border-radius: 2px; }
+              .stats-table .editable-cell { padding: 0; background: #fff; min-width: 40px; }
+              .stats-input { width: 100%; box-sizing: border-box; border: none; background: transparent; text-align: center; padding: 8px 6px; font-size: inherit; font-family: inherit; font-weight: 600; color: #3b82f6; outline: none; transition: background 0.2s; -moz-appearance: textfield; }
+              .stats-input::-webkit-outer-spin-button, .stats-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+              .stats-input:hover { background: #f8fafc; }
+              .stats-input:focus { background: #fff; outline: 2px solid #3b82f6; outline-offset: -2px; border-radius: 2px; }
               .stats-table .auto-cell { background: #f8fafc; font-weight: 600; color: #1e293b; }
               .stats-table .total-row { background: #f1f5f9; font-weight: 800; }
               .stats-table .course-name { text-align: left; padding-left: 15px; font-weight: 700; color: #1e293b; background: #f8fafc; }
