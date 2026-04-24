@@ -915,6 +915,14 @@
             document.getElementById('enquiryForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
+                // Explicit Pincode Validation
+                const pincodeVal = document.getElementById('pincode').value;
+                if (!pincodeVal || pincodeVal.trim().length !== 6) {
+                    alert('Error: A valid 6-digit Pincode is mandatory.');
+                    document.getElementById('pincode').focus();
+                    return;
+                }
+                
                 const submitBtn = document.getElementById('submitBtn');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';

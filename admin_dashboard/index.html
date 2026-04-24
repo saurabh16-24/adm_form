@@ -311,8 +311,10 @@
                 <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Application Velocity (Last 30 Days)</h3>
               </div>
             </div>
-            <div style="position: relative; flex: 1; min-height: 300px; width: 100%;">
-              <canvas id="timelineChart"></canvas>
+            <div style="position: relative; flex: 1; min-height: 300px; width: 100%; overflow-x: auto; overflow-y: hidden;">
+              <div id="timelineContainer" style="height: 100%; min-width: 100%;">
+                <canvas id="timelineChart"></canvas>
+              </div>
             </div>
           </div>
 

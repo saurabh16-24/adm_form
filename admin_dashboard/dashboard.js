@@ -711,6 +711,13 @@ function renderCharts(graphs, stats) {
     const enqData = sortedDates.map(d => dateMap[d].enq);
     const admData = sortedDates.map(d => dateMap[d].adm);
 
+    // Dynamic width for scrollability
+    const container = document.getElementById('timelineContainer');
+    if (container) {
+      const minW = Math.max(container.parentElement.clientWidth, sortedDates.length * 50);
+      container.style.width = minW + 'px';
+    }
+
     timelineChartInstance = new Chart(timeCtx, {
       type: 'line',
       data: {
