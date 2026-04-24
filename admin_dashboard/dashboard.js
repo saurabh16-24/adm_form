@@ -1084,6 +1084,9 @@ function renderEnquiries(rows) {
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'Booking Done')">Booking Done</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After CET')">After CET</div>
           <div class="menu-option action-opt" onclick="updateRemarks(${r.id}, 'admin_remarks', 'After COMEDK')">After COMEDK</div>
+          <div class="menu-option action-opt" style="color: #6366f1; font-weight: 700;" onclick="promptOtherRemark(${r.id})">
+            <span class="material-icons-round" style="font-size: 16px; vertical-align: middle;">add</span> Other...
+          </div>
           <div class="menu-divider"></div>
           <div class="menu-option date-opt" onclick="this.nextElementSibling.showPicker()">Set/Change Follow-up Date</div>
           <input type="date" value="${r.follow_up_date ? new Date(r.follow_up_date).toISOString().split('T')[0] : ''}" 
@@ -3092,4 +3095,14 @@ window.showOthersRegionsModal = function(data, type) {
   
   body.innerHTML = html;
   modal.classList.add('open');
+};
+
+/**
+ * Prompts the user for a custom remark and updates the database
+ */
+window.promptOtherRemark = function(id) {
+  const custom = prompt("Enter custom remark/action status:");
+  if (custom !== null && custom.trim() !== "") {
+    updateRemarks(id, 'admin_remarks', custom.trim());
+  }
 };
