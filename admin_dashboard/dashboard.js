@@ -600,14 +600,15 @@ function renderCharts(graphs, stats) {
     let finalLabels = [];
     let finalData = [];
     
+    let othersDataGroup = [];
     if (pinDataRaw.length > MAX_SLICES) {
       const top = pinDataRaw.slice(0, MAX_SLICES - 1);
-      const others = pinDataRaw.slice(MAX_SLICES - 1);
-      const othersCount = others.reduce((sum, p) => sum + parseInt(p.count), 0);
+      othersDataGroup = pinDataRaw.slice(MAX_SLICES - 1);
+      const othersCount = othersDataGroup.reduce((sum, p) => sum + parseInt(p.count), 0);
       
       finalLabels = top.map(p => p.pincode || 'Unspecified');
       finalData = top.map(p => p.count);
-      finalLabels.push(`Others (${others.length} regions)`);
+      finalLabels.push(`Others (${othersDataGroup.length} regions)`);
       finalData.push(othersCount);
     } else {
       finalLabels = pinDataRaw.map(p => p.pincode || 'Unspecified');
@@ -635,6 +636,15 @@ function renderCharts(graphs, stats) {
         responsive: true,
         maintainAspectRatio: false,
         cutout: '70%',
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const index = elements[0].index;
+            const label = finalLabels[index];
+            if (label.includes('Others')) {
+              showOthersRegionsModal(othersDataGroup, pinType);
+            }
+          }
+        },
         plugins: {
           legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
           tooltip: {
@@ -3015,3 +3025,68 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+/**
+ * Shows a detailed breakdown of all geographic regions grouped under "Others"
+ */
+window.showOthersRegionsModal = function(data, type) {
+  const modal = document.getElementById('modal');
+  const title = document.getElementById('modal-title');
+  const body = document.getElementById('modal-body');
+  
+  if (!modal || !title || !body) return;
+  
+  const categoryName = type.charAt(0).toUpperCase() + type.slice(1);
+  title.innerHTML = `
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="material-icons-round" style="color:#3b82f6;">location_on</span>
+      <span>Geographic Breakdown: ${categoryName}</span>
+    </div>
+  `;
+  
+  let html = `
+    <div style="padding: 10px;">
+      <div style="background:#f0f9ff; border: 1px solid #bae6fd; color:#0369a1; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; display:flex; align-items:center; gap:8px;">
+        <span class="material-icons-round" style="font-size:18px;">info</span>
+        <span>Listing all <strong>${data.length}</strong> additional regions consolidated in the "Others" category.</span>
+      </div>
+      
+      <div class="table-wrap" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px;">
+        <table class="data-table" style="margin: 0;">
+          <thead style="position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="background: #f8fafc;">Pincode / Area</th>
+              <th style="background: #f8fafc; text-align: center; width: 120px;">Count</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+  
+  data.forEach((item, idx) => {
+    html += `
+      <tr style="${idx % 2 === 0 ? '' : 'background: #fcfdfe;'}">
+        <td style="font-weight: 600; color: #1e293b;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:24px; height:24px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:10px; color:#64748b;">${idx+1}</span>
+            ${item.pincode || 'Unspecified'}
+          </div>
+        </td>
+        <td style="font-weight: 800; color: #3b82f6; text-align: center;">${item.count}</td>
+      </tr>
+    `;
+  });
+  
+  html += `
+          </tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top: 15px; text-align: right; color: #94a3b8; font-size: 0.75rem; font-weight: 500;">
+        Total "Others" Volume: ${data.reduce((sum, p) => sum + parseInt(p.count), 0)}
+      </div>
+    </div>
+  `;
+  
+  body.innerHTML = html;
+  modal.style.display = 'flex';
+};
