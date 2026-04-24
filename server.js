@@ -1229,21 +1229,21 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       ORDER BY a.id DESC LIMIT 5
     `);
 
-    // Graph: Enquiry pincodes
+    // Graph: Enquiry pincodes (Include missing as Unspecified)
     const enqPincodes = await pool.query(
-      `SELECT address_pincode as pincode, COUNT(*) as count FROM enquiries${enqWhere} AND address_pincode IS NOT NULL AND address_pincode != '' GROUP BY address_pincode ORDER BY count DESC LIMIT 10`,
+      `SELECT COALESCE(NULLIF(address_pincode, ''), 'Unspecified') as pincode, COUNT(*) as count FROM enquiries${enqWhere} GROUP BY pincode ORDER BY count DESC LIMIT 20`,
       enqParams
     );
     
-    // Graph: Application (admissions table) pincodes
+    // Graph: Application pincodes (Include missing as Unspecified)
     const appPincodes = await pool.query(
-      `SELECT comm_pincode as pincode, COUNT(*) as count FROM admissions${admWhere} AND comm_pincode IS NOT NULL AND comm_pincode != '' GROUP BY comm_pincode ORDER BY count DESC LIMIT 10`,
+      `SELECT COALESCE(NULLIF(comm_pincode, ''), 'Unspecified') as pincode, COUNT(*) as count FROM admissions${admWhere} GROUP BY pincode ORDER BY count DESC LIMIT 20`,
       admParams
     );
     
-    // Graph: Management pincodes (join with admissions for address)
+    // Graph: Management pincodes (Include missing as Unspecified)
     const mgtPincodes = await pool.query(
-      `SELECT a.comm_pincode as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND a.comm_pincode IS NOT NULL AND a.comm_pincode != '' GROUP BY a.comm_pincode ORDER BY count DESC LIMIT 10`,
+      `SELECT COALESCE(NULLIF(a.comm_pincode, ''), 'Unspecified') as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} GROUP BY pincode ORDER BY count DESC LIMIT 20`,
       mgtParams
     );
     
