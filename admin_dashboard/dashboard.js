@@ -800,7 +800,10 @@ function renderCharts(graphs, stats) {
   if (courseCtx) {
     if (courseChartInstance) courseChartInstance.destroy();
     const courseType = document.getElementById('course-data-type')?.value || 'application';
-    let cData = courseType === 'application' ? graphs.application_courses : graphs.admission_courses;
+    let cData = [];
+    if (courseType === 'enquiry') cData = graphs.enquiry_courses;
+    else if (courseType === 'application') cData = graphs.application_courses;
+    else cData = graphs.admission_courses;
     cData = cData || [];
 
     courseChartInstance = new Chart(courseCtx, {
@@ -808,13 +811,13 @@ function renderCharts(graphs, stats) {
       data: {
         labels: cData.map(c => c.course),
         datasets: [{
-          label: courseType === 'application' ? 'Weighted Demand' : 'Confirmed Admissions',
+          label: courseType === 'enquiry' ? 'Enquiry Score' : (courseType === 'application' ? 'Weighted Demand' : 'Confirmed Admissions'),
           data: cData.map(c => c.count),
           backgroundColor: createChartGradient(courseCtx, 
-            courseType === 'application' ? 'rgba(14, 165, 233, 0.95)' : 'rgba(16, 185, 129, 0.95)', 
-            courseType === 'application' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(52, 211, 153, 0.3)'
+            courseType === 'enquiry' ? 'rgba(245, 158, 11, 0.95)' : (courseType === 'application' ? 'rgba(14, 165, 233, 0.95)' : 'rgba(16, 185, 129, 0.95)'), 
+            courseType === 'enquiry' ? 'rgba(245, 158, 11, 0.3)' : (courseType === 'application' ? 'rgba(56, 189, 248, 0.3)' : 'rgba(52, 211, 153, 0.3)')
           ),
-          borderColor: courseType === 'application' ? '#0ea5e9' : '#10b981',
+          borderColor: courseType === 'enquiry' ? '#f59e0b' : (courseType === 'application' ? '#0ea5e9' : '#10b981'),
           borderWidth: 1.5,
           borderRadius: { topRight: 12, bottomRight: 12, topLeft: 4, bottomLeft: 4 },
           barPercentage: 0.7,

@@ -1348,6 +1348,31 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       qualityParams
     );
 
+    const enqCourse = await pool.query(
+      `SELECT course, SUM(score) as count FROM (
+         -- 1. Preferences from JSON list (weighted 1-8)
+         SELECT 
+           TRIM(CASE 
+             WHEN jsonb_typeof(p.pref) = 'object' THEN p.pref->>'course'
+             ELSE p.pref#>>'{}'
+           END) as course,
+           (9 - p.ord) as score
+         FROM enquiries e
+         CROSS JOIN LATERAL jsonb_array_elements(
+           CASE 
+             WHEN jsonb_typeof(e.course_preferences) = 'array' AND jsonb_array_length(e.course_preferences) > 0 
+             THEN e.course_preferences 
+             ELSE '[]'::jsonb 
+           END
+         ) WITH ORDINALITY as p(pref, ord)
+         ${enqWhere}
+       ) as t
+       WHERE course IS NOT NULL AND course != ''
+       GROUP BY course
+       ORDER BY count DESC`,
+      enqParams
+    );
+
     res.json({
       total_enquiries:   parseInt(totalEnq.rows[0].c),
       total_admissions:  parseInt(totalAdm.rows[0].c),
@@ -1362,6 +1387,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         admission_pincodes:   mgtPincodes.rows,
         application_gender:   appGender.rows,
         admission_gender:     admGender.rows,
+        enquiry_courses:      enqCourse.rows,
         application_courses:  appCourse.rows,
         admission_courses:    admCourse.rows,
         lead_sources:         references.rows,
