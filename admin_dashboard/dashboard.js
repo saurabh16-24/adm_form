@@ -645,6 +645,9 @@ function renderCharts(graphs, stats) {
             }
           }
         },
+        onHover: (event, chartElement) => {
+          event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+        },
         plugins: {
           legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, padding: 15, font: { size: 11, weight: '600' } } },
           tooltip: {
@@ -3030,7 +3033,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * Shows a detailed breakdown of all geographic regions grouped under "Others"
  */
 window.showOthersRegionsModal = function(data, type) {
-  const modal = document.getElementById('modal');
+  const modal = document.getElementById('detail-modal');
   const title = document.getElementById('modal-title');
   const body = document.getElementById('modal-body');
   
@@ -3052,7 +3055,7 @@ window.showOthersRegionsModal = function(data, type) {
       </div>
       
       <div class="table-wrap" style="max-height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 12px;">
-        <table class="data-table" style="margin: 0;">
+        <table class="data-table" style="margin: 0; width: 100%;">
           <thead style="position: sticky; top: 0; z-index: 10;">
             <tr>
               <th style="background: #f8fafc;">Pincode / Area</th>
@@ -3065,13 +3068,13 @@ window.showOthersRegionsModal = function(data, type) {
   data.forEach((item, idx) => {
     html += `
       <tr style="${idx % 2 === 0 ? '' : 'background: #fcfdfe;'}">
-        <td style="font-weight: 600; color: #1e293b;">
+        <td style="font-weight: 600; color: #1e293b; padding: 12px 15px;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="width:24px; height:24px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:10px; color:#64748b;">${idx+1}</span>
             ${item.pincode || 'Unspecified'}
           </div>
         </td>
-        <td style="font-weight: 800; color: #3b82f6; text-align: center;">${item.count}</td>
+        <td style="font-weight: 800; color: #3b82f6; text-align: center; padding: 12px 15px;">${item.count}</td>
       </tr>
     `;
   });
@@ -3088,5 +3091,5 @@ window.showOthersRegionsModal = function(data, type) {
   `;
   
   body.innerHTML = html;
-  modal.style.display = 'flex';
+  modal.classList.add('open');
 };
