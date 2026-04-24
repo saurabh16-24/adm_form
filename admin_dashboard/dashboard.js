@@ -594,18 +594,36 @@ function renderCharts(graphs, stats) {
   
   if (pinCtx && pinDataRaw) {
     if (pincodeChartInstance) pincodeChartInstance.destroy();
-    const labels = pinDataRaw.map(p => p.pincode || 'Unknown');
-    const data = pinDataRaw.map(p => p.count);
     
+    // Dynamic Grouping Logic: Keep top 12, group rest into "Others"
+    const MAX_SLICES = 12;
+    let finalLabels = [];
+    let finalData = [];
+    
+    if (pinDataRaw.length > MAX_SLICES) {
+      const top = pinDataRaw.slice(0, MAX_SLICES - 1);
+      const others = pinDataRaw.slice(MAX_SLICES - 1);
+      const othersCount = others.reduce((sum, p) => sum + parseInt(p.count), 0);
+      
+      finalLabels = top.map(p => p.pincode || 'Unspecified');
+      finalData = top.map(p => p.count);
+      finalLabels.push(`Others (${others.length} regions)`);
+      finalData.push(othersCount);
+    } else {
+      finalLabels = pinDataRaw.map(p => p.pincode || 'Unspecified');
+      finalData = pinDataRaw.map(p => p.count);
+    }
+
     pincodeChartInstance = new Chart(pinCtx, {
       type: 'doughnut',
       data: {
-        labels: labels,
+        labels: finalLabels,
         datasets: [{
-          data: data,
+          data: finalData,
           backgroundColor: [
             '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-            '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#94a3b8'
+            '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#94a3b8',
+            '#0ea5e9', '#84cc16', '#a855f7', '#fb7185', '#2dd4bf'
           ],
           borderWidth: 4,
           borderColor: '#ffffff',
