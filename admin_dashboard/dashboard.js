@@ -3470,7 +3470,7 @@ async function exportOverviewCSV() {
     const selectedCourse = document.getElementById('filter-course')?.value || 'All';
     
     // Header Info
-    let csvContent = `SVCE ADMIN PANEL - OVERVIEW REPORT\n`;
+    let csvContent = `SVCE ADMIN PANEL - COMPREHENSIVE OVERVIEW REPORT\n`;
     csvContent += `Generated On: ${new Date().toLocaleString()}\n`;
     csvContent += `Academic Year: ${academicYear}\n`;
     csvContent += `Course Filter: ${selectedCourse}\n\n`;
@@ -3489,9 +3489,7 @@ async function exportOverviewCSV() {
     csvContent += `ADMITTED STUDENTS STATISTICS (${academicYear})\n`;
     const table = document.getElementById('admitted-stats-table');
     if (table) {
-      // Headers (Combining the two-row header into single labels for CSV)
       csvContent += `Sl.No,Course,CET Int,CET Fill,CET SNQ,CET Tot,ComedK Int,ComedK Fill,Mgt Int,Mgt Fill,Actual Int,Actual Fill,Actual Vac,Total SNQ,AICTE,Overall,Actual %\n`;
-      
       const rows = document.querySelectorAll('#admitted-stats-body tr');
       rows.forEach(row => {
         const cells = Array.from(row.querySelectorAll('td')).map(td => {
@@ -3500,22 +3498,41 @@ async function exportOverviewCSV() {
         });
         csvContent += cells.join(',') + '\n';
       });
-
-      // Footer
       const foot = document.querySelector('#admitted-stats-footer tr');
       if (foot) {
         const footCells = Array.from(foot.querySelectorAll('td')).map(td => td.textContent.trim().replace(/%/g, ''));
         csvContent += `TOTALS,` + footCells.slice(1).join(',') + '\n';
       }
     }
+    csvContent += `\n`;
+
+    // Section 3: Distribution Data (from charts)
+    const addDistSection = (title, chartInstance) => {
+      if (!chartInstance) return;
+      csvContent += `${title.toUpperCase()} DISTRIBUTION\n`;
+      csvContent += `Label,Count\n`;
+      const labels = chartInstance.data.labels;
+      const values = chartInstance.data.datasets[0].data;
+      labels.forEach((l, i) => {
+        csvContent += `"${l}",${values[i]}\n`;
+      });
+      csvContent += `\n`;
+    };
+
+    addDistSection('Gender', genderChartInstance);
+    addDistSection('Source of Lead', sourceChartInstance);
+    addDistSection('State', stateChartInstance);
+    addDistSection('Course Preferences', courseChartInstance);
+    addDistSection('Lead Quality', qualityChartInstance);
+    addDistSection('Pincode/Area', pincodeChartInstance);
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `SVCE_Overview_Report_${academicYear}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `SVCE_Full_Report_${academicYear}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    showToast('Overview CSV exported');
+    showToast('Full CSV Report exported');
   } catch (err) {
     console.error('Export CSV Error:', err);
     showToast('Export failed', 'error');
@@ -3534,45 +3551,68 @@ async function exportOverviewPDF() {
       conv: document.getElementById('stat-raw-conv').textContent
     };
 
+    // Capture chart images
+    const getChartImg = (id) => {
+      const canvas = document.getElementById(id);
+      return canvas ? canvas.toDataURL('image/png', 1.0) : null;
+    };
+
+    const ratioImg = getChartImg('ratioChart');
+    const timelineImg = getChartImg('timelineChart');
+    const genderImg = getChartImg('genderChart');
+    const sourceImg = getChartImg('sourceChart');
+    const stateImg = getChartImg('stateChart');
+    const courseImg = getChartImg('courseChart');
+    const pinImg = getChartImg('pincodeChart');
+    const rawConvImg = getChartImg('conversionChart'); // Doughnut
+
     const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
-    
-    // Clean up inputs to static values for printing
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
 
     const html = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>SVCE Dashboard Report - ${academicYear}</title>
+        <title>SVCE Full Analytics Report - ${academicYear}</title>
         <style>
-          @page { size: A4 landscape; margin: 15mm; }
-          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 30px; }
-          .logo { height: 80px; }
-          .title-area h1 { margin: 0; color: #1e40af; font-size: 24px; }
-          .title-area p { margin: 5px 0 0; color: #64748b; font-size: 14px; }
+          @page { size: A4 portrait; margin: 12mm; }
+          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.4; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
+          .logo { height: 65px; }
+          .title-area h1 { margin: 0; color: #1e40af; font-size: 20px; font-weight: 800; }
+          .title-area p { margin: 3px 0 0; color: #64748b; font-size: 12px; font-weight: 600; }
           
-          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
-          .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 12px; text-align: center; }
-          .metric-label { font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 5px; }
-          .metric-value { font-size: 24px; font-weight: 800; color: #1e293b; }
+          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+          .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; text-align: center; }
+          .metric-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 3px; }
+          .metric-value { font-size: 20px; font-weight: 800; color: #1e293b; }
 
-          .section-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 12px; }
+          .section-title { font-size: 15px; font-weight: 800; margin: 25px 0 12px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
           
-          table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 20px; }
-          th, td { border: 1px solid #e2e8f0; padding: 6px 4px; text-align: center; }
+          .stats-table-wrap { overflow-x: hidden; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+          th, td { border: 1px solid #e2e8f0; padding: 4px 2px; text-align: center; }
           th { background: #f1f5f9; font-weight: 700; color: #475569; }
-          .course-name { text-align: left; padding-left: 10px; font-weight: 700; }
+          .course-name { text-align: left; padding-left: 6px; font-weight: 700; }
           .total-row { font-weight: 800; background: #f1f5f9; }
+
+          .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; page-break-inside: avoid; }
+          .chart-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; background: #fff; }
+          .chart-box h4 { margin: 0 0 10px; font-size: 11px; color: #475569; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+          .chart-img { width: 100%; height: auto; max-height: 200px; object-fit: contain; }
           
-          .footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 20px; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; }
+          .full-chart-box { grid-column: 1 / -1; min-height: 250px; }
+          .full-chart-box .chart-img { max-height: 280px; }
+
+          .footer { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
+          .page-break { page-break-before: always; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="title-area">
-            <h1>Dashboard Analytics Report</h1>
-            <p>Academic Year: ${academicYear} | Generated on ${new Date().toLocaleString()}</p>
+            <h1>Comprehensive Analytics Report</h1>
+            <p>Academic Year: ${academicYear} | Report Generated: ${new Date().toLocaleString()}</p>
           </div>
           <img src="${logoUrl}" class="logo">
         </div>
@@ -3584,12 +3624,52 @@ async function exportOverviewPDF() {
           <div class="metric-card"><span class="metric-label">Lead Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
-        <div class="section-title">Admitted Students Statistics</div>
-        ${cleanTableHtml}
+        <div class="section-title">Admission Distribution & Statistics</div>
+        <div class="stats-table-wrap">
+          ${cleanTableHtml}
+        </div>
+
+        <div class="section-title">Conversion & Growth Trends</div>
+        <div class="charts-container">
+          <div class="chart-box full-chart-box">
+            <h4>Conversion Lifecycle (Enquiry → App → Admission)</h4>
+            <img src="${ratioImg}" class="chart-img">
+          </div>
+          <div class="chart-box full-chart-box">
+            <h4>Application Velocity (Last 30 Days)</h4>
+            <img src="${timelineImg}" class="chart-img">
+          </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <div class="section-title">Demographics & Source Analysis</div>
+        <div class="charts-container">
+          <div class="chart-box">
+            <h4>Gender Distribution</h4>
+            <img src="${genderImg}" class="chart-img">
+          </div>
+          <div class="chart-box">
+            <h4>Source of Lead</h4>
+            <img src="${sourceImg}" class="chart-img">
+          </div>
+          <div class="chart-box">
+            <h4>State Distribution</h4>
+            <img src="${stateImg}" class="chart-img">
+          </div>
+          <div class="chart-box">
+            <h4>Area / Pincode Distribution</h4>
+            <img src="${pinImg}" class="chart-img">
+          </div>
+          <div class="chart-box full-chart-box">
+            <h4>Course Preference Distribution</h4>
+            <img src="${courseImg}" class="chart-img">
+          </div>
+        </div>
 
         <div class="footer">
-          <div>SVCE Admission Management System</div>
-          <div>Page 1 of 1</div>
+          <div>SVCE Admission Management Intelligence</div>
+          <div>Generated by Admin Panel</div>
           <div>Confidential Administrative Report</div>
         </div>
       </body>
@@ -3599,6 +3679,6 @@ async function exportOverviewPDF() {
     performHiddenPrint(html);
   } catch (err) {
     console.error('Export PDF Error:', err);
-    showToast('PDF Export failed', 'error');
+    showToast('Full PDF Export failed', 'error');
   }
 }
