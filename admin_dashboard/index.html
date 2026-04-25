@@ -112,13 +112,24 @@
 
       <!-- ───── TAB: Overview ───── -->
       <section class="tab-content active" id="tab-overview">
-        <div class="tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-          <button class="btn" onclick="exportOverviewPDF()" style="background: white; border: 1px solid var(--accent-purple); color: var(--accent-purple); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
-            <span class="material-icons-round">picture_as_pdf</span> Export PDF Report
-          </button>
-          <button class="btn" onclick="exportOverviewCSV()" style="background: var(--accent-blue-glow); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
-            <span class="material-icons-round">table_chart</span> Export CSV Data
-          </button>
+        <div class="tab-actions" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: white; padding: 12px 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
+              <span class="material-icons-round" style="font-size: 20px;">calendar_today</span>
+            </div>
+            <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">Select Academic Session:</span>
+            <select id="global-academic-year" onchange="loadOverview()" style="border: 2px solid #3b82f6; border-radius: 8px; padding: 8px 16px; font-size: 0.95rem; font-weight: 800; color: #1e40af; background: #eff6ff; cursor: pointer; outline: none; min-width: 160px; transition: all 0.2s;">
+              <!-- Options populated via JS -->
+            </select>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="exportOverviewPDF()" style="background: white; border: 1px solid var(--accent-purple); color: var(--accent-purple); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
+              <span class="material-icons-round">picture_as_pdf</span> Export PDF
+            </button>
+            <button class="btn" onclick="exportOverviewCSV()" style="background: var(--accent-blue-glow); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
+              <span class="material-icons-round">table_chart</span> Export CSV
+            </button>
+          </div>
         </div>
         <div class="stats-grid">
           <div class="stat-card stat-blue">
@@ -171,10 +182,7 @@
               <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
                 <span class="material-icons-round" style="font-size: 20px;">table_chart</span>
               </div>
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Admitted Students Statistics - </h3>
-              <select id="stats-academic-year" onchange="renderAdmittedStats()" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.9rem; font-weight: 700; color: #1e293b; background: white; outline: none; cursor: pointer;">
-                <!-- Options populated by JS -->
-              </select>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Admitted Students Statistics</h3>
             </div>
             <div style="display: flex; gap: 10px;">
               <button class="btn" onclick="renderAdmittedStats()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600;">
@@ -248,14 +256,6 @@
               <span class="material-icons-round" style="font-size: 20px;">insights</span>
             </div>
             <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Analytics Overview</h3>
-          </div>
-          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 0.85rem; font-weight: 600; color: #64748b;">Academic Session:</span>
-              <select id="chart-session" onchange="loadOverview()" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 700; color: #1e293b; background: white; cursor: pointer; min-width: 140px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <!-- Dynamic options -->
-              </select>
-            </div>
           </div>
         </div>
 

@@ -196,9 +196,9 @@ async function apiFetch(path, options = {}) {
 
 async function loadOverview() {
   try {
-    const sessionSelect = document.getElementById('chart-session');
+    const sessionSelect = document.getElementById('global-academic-year');
     if (sessionSelect && sessionSelect.options.length === 0) {
-      initChartSessionDropdown();
+      initGlobalYearDropdown();
     }
     const selectedYear = sessionSelect ? sessionSelect.value : '';
     const selectedCourse = document.getElementById('quality-course-filter')?.value || '';
@@ -230,7 +230,6 @@ async function loadOverview() {
       if (document.getElementById('stat-avg-overall')) document.getElementById('stat-avg-overall').textContent = (stats.quality.avg_overall || 0) + '%';
     }
 
-    // Render Charts
     if (stats.graphs) {
       lastGraphs = stats.graphs;
       lastStats = stats;
@@ -242,54 +241,25 @@ async function loadOverview() {
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
     
     // Admitted Stats
-    initStatsYearDropdown();
     renderAdmittedStats();
     
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
 
-function initChartSessionDropdown() {
-  const select = document.getElementById('chart-session');
+function initGlobalYearDropdown() {
+  const select = document.getElementById('global-academic-year');
   if (!select) return;
-  const startYear = 2026;
   const currentYear = new Date().getFullYear();
-  const endYear = currentYear + 3;
-  
-  // Add "All Sessions" option
-  const allOpt = new Option("All Sessions", "");
-  select.add(allOpt);
-
-  for (let y = startYear; y <= endYear; y++) {
-    const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
-    const opt = new Option(yearStr, yearStr);
-    // Auto-select current based on Jan switch logic
-    if (yearStr === `${currentYear}-${(currentYear+1).toString().slice(-2)}`) opt.selected = true;
-    select.add(opt);
+  const years = [];
+  for (let i = -1; i <= 3; i++) {
+    const y = 2026 + i;
+    years.push(`${y}-${(y + 1).toString().slice(-2)}`);
   }
+  select.innerHTML = years.map(y => `<option value="${y}" ${y === '2026-27' ? 'selected' : ''}>${y}</option>`).join('');
 }
 
 
-function initStatsYearDropdown() {
-  const select = document.getElementById('stats-academic-year');
-  if (!select || select.options.length > 0) return;
-
-  const startYear = 2026;
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  
-  // Switch default session as calendar year changes (January)
-  const activeYear = `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
-
-  // Populate options from 2026-27 up to currentYear + 10 (fully future-proof)
-  const endYear = Math.max(startYear, currentYear) + 10;
-  for (let y = startYear; y <= endYear; y++) {
-    const yearStr = `${y}-${(y + 1).toString().slice(-2)}`;
-    const opt = new Option(yearStr, yearStr);
-    if (yearStr === activeYear) opt.selected = true;
-    select.add(opt);
-  }
-}
 
 
 // ═══════════════ ADMITTED STATS LOGIC ═══════════════
@@ -305,7 +275,7 @@ const ADMITTED_COURSES = [
 ];
 
 async function renderAdmittedStats() {
-  const yearSelect = document.getElementById('stats-academic-year');
+  const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
   const tbody = document.getElementById('admitted-stats-body');
@@ -493,7 +463,7 @@ function updateStatsTotals() {
 }
 
 async function saveAdmittedStats() {
-  const yearSelect = document.getElementById('stats-academic-year');
+  const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
   const data = {};
@@ -3468,7 +3438,7 @@ function copyQRLink() {
 
 async function exportOverviewCSV() {
   try {
-    const academicYear = document.getElementById('stats-academic-year')?.value || '2026-27';
+    const academicYear = document.getElementById('global-academic-year')?.value || '2026-27';
     const selectedCourse = document.getElementById('filter-course')?.value || 'All';
     
     // Header Info
@@ -3543,7 +3513,7 @@ async function exportOverviewCSV() {
 
 async function exportOverviewPDF() {
   try {
-    const academicYear = document.getElementById('stats-academic-year')?.value || '2026-27';
+    const academicYear = document.getElementById('global-academic-year')?.value || '2026-27';
     const logoUrl = window.location.origin + '/admin_dashboard/image_copy.png';
     
     showToast('Generating detailed report with data tables...', 'info');
