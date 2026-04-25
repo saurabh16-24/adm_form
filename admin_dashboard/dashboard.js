@@ -3615,144 +3615,145 @@ async function exportOverviewPDF() {
       <head>
         <title>SVCE Full Analytics Report - ${academicYear}</title>
         <style>
-          @page { size: A4 portrait; margin: 10mm; }
-          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.3; font-size: 11px; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
-          .logo { height: 60px; }
-          .title-area h1 { margin: 0; color: #1e40af; font-size: 18px; font-weight: 800; }
-          .title-area p { margin: 2px 0 0; color: #64748b; font-size: 10px; font-weight: 600; }
+          @page { size: A4 portrait; margin: 8mm; }
+          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.2; font-size: 10px; background: #fff; }
           
-          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-          .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
-          .metric-label { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 2px; }
-          .metric-value { font-size: 18px; font-weight: 800; color: #1e293b; }
-
-          .section-title { font-size: 13px; font-weight: 800; margin: 20px 0 10px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 8px; text-transform: uppercase; background: #f8fafc; padding-top: 4px; padding-bottom: 4px; }
-          .sub-section-title { font-size: 11px; font-weight: 700; color: #475569; margin: 20px 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
+          /* Header & Metrics */
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 12px; }
+          .logo { height: 50px; }
+          .title-area h1 { margin: 0; color: #1e40af; font-size: 16px; font-weight: 800; }
+          .title-area p { margin: 0; color: #64748b; font-size: 9px; font-weight: 600; }
           
-          .insight-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 8px; font-size: 10px; margin-bottom: 15px; color: #1e40af; }
-          .insight-box strong { color: #1d4ed8; }
+          .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+          .metric-card { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; text-align: center; }
+          .metric-label { font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; }
+          .metric-value { font-size: 16px; font-weight: 800; color: #1e40af; }
 
-          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 20px; table-layout: fixed; }
-          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 6px 4px; text-align: center; word-wrap: break-word; }
-          .report-data-table th { font-weight: 700; text-transform: uppercase; font-size: 8px; letter-spacing: 0.3px; }
-          .report-data-table td { font-size: 9px; }
-
-          .data-section { page-break-inside: avoid; }
-          .content-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; page-break-inside: auto; }
-          .charts-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 10px; page-break-inside: avoid; }
-          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; display: flex; flex-direction: column; page-break-inside: avoid; }
-          .chart-box h4 { margin: 0 0 8px; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; }
-          .chart-img { width: 100%; height: auto; max-height: 140px; object-fit: contain; }
+          /* Sections */
+          .section-title { font-size: 11px; font-weight: 800; margin: 12px 0 8px; color: #fff; background: #1e40af; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .sub-section-title { font-size: 10px; font-weight: 700; color: #1e40af; margin: 10px 0 5px; border-bottom: 1px solid #bfdbfe; padding-bottom: 2px; text-transform: uppercase; }
           
-          .full-chart-box { grid-column: 1 / -1; }
-          .full-chart-box .chart-img { max-height: 220px; }
+          .insight-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 6px 10px; font-size: 9px; margin-bottom: 10px; color: #1e40af; }
 
-          .footer { margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 8px; color: #94a3b8; display: flex; justify-content: space-between; }
+          /* Layout Grids */
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+          .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+          
+          /* Table Styles */
+          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 5px; table-layout: fixed; }
+          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 3px 4px; text-align: center; word-wrap: break-word; }
+          .report-data-table th { background: #f8fafc; color: #475569; font-weight: 700; font-size: 7.5px; }
+          .report-data-table td { font-size: 8px; }
+          
+          /* Charts */
+          .chart-container { border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px; background: #fff; text-align: center; margin-bottom: 5px; }
+          .chart-container h4 { margin: 0 0 4px; font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+          .chart-img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
+          .chart-img.large { max-height: 180px; }
+
+          .footer { position: fixed; bottom: 8mm; left: 8mm; right: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 7px; color: #94a3b8; display: flex; justify-content: space-between; }
           .page-break { page-break-before: always; }
+          .no-break { page-break-inside: avoid; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="title-area">
-            <h1>Comprehensive Admission Intelligence Report</h1>
-            <p>Academic Year: ${academicYear} | Report Generated: ${new Date().toLocaleString()}</p>
+            <h1>Admission Intelligence Report</h1>
+            <p>AY ${academicYear} | Generated: ${new Date().toLocaleString()}</p>
           </div>
           <img src="${logoUrl}" class="logo">
         </div>
 
-        <div class="metrics-grid">
-          <div class="metric-card"><span class="metric-label">Total Enquiries</span><div class="metric-value">${metrics.enq}</div></div>
-          <div class="metric-card"><span class="metric-label">Total Applications</span><div class="metric-value">${metrics.adm}</div></div>
-          <div class="metric-card"><span class="metric-label">Management Forms</span><div class="metric-value">${metrics.mgt}</div></div>
-          <div class="metric-card"><span class="metric-label">Lead Conversion</span><div class="metric-value">${metrics.conv}</div></div>
+        <div class="metrics-row">
+          <div class="metric-card"><span class="metric-label">Enquiries</span><div class="metric-value">${metrics.enq}</div></div>
+          <div class="metric-card"><span class="metric-label">Applications</span><div class="metric-value">${metrics.adm}</div></div>
+          <div class="metric-card"><span class="metric-label">Admissions</span><div class="metric-value">${metrics.mgt}</div></div>
+          <div class="metric-card"><span class="metric-label">Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
-        <div class="section-title">Admitted Students Performance Stats</div>
-        ${cleanTableHtml}
-
-        <div class="section-title">Admission Funnel & Velocity</div>
-        <div class="insight-box">
-          <strong>Funnel Insight:</strong> The conversion rate from <strong>Enquiry to Application is ${enqToApp}%</strong>, 
-          from <strong>Application to Admission is ${appToAdm}%</strong>, and the overall conversion from 
-          <strong>Enquiry to Admission is ${enqToAdm}%</strong>. 
-          The velocity chart below indicates daily submission patterns over the last 30 days.
-        </div>
-        <div class="charts-row" style="grid-template-columns: 1fr;">
-          <div class="chart-box full-chart-box" style="margin-bottom: 20px;">
-            <h4>Funnel Lifecycle (Enquiry → App → Admission)</h4>
-            <img src="${ratioImg}" class="chart-img">
+        <div class="no-break">
+          <div class="section-title">Admission Funnel & Trends</div>
+          <div class="insight-box">
+            <strong>Funnel Analysis:</strong> Enq→App: <b>${enqToApp}%</b> | App→Adm: <b>${appToAdm}%</b> | Overall: <b>${enqToAdm}%</b>
           </div>
-          <div class="chart-box full-chart-box">
-            <h4>Daily Submission Trends (Last 30 Days)</h4>
-            <img src="${timelineImg}" class="chart-img">
+          <div class="grid-2">
+            <div class="chart-container"><h4>Funnel Lifecycle</h4><img src="${ratioImg}" class="chart-img large"></div>
+            <div class="chart-container"><h4>Daily Velocity (30d)</h4><img src="${timelineImg}" class="chart-img large"></div>
+          </div>
+        </div>
+
+        <div class="section-title">Demographic Distribution (Comparative View)</div>
+        
+        <div class="no-break">
+          <div class="sub-section-title">Gender Analysis</div>
+          <div class="grid-3">
+            <div class="chart-container"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div>
+            <div class="chart-container"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div>
+            <div class="chart-container"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div>
+          </div>
+          <div class="grid-3">
+            ${generateDataHtml('Enq Gender', lastGraphs.enquiry_gender, 'gender', 'count')}
+            ${generateDataHtml('App Gender', lastGraphs.application_gender, 'gender', 'count')}
+            ${generateDataHtml('Adm Gender', lastGraphs.admission_gender, 'gender', 'count')}
+          </div>
+        </div>
+
+        <div class="no-break" style="margin-top:15px;">
+          <div class="sub-section-title">Area / Pincode Reach</div>
+          <div class="grid-3">
+            <div class="chart-container"><h4>Enquiry Map</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
+            <div class="chart-container"><h4>Application Map</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
+            <div class="chart-container"><h4>Admission Map</h4><img src="${snapshots.admission.pin}" class="chart-img"></div>
+          </div>
+          <div class="grid-3">
+            ${generateDataHtml('Enq Region', lastGraphs.enquiry_pincodes, 'pincode', 'count')}
+            ${generateDataHtml('App Region', lastGraphs.application_pincodes, 'pincode', 'count')}
+            ${generateDataHtml('Adm Region', lastGraphs.admission_pincodes, 'pincode', 'count')}
           </div>
         </div>
 
         <div class="page-break"></div>
 
-        <div class="section-title">Demographics Analysis (Comparative View)</div>
+        <div class="section-title">Academic & Marketing Intelligence</div>
         
-        <div class="sub-section-title">Gender Distribution Details</div>
-        <div class="insight-box">
-          <strong>Gender Trend:</strong> ${getInsight('Applications', lastGraphs.application_gender, 'gender', 'count')}
-        </div>
-        <div class="charts-row">
-          <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div>
-          <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div>
-          <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div>
-        </div>
-        <div class="charts-row" style="margin-top:-10px;">
-          ${generateDataHtml('Enq Gender', lastGraphs.enquiry_gender, 'gender', 'count')}
-          ${generateDataHtml('App Gender', lastGraphs.application_gender, 'gender', 'count')}
-          ${generateDataHtml('Adm Gender', lastGraphs.admission_gender, 'gender', 'count')}
-        </div>
-
-        <div class="sub-section-title">Geographic / Pincode Reach</div>
-        <div class="insight-box">
-          <strong>Geographic Insight:</strong> ${getInsight('Admission Regions', lastGraphs.admission_pincodes, 'pincode', 'count')}
-        </div>
-        <div class="charts-row">
-          <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
-          <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
-          <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.pin}" class="chart-img"></div>
-        </div>
-        <div class="charts-row" style="margin-top:-10px;">
-          ${generateDataHtml('Enq Pincode', lastGraphs.enquiry_pincodes, 'pincode', 'count')}
-          ${generateDataHtml('App Pincode', lastGraphs.application_pincodes, 'pincode', 'count')}
-          ${generateDataHtml('Adm Pincode', lastGraphs.admission_pincodes, 'pincode', 'count')}
-        </div>
-
-        <div class="page-break"></div>
-
-        <div class="section-title">Course Demand & Channel Analysis</div>
-        
-        <div class="sub-section-title">Course Preference Funnel</div>
-        <div class="insight-box">
-          <strong>Academic Demand:</strong> ${getInsight('Course Interest', lastGraphs.application_courses, 'course', 'count')}
-        </div>
-        <div class="charts-row" style="grid-template-columns: 1fr;">
-          <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Lead Interest (Enquiry)</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
-          <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Weighted Demand (Application)</h4><img src="${snapshots.application.course}" class="chart-img"></div>
-          <div class="chart-box full-chart-box"><h4>Confirmed Admissions</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
-        </div>
-
-        <div class="sub-section-title">Lead Source & Regional Distribution</div>
-        <div class="content-row">
-          <div>
-            <div class="chart-box" style="height:280px;"><h4>Marketing Source</h4><img src="${sourceImg}" class="chart-img"></div>
-            ${generateDataHtml('Source Categories', lastGraphs.lead_sources, 'reference', 'count')}
+        <div class="no-break">
+          <div class="sub-section-title">Course Preference Funnel</div>
+          <div class="grid-3">
+            <div class="chart-container"><h4>Enq Interest</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
+            <div class="chart-container"><h4>App Demand</h4><img src="${snapshots.application.course}" class="chart-img"></div>
+            <div class="chart-container"><h4>Adm Confirmed</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
           </div>
-          <div>
-            <div class="chart-box" style="height:280px;"><h4>State Distribution</h4><img src="${stateImg}" class="chart-img"></div>
-            ${generateDataHtml('State Presence', lastGraphs.application_states, 'state', 'count')}
+          <div class="grid-3">
+            ${generateDataHtml('Enq Preference', lastGraphs.enquiry_courses, 'course', 'count')}
+            ${generateDataHtml('App Preference', lastGraphs.application_courses, 'course', 'count')}
+            ${generateDataHtml('Adm Course', lastGraphs.admission_courses, 'course', 'count')}
           </div>
+        </div>
+
+        <div class="no-break" style="margin-top:15px;">
+          <div class="sub-section-title">Lead Source & Regional Distribution</div>
+          <div class="grid-2">
+            <div>
+              <div class="chart-container"><h4>Lead Channels</h4><img src="${sourceImg}" class="chart-img large"></div>
+              ${generateDataHtml('Source Breakdown', lastGraphs.lead_sources, 'reference', 'count')}
+            </div>
+            <div>
+              <div class="chart-container"><h4>State Distribution</h4><img src="${stateImg}" class="chart-img large"></div>
+              ${generateDataHtml('State Analysis', lastGraphs.application_states, 'state', 'count')}
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">Admitted Students Performance Details</div>
+        <div style="font-size: 7.5px;">
+          ${cleanTableHtml}
         </div>
 
         <div class="footer">
-          <div>SVCE Admission Management Intelligence System</div>
-          <div>Generated by Admin Panel</div>
-          <div>Confidential Administrative Report</div>
+          <div>SVCE Intelligence Dashboard</div>
+          <div>Report generated for ${academicYear}</div>
+          <div>Confidential Administrative Use</div>
         </div>
       </body>
       </html>
