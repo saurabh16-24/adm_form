@@ -665,6 +665,27 @@ body {
 
 .btn-print:hover { border-color: var(--accent-blue); background: var(--bg-secondary); }
 
+.btn-stop {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+.btn-stop:hover { background: rgba(220, 38, 38, 0.25); border-color: #dc2626; }
+
+/* Row highlighters */
+.row-stopped {
+  background-color: #7f1d1d !important;
+  color: white !important;
+}
+.row-stopped td { color: white !important; }
+.row-stopped .remarks-pill-main { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+.row-stopped .pill-remark, .row-stopped .pill-date, .row-stopped .pill-date .material-icons-round { color: white !important; }
+.row-stopped .btn-view, .row-stopped .btn-print, .row-stopped .btn-stop { background: rgba(255,255,255,0.1); color: white; border-color: rgba(255,255,255,0.2); }
+.row-stopped .btn-view:hover, .row-stopped .btn-print:hover, .row-stopped .btn-stop:hover { background: rgba(255,255,255,0.2); }
+
+
 /* ═══════════════ REMARKS & DATE (UNIFIED GROUP) ═══════════════ */
 .remarks-cell { min-width: 180px; position: relative; }
 

@@ -1072,7 +1072,8 @@ function renderEnquiries(rows) {
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
     
     let highlightClass = "";
-    if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.35)"';
+    if (r.follow_up_status === 'Stopped') highlightClass = 'class="row-stopped"';
+    else if (r.has_management) highlightClass = 'style="background:rgba(56, 189, 248, 0.35)"';
     else if (r.has_application) highlightClass = 'style="background:rgba(245, 158, 11, 0.3)"';
 
     return `<tr ${highlightClass}>
@@ -1107,15 +1108,33 @@ function renderEnquiries(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewEnquiry(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printEnquiry(${r.id})" title="Print Enquiry"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      <button class="btn btn-stop" onclick="stopFollowUp(${r.id})" title="Stop Follow-up"><span class="material-icons-round" style="font-size:16px">block</span></button>
       ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
     </td>
   </tr>`}).join('');
 }
 
+async function stopFollowUp(id) {
+  if (!confirm('Are you sure you want to STOP follow-up for this student? This will clear the follow-up date and mark the row as stopped.')) return;
+  
+  try {
+    const result = await apiFetch(`/api/admin/enquiry/${id}/stop-follow-up`, { method: 'PUT' });
+    if (result.success) {
+      showToast('Follow-up stopped');
+      loadEnquiries(); // Refresh table
+    } else {
+      throw new Error(result.error);
+    }
+  } catch (err) {
+    showToast('Failed to stop follow-up: ' + err.message, 'error');
+  }
+}
+
+
 function exportEnquiriesCSV() {
   if (!lastFilteredEnquiries.length) return showToast('No records to export', 'error');
   
-  const headers = ['ID', 'Token', 'Name', 'Email', 'Mobile', 'Reference', 'Qualification', 'Board', 'PCM %', 'Total %', 'Status', 'Follow-up', 'Hostel', 'Transport', 'Course Prefs', 'Enquiry Date'];
+  const headers = ['ID', 'Token', 'Name', 'Email', 'Mobile', 'Reference', 'Qualification', 'Board', 'PCM %', 'Total %', 'Status', 'Follow-up', 'Follow-up Status', 'Hostel', 'Transport', 'Course Prefs', 'Enquiry Date'];
   const rows = lastFilteredEnquiries.map(r => {
     let prefs = '';
     try {
@@ -1136,6 +1155,7 @@ function exportEnquiriesCSV() {
       r.total_percentage || '',
       r.admin_remarks || '',
       r.follow_up_date ? formatDate(r.follow_up_date) : '',
+      r.follow_up_status || 'Active',
       r.hostel_required ? 'YES' : 'NO',
       r.transport_required ? 'YES' : 'NO',
       prefs,

@@ -1435,6 +1435,20 @@ app.put('/api/admin/enquiry/:id/remarks', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Stop follow-up for an enquiry
+app.put('/api/admin/enquiry/:id/stop-follow-up', adminAuth, async (req, res) => {
+  try {
+    const old = await pool.query('SELECT student_name FROM enquiries WHERE id = $1', [req.params.id]);
+    await pool.query(
+      "UPDATE enquiries SET follow_up_status = 'Stopped', follow_up_date = NULL WHERE id = $1",
+      [req.params.id]
+    );
+    const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
+    logAdminActivity(req.userName, 'Stopped Follow-up', 'enquiry', parseInt(req.params.id), studentName, 'Follow-up permanently stopped');
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // Single enquiry
 app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   try {
