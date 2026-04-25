@@ -1341,56 +1341,67 @@ async function viewEnquiry(id) {
         prefsHtml = r.course_preferences || '—'; 
     }
 
+    const role = sessionStorage.getItem('admin_role');
+
     document.getElementById('modal-title').textContent = `Enquiry #${r.id} — ${r.student_name}`;
     document.getElementById('modal-body').innerHTML = `
       <div class="detail-grid">
-        ${detailItem('Token Number', r.token_number)}
-        ${detailItem('Date', formatDate(r.enquiry_date))}
-        ${detailItem('Student Name', r.student_name)}
-        ${detailItem('Email', r.student_email)}
-        ${detailItem('Mobile', r.student_mobile)}
-        ${detailItem('Father', r.father_name)}
-        ${detailItem('Father Mobile', r.father_mobile)}
-        ${detailItem('Mother', r.mother_name)}
-        ${detailItem('Mother Mobile', r.mother_mobile)}
-        ${detailItem('Address', r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '), true)}
-        ${detailItem('Qualification', r.education_qualification)}
-        ${detailItem('Board', r.education_board)}
-        ${detailItem('Expected %', r.expected_percentage != null ? r.expected_percentage + '%' : '—')}
-        ${detailItem('Result Status', r.result_status)}
-        ${detailItem('Hostel Req.', r.hostel_required ? 'YES' : 'NO')}
+        ${detailItem('Token Number', r.token_number, false, 'token_number', true)}
+        ${detailItem('Date', formatDate(r.enquiry_date), false)}
+        ${detailItem('Student Name', r.student_name, false, 'student_name', true)}
+        ${detailItem('Email', r.student_email, false, 'student_email', true)}
+        ${detailItem('Mobile', r.student_mobile, false, 'student_mobile', true)}
+        ${detailItem('Father', r.father_name, false, 'father_name', true)}
+        ${detailItem('Father Mobile', r.father_mobile, false, 'father_mobile', true)}
+        ${detailItem('Mother', r.mother_name, false, 'mother_name', true)}
+        ${detailItem('Mother Mobile', r.mother_mobile, false, 'mother_mobile', true)}
+        ${detailItem('Address', r.address || [r.address_line1, r.address_line2, r.address_city, r.address_district, r.address_state, r.address_pincode].filter(Boolean).join(', '), true, 'address', true)}
+        ${detailItem('Qualification', r.education_qualification, false, 'education_qualification', true)}
+        ${detailItem('Board', r.education_board, false, 'education_board', true)}
+        ${detailItem('Expected %', r.expected_percentage != null ? r.expected_percentage + '%' : '—', false, 'expected_percentage', true)}
+        ${detailItem('Result Status', r.result_status, false, 'result_status', true)}
+        ${detailItem('Hostel Req.', r.hostel_required ? 'YES' : 'NO', false, 'hostel_required', false)}
         ${r.hostel_required ? detailItem('Hostel Details', `${r.hostel_type} (₹${r.hostel_fee})`, true) : ''}
-        ${detailItem('Transport Req.', r.transport_required ? 'YES' : 'NO')}
+        ${detailItem('Transport Req.', r.transport_required ? 'YES' : 'NO', false, 'transport_required', false)}
         ${r.transport_required ? detailItem('Transport Details', `${r.transport_route} (₹${r.transport_fee})`, true) : ''}
+        
         ${detailHeader('11th Marks (AP/TS Students)')}
-        ${detailItem('Physics', r.physics_11)}
-        ${detailItem('Chemistry', r.chemistry_11)}
-        ${detailItem('Math A', r.math_11a)}
-        ${detailItem('Math B', r.math_11b)}
-        ${detailItem('English', r.english_11)}
-        ${detailItem('Language', r.language_11)}
+        ${detailItem('Physics', r.physics_11, false, 'physics_11', true)}
+        ${detailItem('Chemistry', r.chemistry_11, false, 'chemistry_11', true)}
+        ${detailItem('Math A', r.math_11a, false, 'math_11a', true)}
+        ${detailItem('Math B', r.math_11b, false, 'math_11b', true)}
+        ${detailItem('English', r.english_11, false, 'english_11', true)}
+        ${detailItem('Language', r.language_11, false, 'language_11', true)}
+        
         ${detailHeader('12th Marks')}
-        ${detailItem('Physics 12 Th.', r.physics_marks)}
-        ${detailItem('Physics 12 Pr.', r.physics_12_prac)}
-        ${detailItem('Chem 12 Th.', r.chemistry_marks)}
-        ${detailItem('Chem 12 Pr.', r.chemistry_12_prac)}
-        ${detailItem('Math 12 A', r.math_12a)}
-        ${detailItem('Math 12 B', r.math_12b)}
-        ${detailItem('Math Standard', r.mathematics_marks)}
-        ${detailItem('English 12th', r.english_12)}
-        ${detailItem('Kannada/Sanskrit/Hindi', r.kannada_12)}
-        ${detailItem('Other Subjects', r.other_12)}
+        ${detailItem('Physics 12 Th.', r.physics_marks, false, 'physics_marks', true)}
+        ${detailItem('Physics 12 Pr.', r.physics_12_prac, false, 'physics_12_prac', true)}
+        ${detailItem('Chem 12 Th.', r.chemistry_marks, false, 'chemistry_marks', true)}
+        ${detailItem('Chem 12 Pr.', r.chemistry_12_prac, false, 'chemistry_12_prac', true)}
+        ${detailItem('Math 12 A', r.math_12a, false, 'math_12a', true)}
+        ${detailItem('Math 12 B', r.math_12b, false, 'math_12b', true)}
+        ${detailItem('Math Standard', r.mathematics_marks, false, 'mathematics_marks', true)}
+        ${detailItem('English 12th', r.english_12, false, 'english_12', true)}
+        ${detailItem('Kannada/Sanskrit/Hindi', r.kannada_12, false, 'kannada_12', true)}
+        ${detailItem('Other Subjects', r.other_12, false, 'other_12', true)}
+        
         ${detailHeader('Entrance Exams')}
-        ${detailItem('JEE Rank', r.jee_rank)}
-        ${detailItem('COMEDK Rank', r.comedk_rank)}
-        ${detailItem('CET Rank', r.cet_rank)}
+        ${detailItem('JEE Rank', r.jee_rank, false, 'jee_rank', true)}
+        ${detailItem('COMEDK Rank', r.comedk_rank, false, 'comedk_rank', true)}
+        ${detailItem('CET Rank', r.cet_rank, false, 'cet_rank', true)}
+        
         ${detailHeader('Percentages & Prefs')}
-        ${detailItem('Total %', r.total_percentage != null ? r.total_percentage + '%' : '—')}
-        ${detailItem('PCM %', r.pcm_percentage != null ? r.pcm_percentage + '%' : '—')}
+        ${detailItem('Total %', r.total_percentage != null ? r.total_percentage + '%' : '—', false, 'total_percentage', true)}
+        ${detailItem('PCM %', r.pcm_percentage != null ? r.pcm_percentage + '%' : '—', false, 'pcm_percentage', true)}
         ${detailItem('Course Preferences & Fees', prefsHtml, true)}
-        ${detailItem('Reference', r.reference)}
+        ${detailItem('Reference', r.reference, false, 'reference', true)}
       </div>
-      <div style="margin-top: 24px; text-align: right; border-top: 1px solid var(--border); padding-top: 20px;">
+      <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 20px; gap: 12px;">
+        ${role === 'admin' ? `
+        <button class="btn btn-save" style="padding: 10px 24px; font-size: 0.9rem; background: #10b981; color: white; border: none; display: flex; align-items: center; gap: 8px;" onclick="saveEnquiryChanges(${r.id})">
+          <span class="material-icons-round" style="font-size:20px">save</span> Save Changes
+        </button>
+        ` : '<div></div>'}
         <button class="btn btn-print" style="padding: 10px 24px; font-size: 0.9rem;" onclick="printEnquiry(${r.id})">
           <span class="material-icons-round" style="font-size:20px">print</span> Print Enquiry Form
         </button>
@@ -1398,6 +1409,53 @@ async function viewEnquiry(id) {
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to load enquiry details'); }
 }
+
+async function saveEnquiryChanges(id) {
+  const modal = document.getElementById('detail-modal');
+  const inputs = modal.querySelectorAll('.detail-input');
+  const payload = {};
+  inputs.forEach(inp => {
+    const key = inp.dataset.key;
+    let val = inp.value.trim();
+    
+    // Clean up percentage signs if user added them
+    if (['expected_percentage', 'total_percentage', 'pcm_percentage'].includes(key)) {
+        val = val.replace('%', '');
+        val = val === '' ? null : parseFloat(val);
+    } else if (val === '') {
+        val = null;
+    }
+    
+    payload[key] = val;
+  });
+
+  try {
+    const btn = modal.querySelector('.btn-save');
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner"></span> Saving...';
+    btn.disabled = true;
+
+    const res = await apiFetch(`/api/admin/enquiry/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload)
+    });
+
+    if (res.success) {
+      showToast('Enquiry updated successfully');
+      loadEnquiries(); // Refresh the table
+      closeModal();
+    }
+  } catch (err) {
+    showToast('Failed to save: ' + err.message, 'error');
+  } finally {
+    const btn = modal.querySelector('.btn-save');
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    }
+  }
+}
+
 
 function performHiddenPrint(htmlContent) {
   // Use window.open() instead of a hidden iframe.
@@ -2360,7 +2418,23 @@ function truncate(str, len) {
   return str.length > len ? str.substring(0, len) + '…' : str;
 }
 
-function detailItem(label, value, fullWidth) {
+function detailItem(label, value, fullWidth, key, editable = false) {
+  const role = sessionStorage.getItem('admin_role');
+  const isCounsellor = (role === 'counsellor');
+  
+  if (editable && !isCounsellor) {
+      if (key && (key.includes('address') || key === 'reference')) {
+          return `<div class="detail-item${fullWidth ? ' full-width' : ''}">
+            <span class="detail-label">${label}</span>
+            <textarea class="detail-input" data-key="${key}" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; font-family: inherit; background: var(--bg-card); color: var(--text-primary); resize: vertical;" rows="2">${value ?? ''}</textarea>
+          </div>`;
+      }
+      return `<div class="detail-item${fullWidth ? ' full-width' : ''}">
+        <span class="detail-label">${label}</span>
+        <input type="text" class="detail-input" data-key="${key}" value="${value ?? ''}" style="width:100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--bg-card); color: var(--text-primary);">
+      </div>`;
+  }
+
   return `<div class="detail-item${fullWidth ? ' full-width' : ''}">
     <span class="detail-label">${label}</span>
     <span class="detail-value">${value ?? '—'}</span>

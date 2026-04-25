@@ -1449,6 +1449,50 @@ app.put('/api/admin/enquiry/:id/stop-follow-up', adminAuth, async (req, res) => 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Update full enquiry (Admin only)
+app.put('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
+  if (req.userRole !== 'admin') {
+    return res.status(403).json({ error: 'Counsellors cannot edit full enquiry details.' });
+  }
+  try {
+    const id = req.params.id;
+    const body = req.body;
+    
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    const allowedFields = [
+      'student_name', 'student_email', 'student_mobile', 'father_name', 'father_mobile',
+      'mother_name', 'mother_mobile', 'address_line1', 'address_line2', 'address_city',
+      'address_district', 'address_state', 'address_pincode', 'education_qualification',
+      'education_board', 'expected_percentage', 'result_status', 'hostel_required',
+      'hostel_type', 'hostel_fee', 'transport_required', 'transport_route', 'transport_fee',
+      'physics_11', 'chemistry_11', 'math_11a', 'math_11b', 'english_11', 'language_11',
+      'physics_marks', 'physics_12_prac', 'chemistry_marks', 'chemistry_12_prac',
+      'math_12a', 'math_12b', 'mathematics_marks', 'english_12', 'kannada_12', 'other_12',
+      'jee_rank', 'comedk_rank', 'cet_rank', 'reference', 'gender'
+    ];
+
+    for (const field of allowedFields) {
+      if (body.hasOwnProperty(field)) {
+        fields.push(`${field} = $${idx++}`);
+        values.push(body[field]);
+      }
+    }
+
+    if (fields.length === 0) return res.json({ success: true, message: 'No fields to update' });
+
+    values.push(id);
+    const query = `UPDATE enquiries SET ${fields.join(', ')} WHERE id = $${idx}`;
+    await pool.query(query, values);
+
+    logAdminActivity(req.userName, 'Updated Full Enquiry', 'enquiry', parseInt(id), body.student_name || 'Enquiry', 'Admin updated multiple fields');
+    
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // Single enquiry
 app.get('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   try {
