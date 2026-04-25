@@ -1288,6 +1288,7 @@ function filterEnquiries() {
     if (statusFilter === 'applied') filtered = filtered.filter(r => r.has_application);
     if (statusFilter === 'management') filtered = filtered.filter(r => r.has_management);
     if (statusFilter === 'none') filtered = filtered.filter(r => !r.has_application && !r.has_management);
+    if (statusFilter === 'stopped') filtered = filtered.filter(r => r.follow_up_status === 'Stopped');
   }
 
   if (courseFilter) {
