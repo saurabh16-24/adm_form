@@ -3630,8 +3630,9 @@ async function exportOverviewPDF() {
           .metric-value { font-size: 16px; font-weight: 800; color: #1e40af; }
 
           /* Sections */
-          .section-title { font-size: 11px; font-weight: 800; margin: 12px 0 8px; color: #fff; background: #1e40af; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-          .sub-section-title { font-size: 10px; font-weight: 700; color: #1e40af; margin: 10px 0 5px; border-bottom: 1px solid #bfdbfe; padding-bottom: 2px; text-transform: uppercase; }
+          .section-title { page-break-before: always; font-size: 11px; font-weight: 800; margin: 0 0 10px; color: #fff; background: #1e40af; padding: 6px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.8px; display: block; }
+          .section-title:first-of-type { page-break-before: avoid; margin-top: 0; }
+          .sub-section-title { font-size: 10px; font-weight: 700; color: #1e40af; margin: 12px 0 6px; border-bottom: 1.5px solid #bfdbfe; padding-bottom: 2px; text-transform: uppercase; }
           
           .insight-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 6px 10px; font-size: 9px; margin-bottom: 10px; color: #1e40af; }
 
@@ -3713,7 +3714,6 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
-        <div class="page-break"></div>
 
         <div class="section-title">Academic & Marketing Intelligence</div>
         
