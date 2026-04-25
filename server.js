@@ -1245,6 +1245,12 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       mgtParams
     );
     
+    // Graph: Gender distribution (Enquiries)
+    const enqGender = await pool.query(
+      `SELECT gender, COUNT(*) as count FROM enquiries${enqWhere} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`,
+      enqParams
+    );
+
     // Graph: Gender distribution (Applications)
     const appGender = await pool.query(
       `SELECT gender, COUNT(*) as count FROM admissions${admWhere} AND gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY count DESC`,
@@ -1387,6 +1393,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         enquiry_pincodes:     enqPincodes.rows,
         application_pincodes: appPincodes.rows,
         admission_pincodes:   mgtPincodes.rows,
+        enquiry_gender:       enqGender.rows,
         application_gender:   appGender.rows,
         admission_gender:     admGender.rows,
         enquiry_courses:      enqCourse.rows,

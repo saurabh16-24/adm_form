@@ -667,7 +667,8 @@ function renderCharts(graphs, stats) {
   if (genCtx) {
     if (genderChartInstance) genderChartInstance.destroy();
     let genData = [];
-    if (genType === 'application') genData = graphs.application_gender || [];
+    if (genType === 'enquiry') genData = graphs.enquiry_gender || [];
+    else if (genType === 'application') genData = graphs.application_gender || [];
     else if (genType === 'admission') genData = graphs.admission_gender || [];
     
     if (genData.length === 0) {
