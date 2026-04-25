@@ -1344,15 +1344,16 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     let qualityParams = [...mgtParams];
     
     if (filterCourse) {
-      qualityWhere += ` AND branch = $${qualityParams.length + 1}`;
-      qualityParams.push(filterCourse);
+      const cleanCourse = filterCourse.replace(/^BE /, '');
+      qualityWhere += ` AND (branch ILIKE $${qualityParams.length + 1} OR branch ILIKE $${qualityParams.length + 2})`;
+      qualityParams.push(filterCourse, `%${cleanCourse}%`);
     }
 
     const academicQuality = await pool.query(
       `SELECT 
          ROUND(AVG(NULLIF(regexp_replace(pcm_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
          ROUND(AVG(NULLIF(regexp_replace(overall_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
-       FROM management_forms m WHERE 1=1 AND EXISTS(SELECT 1 FROM admissions a WHERE a.id = m.admission_id) ${qualityWhere.replace('WHERE 1=1', '')}`,
+       FROM management_forms m WHERE 1=1 ${qualityWhere.replace('WHERE 1=1', '')}`,
       qualityParams
     );
 
