@@ -3673,8 +3673,8 @@ async function exportOverviewPDF() {
           <div class="metric-card"><span class="metric-label">Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
+        <div class="section-title">Admission Funnel & Growth Trends</div>
         <div class="no-break">
-          <div class="section-title">Admission Funnel & Growth Trends</div>
           <div class="insight-box" style="margin-bottom: 20px;">
             <strong>Overall Pipeline Performance:</strong> Your conversion funnel currently shows an Enquiry-to-Application rate of <b>${enqToApp}%</b>, an Application-to-Admission rate of <b>${appToAdm}%</b>, and an overall institutional conversion of <b>${enqToAdm}%</b>.
           </div>
@@ -3697,7 +3697,6 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="section-title">Demographic Distribution Analysis</div>
-        
         <div class="no-break">
           <div class="sub-section-title">Gender Analysis</div>
           <div class="grid-3">
@@ -3712,9 +3711,8 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
+        <div class="section-title">Geographic / Area Reach Analysis</div>
         <div class="no-break">
-          <div class="section-title">Geographic / Area Reach Analysis</div>
-          <div class="sub-section-title">Gender Analysis</div>
           <div class="grid-3">
             <div class="chart-container"><h4>Enquiry Map</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
             <div class="chart-container"><h4>Application Map</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
@@ -3729,7 +3727,6 @@ async function exportOverviewPDF() {
 
 
         <div class="section-title">Course Preference & Demand Analysis</div>
-        
         <div class="no-break">
           <div class="sub-section-title">Course Preference Funnel</div>
           <div class="grid-3">
@@ -3744,9 +3741,8 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
+        <div class="section-title">Lead Source & Marketing Insights</div>
         <div class="no-break">
-          <div class="section-title">Lead Source & Marketing Insights</div>
-          <div class="sub-section-title">Course Preference Funnel</div>
           <div class="grid-2">
             <div>
               <div class="chart-container"><h4>Lead Channels</h4><img src="${sourceImg}" class="chart-img large"></div>
