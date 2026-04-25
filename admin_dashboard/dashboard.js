@@ -6,6 +6,7 @@ const API = window.location.origin; // same origin
 let allEnquiries  = [];
 let allAdmissions = [];
 let allManagement = [];
+let allRawEnquiries = [];
 let lastGraphs     = null;
 let pincodeChartInstance = null;
 let genderChartInstance = null;
@@ -157,6 +158,7 @@ function switchTab(tab) {
   const titles = {
     overview:   ['Overview', 'Dashboard analytics and insights'],
     enquiries:  ['Enquiries', 'Manage student enquiry records'],
+    'raw-enquiries': ['Raw Enquiry', 'Manage informal student leads and walk-ins'],
     admissions: ['Applications', 'Manage admission applications'],
     management: ['Admissions', 'Generated Management Admission Forms']
   };
@@ -165,6 +167,7 @@ function switchTab(tab) {
 
   if (tab === 'overview')   loadOverview();
   if (tab === 'enquiries')  loadEnquiries();
+  if (tab === 'raw-enquiries') loadRawEnquiries();
   if (tab === 'admissions') loadAdmissions();
   if (tab === 'management') loadManagementStatus();
 }
@@ -3228,3 +3231,132 @@ window.promptOtherRemark = function(id) {
     updateRemarks(id, 'admin_remarks', custom.trim());
   }
 };
+
+// ═══════════════ RAW ENQUIRIES ═══════════════
+
+async function loadRawEnquiries() {
+  try {
+    const data = await apiFetch('/api/admin/raw-enquiries');
+    allRawEnquiries = data.rows || [];
+    renderRawEnquiries(allRawEnquiries);
+  } catch (err) { console.error('Raw enquiries load error:', err); }
+}
+
+function renderRawEnquiries(data) {
+  const tbody = document.getElementById('raw-enquiry-body');
+  if (!tbody) return;
+  
+  const countEl = document.getElementById('raw-count');
+  if (countEl) countEl.textContent = `${data.length} records`;
+  
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td><span class="token-badge">${r.serial_no}</span></td>
+      <td><strong>${r.student_name}</strong></td>
+      <td>${r.phone_number}</td>
+      <td>${r.email_id || '—'}</td>
+      <td>${r.course}</td>
+      <td>${r.place}</td>
+      <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : 'tag-management'}">${r.mode}</span></td>
+      <td>${new Date(r.created_at).toLocaleDateString()}</td>
+      <td>
+        <button class="btn btn-delete" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function openRawEnquiryModal() {
+  document.getElementById('raw-enquiry-modal').classList.add('active');
+  // Reset form
+  ['raw-name', 'raw-phone', 'raw-email', 'raw-course', 'raw-place'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+  });
+  const modeEl = document.getElementById('raw-mode');
+  if (modeEl) modeEl.value = 'Telephonic';
+}
+
+function closeRawEnquiryModal() {
+  document.getElementById('raw-enquiry-modal').classList.remove('active');
+}
+
+async function saveRawEnquiry() {
+  const nameVal = document.getElementById('raw-name').value.trim();
+  const phoneVal = document.getElementById('raw-phone').value.trim();
+  
+  if (!nameVal || !phoneVal) {
+    alert('Name and Phone Number are mandatory');
+    return;
+  }
+
+  const payload = {
+    student_name: nameVal,
+    phone_number: phoneVal,
+    email_id: document.getElementById('raw-email').value.trim(),
+    course: document.getElementById('raw-course').value.trim(),
+    place: document.getElementById('raw-place').value.trim(),
+    mode: document.getElementById('raw-mode').value
+  };
+
+  try {
+    const res = await apiFetch('/api/admin/raw-enquiry', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (res.success) {
+      showToast('Raw enquiry saved successfully');
+      closeRawEnquiryModal();
+      loadRawEnquiries();
+    }
+  } catch (err) {
+    alert('Failed to save: ' + err.message);
+  }
+}
+
+async function deleteRawEnquiry(id) {
+  if (!confirm('Are you sure you want to delete this raw record?')) return;
+  try {
+    await apiFetch(`/api/admin/raw-enquiry/${id}`, { method: 'DELETE' });
+    showToast('Record deleted');
+    loadRawEnquiries();
+  } catch (err) {
+    alert('Failed to delete: ' + err.message);
+  }
+}
+
+function filterRawEnquiries() {
+  const search = document.getElementById('raw-enq-search').value.toLowerCase();
+  const filtered = allRawEnquiries.filter(r => 
+    (r.student_name || '').toLowerCase().includes(search) ||
+    (r.phone_number || '').toLowerCase().includes(search) ||
+    (r.email_id || '').toLowerCase().includes(search) ||
+    (r.course || '').toLowerCase().includes(search) ||
+    (r.place || '').toLowerCase().includes(search)
+  );
+  renderRawEnquiries(filtered);
+}
+
+function exportRawEnquiries() {
+  if (allRawEnquiries.length === 0) return alert('No data to export');
+  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Date', 'Created By'];
+  const rows = allRawEnquiries.map(r => [
+    r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, 
+    new Date(r.created_at).toLocaleString(), r.created_by
+  ]);
+  
+  let csv = headers.join(',') + '\n';
+  rows.forEach(row => {
+    csv += row.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(',') + '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('hidden', '');
+  a.setAttribute('href', url);
+  a.setAttribute('download', `Raw_Enquiries_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}

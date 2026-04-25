@@ -73,6 +73,10 @@
           <span class="material-icons-round">contact_mail</span>
           <span>Enquiries</span>
         </a>
+        <a href="#" class="nav-item" data-tab="raw-enquiries" id="nav-raw-enquiries">
+          <span class="material-icons-round">edit_note</span>
+          <span>Raw Enquiry</span>
+        </a>
         <a href="#" class="nav-item" data-tab="admissions" id="nav-admissions">
           <span class="material-icons-round">how_to_reg</span>
           <span>Applications</span>
@@ -627,6 +631,49 @@
         </div>
       </section>
 
+      <!-- ───── TAB: Raw Enquiry ───── -->
+      <section class="tab-content" id="tab-raw-enquiries">
+        <div class="action-bar">
+          <div class="search-box">
+            <span class="material-icons-round">search</span>
+            <input type="text" id="raw-enq-search" placeholder="Search by name, phone or email..." oninput="filterRawEnquiries()">
+          </div>
+          <div class="filter-group">
+            <button class="btn btn-primary" onclick="openRawEnquiryModal()">
+              <span class="material-icons-round">add</span>
+              <span>Add Raw Record</span>
+            </button>
+            <button class="btn btn-secondary" onclick="exportRawEnquiries()">
+              <span class="material-icons-round">file_download</span>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+        <div class="table-container card">
+          <table id="raw-enquiry-table">
+            <thead>
+              <tr>
+                <th>SL NO.</th>
+                <th>Candidate Name</th>
+                <th>Phone Number</th>
+                <th>Email ID</th>
+                <th>Course</th>
+                <th>Place</th>
+                <th>Mode</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="raw-enquiry-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span id="raw-count">0 records</span>
+          </div>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="dashboard-footer">
         <div class="footer-info" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
@@ -697,6 +744,48 @@
           <button class="btn" id="send-bulk-mail-btn" style="background: #1e40af; border: none; color: white; padding: 10px 24px; font-weight: 600; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;" onclick="sendBulkMail()">
             <span class="material-icons-round" style="font-size: 18px;">send</span> Send Mail
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ RAW ENQUIRY MODAL ═══════════════ -->
+  <div id="raw-enquiry-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 id="raw-modal-title">Add Raw Enquiry</h2>
+        <button class="modal-close" onclick="closeRawEnquiryModal()"><span class="material-icons-round">close</span></button>
+      </div>
+      <div class="modal-body" style="padding: 25px;">
+        <div class="form-group">
+          <label>Candidate Name</label>
+          <input type="text" id="raw-name" placeholder="Enter student name">
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" id="raw-phone" placeholder="Enter mobile number">
+        </div>
+        <div class="form-group">
+          <label>Email ID</label>
+          <input type="email" id="raw-email" placeholder="Enter email address">
+        </div>
+        <div class="form-group">
+          <label>Course</label>
+          <input type="text" id="raw-course" placeholder="Enter interested course">
+        </div>
+        <div class="form-group">
+          <label>Place</label>
+          <input type="text" id="raw-place" placeholder="Enter candidate place/location">
+        </div>
+        <div class="form-group">
+          <label>Inquiry Mode</label>
+          <select id="raw-mode" class="form-control" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit;">
+            <option value="Telephonic">Telephonic</option>
+            <option value="Email">Email</option>
+          </select>
+        </div>
+        <div style="margin-top: 25px;">
+          <button class="btn btn-primary" style="width: 100%;" onclick="saveRawEnquiry()">Save Record</button>
         </div>
       </div>
     </div>

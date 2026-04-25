@@ -723,6 +723,22 @@ app.get('/api/enquiry/:id', async (req, res) => {
       );
     `);
 
+    // Create raw_enquiries table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS raw_enquiries (
+        id SERIAL PRIMARY KEY,
+        serial_no VARCHAR(50),
+        student_name VARCHAR(150),
+        phone_number VARCHAR(50),
+        email_id VARCHAR(150),
+        course VARCHAR(150),
+        place VARCHAR(150),
+        mode VARCHAR(50), 
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by VARCHAR(100)
+      );
+    `);
+
     // Also ensure enquiries has sequence_number + structured address columns
 
     const enquiryAlterCols = [
@@ -1457,6 +1473,50 @@ app.put('/api/admin/enquiry/:id/stop-follow-up', adminAuth, async (req, res) => 
     );
     const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
     logAdminActivity(req.userName, 'Stopped Follow-up', 'enquiry', parseInt(req.params.id), studentName, 'Follow-up permanently stopped');
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ═══════════════ RAW ENQUIRIES ═══════════════
+
+// Get all raw enquiries
+app.get('/api/admin/raw-enquiries', adminAuth, async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM raw_enquiries ORDER BY id DESC');
+    res.json({ rows: result.rows });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create raw enquiry
+app.post('/api/admin/raw-enquiry', adminAuth, async (req, res) => {
+  try {
+    const { student_name, phone_number, email_id, course, place, mode } = req.body;
+    
+    // Auto-generate serial no (e.g., RAW/2026/001)
+    const year = new Date().getFullYear();
+    const countRes = await pool.query('SELECT COUNT(*) FROM raw_enquiries WHERE EXTRACT(YEAR FROM created_at) = $1', [year]);
+    const count = parseInt(countRes.rows[0].count) + 1;
+    const serial_no = `RAW/${year}/${String(count).padStart(3, '0')}`;
+
+    const query = `
+      INSERT INTO raw_enquiries (serial_no, student_name, phone_number, email_id, course, place, mode, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `;
+    const result = await pool.query(query, [serial_no, student_name, phone_number, email_id, course, place, mode, req.userName]);
+    
+    logAdminActivity(req.userName, 'Created Raw Enquiry', 'raw_enquiry', result.rows[0].id, student_name, `Mode: ${mode}, Serial: ${serial_no}`);
+    res.json({ success: true, row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Delete raw enquiry
+app.delete('/api/admin/raw-enquiry/:id', adminAuth, async (req, res) => {
+  if (req.userRole === 'counsellor') return res.status(403).json({ error: 'Counsellors cannot delete records' });
+  try {
+    const old = await pool.query('SELECT student_name FROM raw_enquiries WHERE id = $1', [req.params.id]);
+    await pool.query('DELETE FROM raw_enquiries WHERE id = $1', [req.params.id]);
+    logAdminActivity(req.userName, 'Deleted Raw Enquiry', 'raw_enquiry', parseInt(req.params.id), old.rows[0]?.student_name, 'Raw record deleted');
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
