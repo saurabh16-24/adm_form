@@ -2589,7 +2589,9 @@ function renderManagement(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewManagementForm(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printManagementFromRecord(${r.id})" title="Print Form"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      <button class="btn btn-delete" onclick="deleteManagement(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+      ${sessionStorage.getItem('admin_role') !== 'counsellor' ? `
+        <button class="btn btn-delete" onclick="deleteManagement(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+      ` : ''}
     </td>
   </tr>`).join('');
 }
@@ -3280,7 +3282,9 @@ function renderRawEnquiries(data) {
         ` : `
           <span class="converted-badge"><i class="fas fa-check-circle"></i> Converted</span>
         `}
-        <button class="btn btn-delete" style="padding: 6px; border-radius: 8px;" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:18px">delete</span></button>
+        ${sessionStorage.getItem('admin_role') !== 'counsellor' ? `
+          <button class="btn btn-delete" style="padding: 6px; border-radius: 8px;" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:18px">delete</span></button>
+        ` : ''}
       </td>
     </tr>
   `).join('');
