@@ -633,19 +633,19 @@
 
       <!-- ───── TAB: Raw Enquiry ───── -->
       <section class="tab-content" id="tab-raw-enquiries">
-        <div class="action-bar">
-          <div class="search-box">
+        <div class="action-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px;">
+          <div class="search-box" style="flex: 1; max-width: 400px;">
             <span class="material-icons-round">search</span>
-            <input type="text" id="raw-enq-search" placeholder="Search by name, phone or email..." oninput="filterRawEnquiries()">
+            <input type="text" id="raw-enq-search" placeholder="Quick search leads..." oninput="filterRawEnquiries()" style="border-radius: 12px;">
           </div>
-          <div class="filter-group">
-            <button class="btn btn-primary" onclick="openRawEnquiryModal()">
-              <span class="material-icons-round">add</span>
-              <span>Add Raw Record</span>
+          <div class="filter-group" style="display: flex; gap: 12px;">
+            <button class="btn btn-primary" onclick="openRawEnquiryModal()" style="border-radius: 10px; padding: 10px 18px; font-weight: 700; gap: 8px;">
+              <span class="material-icons-round">person_add_alt</span>
+              <span>Add Record</span>
             </button>
-            <button class="btn btn-secondary" onclick="exportRawEnquiries()">
-              <span class="material-icons-round">file_download</span>
-              <span>Export CSV</span>
+            <button class="btn btn-secondary" onclick="exportRawEnquiries()" style="border-radius: 10px; padding: 10px 18px; font-weight: 700; gap: 8px;">
+              <span class="material-icons-round">sim_card_download</span>
+              <span>Export</span>
             </button>
           </div>
         </div>
@@ -752,40 +752,61 @@
   <!-- ═══════════════ RAW ENQUIRY MODAL ═══════════════ -->
   <div id="raw-enquiry-modal" class="modal-overlay">
     <div class="modal-card" style="max-width: 500px;">
-      <div class="modal-header">
-        <h2 id="raw-modal-title">Add Raw Enquiry</h2>
+      <div class="modal-header" style="background: #f8fafc; padding: 20px 24px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:40px; height:40px; border-radius:10px; background:rgba(59, 130, 246, 0.1); color:#3b82f6; display:flex; align-items:center; justify-content:center;">
+            <span class="material-icons-round">edit_note</span>
+          </div>
+          <div>
+            <h2 id="raw-modal-title" style="font-size:1.1rem; font-weight:800; color:#1e293b;">Add Raw Enquiry</h2>
+            <p style="font-size:0.8rem; color:#64748b;">Log new student walk-ins or calls</p>
+          </div>
+        </div>
         <button class="modal-close" onclick="closeRawEnquiryModal()"><span class="material-icons-round">close</span></button>
       </div>
-      <div class="modal-body" style="padding: 25px;">
-        <div class="form-group">
-          <label>Candidate Name</label>
-          <input type="text" id="raw-name" placeholder="Enter student name">
-        </div>
-        <div class="form-group">
-          <label>Phone Number</label>
-          <input type="text" id="raw-phone" placeholder="Enter mobile number">
-        </div>
-        <div class="form-group">
-          <label>Email ID</label>
-          <input type="email" id="raw-email" placeholder="Enter email address">
-        </div>
-        <div class="form-group">
-          <label>Course</label>
-          <input type="text" id="raw-course" placeholder="Enter interested course">
-        </div>
-        <div class="form-group">
-          <label>Place</label>
-          <input type="text" id="raw-place" placeholder="Enter candidate place/location">
-        </div>
-        <div class="form-group">
-          <label>Inquiry Mode</label>
-          <select id="raw-mode" class="form-control" style="width:100%; padding:10px; border:1px solid #e2e8f0; border-radius:8px; font-family:inherit;">
-            <option value="Telephonic">Telephonic</option>
-            <option value="Email">Email</option>
-          </select>
-        </div>
-        <div style="margin-top: 25px;">
-          <button class="btn btn-primary" style="width: 100%;" onclick="saveRawEnquiry()">Save Record</button>
+      <div class="modal-body" style="padding: 24px;">
+        <div class="raw-form-grid" style="display: flex; flex-direction: column; gap: 16px;">
+          
+          <div class="form-group">
+            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Candidate Name <span style="color:red">*</span></label>
+            <input type="text" id="raw-name" class="modal-input" placeholder="Enter student full name" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; outline:none; transition:all 0.2s;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Phone Number <span style="color:red">*</span></label>
+              <input type="text" id="raw-phone" class="modal-input" placeholder="10-digit mobile" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; outline:none;">
+            </div>
+            <div class="form-group">
+              <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Mode</label>
+              <select id="raw-mode" class="modal-input" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; background:#fff; outline:none; cursor:pointer;">
+                <option value="Telephonic">📞 Telephonic</option>
+                <option value="Email">📧 Email</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Email ID</label>
+            <input type="email" id="raw-email" class="modal-input" placeholder="example@gmail.com" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; outline:none;">
+          </div>
+
+          <div class="form-group">
+            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Interested Course</label>
+            <input type="text" id="raw-course" class="modal-input" placeholder="e.g. BE Computer Science" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; outline:none;">
+          </div>
+
+          <div class="form-group">
+            <label style="display:block; font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px; letter-spacing:0.5px;">Place / Location</label>
+            <input type="text" id="raw-place" class="modal-input" placeholder="e.g. Bangalore, Karnataka" style="width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e2e8f0; font-size:0.9rem; outline:none;">
+          </div>
+
+          <div style="margin-top: 12px;">
+            <button class="btn btn-primary" style="width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);" onclick="saveRawEnquiry()">
+              <span class="material-icons-round">save</span>
+              Save Raw Record
+            </button>
+          </div>
         </div>
       </div>
     </div>
