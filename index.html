@@ -308,11 +308,11 @@
                 <label>11<sup>th</sup> Standard Marks: <span class="required-note">(For Andhra Pradesh/Telangana students only)</span></label>
                 <div class="marks-fields">
                     <div class="marks-field">
-                        <label for="physics11">Physics (Theory):</label>
+                        <label for="physics11">Physics <span class="theory-suffix">(Theory)</span>:</label>
                         <input type="number" id="physics11" name="physics11">
                     </div>
                     <div class="marks-field">
-                        <label for="chemistry11">Chemistry (Theory):</label>
+                        <label for="chemistry11">Chemistry <span class="theory-suffix">(Theory)</span>:</label>
                         <input type="number" id="chemistry11" name="chemistry11">
                     </div>
                     <div class="marks-field">
@@ -340,11 +340,11 @@
                 <div class="marks-fields marks-fields-12">
                     <!-- Row 1: Physics, Chemistry, Mathematics -->
                     <div class="marks-field">
-                        <label for="physics">Physics (Theory):</label>
+                        <label for="physics">Physics <span class="theory-suffix">(Theory)</span>:</label>
                         <input type="number" id="physics" name="physics">
                     </div>
                     <div class="marks-field">
-                        <label for="chemistry">Chemistry (Theory): <span class="optional-note">(Optional)</span></label>
+                        <label for="chemistry">Chemistry <span class="theory-suffix">(Theory)</span>: <span class="optional-note">(Optional)</span></label>
                         <input type="number" id="chemistry" name="chemistry">
                     </div>
                     <div class="marks-field" id="mathematics12_standard_group">
@@ -636,7 +636,12 @@
                 const resultStatus     = document.getElementById('resultStatus').value;
                 const isPassed         = resultStatus === 'Passed';
 
-                if (this.value === 'AP/Telangana') {
+                const isAP = this.value === 'AP/Telangana';
+                document.querySelectorAll('.theory-suffix').forEach(span => {
+                    span.style.display = isAP ? 'inline' : 'none';
+                });
+
+                if (isAP) {
                     // Only show 11th section if student has passed
                     if (marksSection11th) marksSection11th.style.display = isPassed ? 'block' : 'none';
                     document.getElementById('physics12Practical_group').style.display = 'block';
