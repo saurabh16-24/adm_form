@@ -112,6 +112,14 @@
 
       <!-- ───── TAB: Overview ───── -->
       <section class="tab-content active" id="tab-overview">
+        <div class="tab-actions" style="margin-bottom: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="btn" onclick="exportOverviewPDF()" style="background: white; border: 1px solid var(--accent-purple); color: var(--accent-purple); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
+            <span class="material-icons-round">picture_as_pdf</span> Export PDF Report
+          </button>
+          <button class="btn" onclick="exportOverviewCSV()" style="background: var(--accent-blue-glow); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
+            <span class="material-icons-round">table_chart</span> Export CSV Data
+          </button>
+        </div>
         <div class="stats-grid">
           <div class="stat-card stat-blue">
             <div class="stat-icon"><span class="material-icons-round">contact_mail</span></div>
