@@ -3746,7 +3746,17 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="section-title">Admitted Students Performance Details</div>
-        <div style="font-size: 7.5px;">
+        <div style="margin-top: 10px; overflow-x: visible;">
+          <style>
+            .stats-table { width: 100%; border-collapse: collapse; font-size: 7px; table-layout: auto; }
+            .stats-table th, .stats-table td { border: 1px solid #94a3b8; padding: 3px 2px; text-align: center; }
+            .stats-table thead th { background: #f1f5f9; font-weight: 800; color: #334155; text-transform: uppercase; }
+            .stats-table th[colspan] { background: #e2e8f0; color: #1e40af; border-bottom: 2px solid #1e40af; }
+            .stats-table .course-name { text-align: left; padding-left: 5px; font-weight: 700; background: #f8fafc; }
+            .stats-table .total-row { background: #1e293b; color: white; font-weight: 800; }
+            .stats-table .total-row td { border-color: #334155; }
+            .stats-table .actual-pct { font-weight: 800; color: #1e40af; background: #eff6ff; }
+          </style>
           ${cleanTableHtml}
         </div>
 
