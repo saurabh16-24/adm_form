@@ -3554,11 +3554,16 @@ async function exportOverviewPDF() {
     renderCharts(lastGraphs, lastStats);
 
     const metrics = {
-      enq: document.getElementById('stat-enquiries').textContent,
-      adm: document.getElementById('stat-admissions').textContent,
-      mgt: document.getElementById('stat-management').textContent,
+      enq: parseInt(document.getElementById('stat-enquiries').textContent) || 0,
+      adm: parseInt(document.getElementById('stat-admissions').textContent) || 0,
+      mgt: parseInt(document.getElementById('stat-management').textContent) || 0,
       conv: document.getElementById('stat-raw-conv').textContent
     };
+
+    // Calculate detailed conversion rates
+    const enqToApp = metrics.enq > 0 ? ((metrics.adm / metrics.enq) * 100).toFixed(1) : 0;
+    const appToAdm = metrics.adm > 0 ? ((metrics.mgt / metrics.adm) * 100).toFixed(1) : 0;
+    const enqToAdm = metrics.enq > 0 ? ((metrics.mgt / metrics.enq) * 100).toFixed(1) : 0;
 
     const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
@@ -3657,7 +3662,9 @@ async function exportOverviewPDF() {
 
         <div class="section-title">Admission Funnel & Velocity</div>
         <div class="insight-box">
-          <strong>Funnel Insight:</strong> Your conversion rate from initial Enquiry to confirmed Admission is currently <strong>${((parseInt(metrics.adm)/parseInt(metrics.enq))*100).toFixed(1)}%</strong>. 
+          <strong>Funnel Insight:</strong> The conversion rate from <strong>Enquiry to Application is ${enqToApp}%</strong>, 
+          from <strong>Application to Admission is ${appToAdm}%</strong>, and the overall conversion from 
+          <strong>Enquiry to Admission is ${enqToAdm}%</strong>. 
           The velocity chart below indicates daily submission patterns over the last 30 days.
         </div>
         <div class="charts-row" style="grid-template-columns: 1fr;">
