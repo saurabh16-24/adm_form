@@ -1453,6 +1453,21 @@ app.put('/api/admin/enquiry/:id/stop-follow-up', adminAuth, async (req, res) => 
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Resume follow-up for an enquiry
+app.put('/api/admin/enquiry/:id/resume-follow-up', adminAuth, async (req, res) => {
+  try {
+    const old = await pool.query('SELECT student_name FROM enquiries WHERE id = $1', [req.params.id]);
+    await pool.query(
+      "UPDATE enquiries SET follow_up_status = 'Active' WHERE id = $1",
+      [req.params.id]
+    );
+    const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
+    logAdminActivity(req.userName, 'Resumed Follow-up', 'enquiry', parseInt(req.params.id), studentName, 'Follow-up resumed to Active status');
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+
 // Update full enquiry (Admin only)
 app.put('/api/admin/enquiry/:id', adminAuth, async (req, res) => {
   if (req.userRole !== 'admin') {

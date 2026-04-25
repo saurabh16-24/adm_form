@@ -1108,7 +1108,10 @@ function renderEnquiries(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewEnquiry(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printEnquiry(${r.id})" title="Print Enquiry"><span class="material-icons-round" style="font-size:16px">print</span></button>
-      <button class="btn btn-stop" onclick="stopFollowUp(${r.id})" title="Stop Follow-up"><span class="material-icons-round" style="font-size:16px">block</span></button>
+      ${r.follow_up_status === 'Stopped' 
+        ? `<button class="btn btn-start" onclick="resumeFollowUp(${r.id})" title="Enable Follow-up" style="background:#10b981; color:white; border:none;"><span class="material-icons-round" style="font-size:16px">play_arrow</span></button>`
+        : `<button class="btn btn-stop" onclick="stopFollowUp(${r.id})" title="Stop Follow-up"><span class="material-icons-round" style="font-size:16px">block</span></button>`
+      }
       ${role !== 'counsellor' ? `<button class="btn btn-delete" onclick="deleteEnquiry(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>` : ''}
     </td>
   </tr>`}).join('');
@@ -1129,6 +1132,20 @@ async function stopFollowUp(id) {
     showToast('Failed to stop follow-up: ' + err.message, 'error');
   }
 }
+
+async function resumeFollowUp(id) {
+  if (!confirm('Resume follow-up for this student?')) return;
+  try {
+    const res = await apiFetch(`/api/admin/enquiry/${id}/resume-follow-up`, { method: 'PUT' });
+    if (res.success) {
+      showToast('Follow-up resumed');
+      loadEnquiries();
+    }
+  } catch (err) { 
+    showToast('Failed to resume follow-up: ' + err.message, 'error');
+  }
+}
+
 
 
 function exportEnquiriesCSV() {
