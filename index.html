@@ -580,6 +580,19 @@
             });
         });
         
+        // Capture raw_id from URL if present (moved inside initialization)
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawId = urlParams.get('raw_id');
+            if (rawId) {
+                const el = document.getElementById('raw_id');
+                if (el) {
+                    el.value = rawId;
+                    console.log('Conversion link detected. Raw ID:', rawId);
+                }
+            }
+        });
+        
         // Fetch next token from server and update the display
         async function fetchAndDisplayNextToken() {
             try {
@@ -950,6 +963,7 @@
 
                     const formData = {
                         token_number: tokenStr,
+                        raw_id: document.getElementById('raw_id').value ? parseInt(document.getElementById('raw_id').value, 10) : null,
                         enquiry_date: new Date().toISOString().split('T')[0],
                         student_name: document.getElementById('studentName').value,
                         gender: document.getElementById('genderSelect').value,
@@ -1029,6 +1043,14 @@
 
                     const result = await dbConnection.submitEnquiry(formData);
                     if (result.error) throw new Error(result.error);
+                    
+                    if (formData.raw_id) {
+                        console.log('Submission successfully linked to lead ID:', formData.raw_id);
+                        const convText = document.createElement('div');
+                        convText.innerHTML = '<span style="color:#10b981; font-size:0.75rem; font-weight:700;">Lead conversion tracked ✓</span>';
+                        convText.style.marginBottom = '10px';
+                        document.getElementById('successModal').querySelector('.modal-body').prepend(convText);
+                    }
 
                     document.getElementById('tokenNumber').textContent = tokenStr;
                     const dbId = result.data?.id || tokenStr;
@@ -1191,16 +1213,6 @@
                 } finally {
                     spinner.style.display = 'none';
                 }
-            }
-        })();
-        // Capture raw_id from URL if present
-        (function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const rawId = urlParams.get('raw_id');
-            if (rawId) {
-                const el = document.getElementById('raw_id');
-                if (el) el.value = rawId;
-                console.log('Conversion link detected. Raw ID:', rawId);
             }
         })();
     </script>

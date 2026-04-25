@@ -207,6 +207,7 @@ async function loadOverview() {
     if (selectedCourse) url += `course=${encodeURIComponent(selectedCourse)}&`;
 
     const stats = await apiFetch(url);
+    console.log('Overview Stats:', stats);
     
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
@@ -3261,6 +3262,8 @@ function renderRawEnquiries(data) {
   const countEl = document.getElementById('raw-count');
   if (countEl) countEl.textContent = `${data.length} records`;
   
+  console.log('Rendering Raw Enquiries:', data);
+  
   tbody.innerHTML = data.map(r => `
     <tr class="${r.is_converted ? 'row-converted' : ''}">
       <td><span class="token-badge">${r.serial_no}</span></td>
@@ -3424,6 +3427,7 @@ function openQRModal(rawId) {
   container.innerHTML = "";
   const origin = window.location.origin;
   activeQRLink = `${origin}/index.html?raw_id=${rawId}`;
+  console.log('Generated QR Link:', activeQRLink);
   linkText.textContent = activeQRLink;
   
   new QRCode(container, {

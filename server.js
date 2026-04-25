@@ -154,6 +154,22 @@ const pool = new Pool({
 async function initDB() {
   const client = await pool.connect();
   try {
+    // Create raw_enquiries table first (required for foreign keys)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS raw_enquiries (
+        id SERIAL PRIMARY KEY,
+        serial_no VARCHAR(50),
+        student_name VARCHAR(150),
+        phone_number VARCHAR(50),
+        email_id VARCHAR(150),
+        course VARCHAR(150),
+        place VARCHAR(150),
+        mode VARCHAR(50), 
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_by VARCHAR(100)
+      );
+    `);
+
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
     console.log("Applied one-time corrective reset for IDs 24 and 22.");
@@ -293,6 +309,8 @@ app.post('/api/submit-enquiry', async (req, res) => {
     await client.query('BEGIN');
     const d = req.body;
     const today = getISTDateString();
+    
+    if (d.raw_id) console.log(`[Submission] Linked to Raw Lead ID: ${d.raw_id}`);
 
     // ── Atomically assign token number (advisory lock prevents duplicates) ──
     await client.query('SELECT pg_advisory_xact_lock(1001)'); // lock id 1001 = enquiry tokens
@@ -403,7 +421,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
       /* $57 */ d.transport_fee || null,
       /* $58 */ d.institution_name || null,
       /* $59 */ d.year_of_passing || null,
-      /* $60 */ d.raw_id || null
+      /* $60 */ (d.raw_id ? parseInt(d.raw_id, 10) : null)
     ];
 
     const result = await client.query(query, values);
@@ -725,21 +743,7 @@ app.get('/api/enquiry/:id', async (req, res) => {
       );
     `);
 
-    // Create raw_enquiries table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS raw_enquiries (
-        id SERIAL PRIMARY KEY,
-        serial_no VARCHAR(50),
-        student_name VARCHAR(150),
-        phone_number VARCHAR(50),
-        email_id VARCHAR(150),
-        course VARCHAR(150),
-        place VARCHAR(150),
-        mode VARCHAR(50), 
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        created_by VARCHAR(100)
-      );
-    `);
+    // raw_enquiries table created in main initDB()
 
     // Also ensure enquiries has sequence_number + structured address columns
 
@@ -1426,7 +1430,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         raw_conversion: (await pool.query(`
           SELECT 
             (SELECT COUNT(*) FROM raw_enquiries) as total_raw,
-            (SELECT COUNT(*) FROM enquiries WHERE raw_id IS NOT NULL) as converted
+            (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL) as converted
         `)).rows[0]
       },
       quality: academicQuality.rows[0]
