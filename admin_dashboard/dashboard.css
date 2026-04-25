@@ -535,7 +535,20 @@ body {
 
 .data-table tbody tr:hover { background: var(--bg-card-hover); }
 .data-table tbody tr:last-child { border-bottom: none; }
-.data-table tbody tr.row-converted { background-color: rgba(14, 165, 233, 0.1) !important; }
+.data-table tbody tr.row-converted {
+  background-color: rgba(14, 165, 233, 0.3) !important;
+}
+.converted-badge {
+  color: #0369a1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(14, 165, 233, 0.2);
+  border-radius: 4px;
+}
 .data-table tbody tr.row-converted:hover { background-color: rgba(14, 165, 233, 0.15) !important; }
 
 .data-table td {

@@ -3274,8 +3274,12 @@ function renderRawEnquiries(data) {
       <td>${r.place}</td>
       <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : 'tag-management'}">${r.mode}</span></td>
       <td>${new Date(r.created_at).toLocaleDateString()}</td>
-      <td style="display:flex; gap:8px;">
-        <button class="btn btn-secondary" style="padding: 6px; border-radius: 8px;" onclick="openQRModal(${r.id})" title="Generate QR"><span class="material-icons-round" style="font-size:18px">qr_code_2</span></button>
+      <td style="display:flex; gap:8px; align-items:center;">
+        ${!r.is_converted ? `
+          <button class="btn btn-secondary" style="padding: 6px; border-radius: 8px;" onclick="openQRModal(${r.id})" title="Generate QR"><span class="material-icons-round" style="font-size:18px">qr_code_2</span></button>
+        ` : `
+          <span class="converted-badge"><i class="fas fa-check-circle"></i> Converted</span>
+        `}
         <button class="btn btn-delete" style="padding: 6px; border-radius: 8px;" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:18px">delete</span></button>
       </td>
     </tr>
