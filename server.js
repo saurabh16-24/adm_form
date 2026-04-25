@@ -212,6 +212,7 @@ async function initDB() {
         english_12 NUMERIC(5,2),
         other_12 NUMERIC(5,2),
         follow_up_date DATE,
+        follow_up_status VARCHAR(50) DEFAULT 'Active',
         admin_remarks VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -233,7 +234,8 @@ async function initDB() {
       ['pref_fees', 'JSONB'],
       ['hostel_type', 'TEXT'], ['hostel_fee', 'NUMERIC'],
       ['transport_route', 'TEXT'], ['transport_fee', 'NUMERIC'],
-      ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)']
+      ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)'],
+      ['follow_up_status', "VARCHAR(50) DEFAULT 'Active'"]
     ];
 
     for (const [col, type] of columns) {
