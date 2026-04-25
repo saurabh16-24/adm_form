@@ -3653,7 +3653,6 @@ async function exportOverviewPDF() {
           .chart-img.large { max-height: 220px; }
 
           .footer { position: fixed; bottom: 8mm; left: 8mm; right: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 7px; color: #94a3b8; display: flex; justify-content: space-between; }
-          .page-break { page-break-before: always; }
           .no-break { page-break-inside: avoid; }
         </style>
       </head>
@@ -3674,19 +3673,21 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="section-title">Admission Funnel & Growth Trends</div>
-        <div class="no-break">
-          <div class="insight-box" style="margin-bottom: 20px;">
-            <strong>Overall Pipeline Performance:</strong> Your conversion funnel currently shows an Enquiry-to-Application rate of <b>${enqToApp}%</b>, an Application-to-Admission rate of <b>${appToAdm}%</b>, and an overall institutional conversion of <b>${enqToAdm}%</b>.
-          </div>
-          
-          <div class="chart-container" style="margin-bottom: 10px;">
+        <div class="insight-box" style="margin-bottom: 20px;">
+          <strong>Overall Pipeline Performance:</strong> Your conversion funnel currently shows an Enquiry-to-Application rate of <b>${enqToApp}%</b>, an Application-to-Admission rate of <b>${appToAdm}%</b>, and an overall institutional conversion of <b>${enqToAdm}%</b>.
+        </div>
+        
+        <div class="no-break" style="margin-bottom: 15px;">
+          <div class="chart-container">
             <h4>Funnel Lifecycle Analysis</h4>
             <img src="${ratioImg}" class="chart-img large" style="max-height: 250px;">
             <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
               <b>Visualization Explanation:</b> This lifecycle chart represents the progressive conversion of potential leads through the admission stages. The steepness of the curve indicates where the highest drop-off occurs. A balanced funnel should show a gradual transition, ensuring that a healthy volume of initial interest (Enquiries) successfully matures into confirmed enrollments (Admissions).
             </p>
           </div>
+        </div>
 
+        <div class="no-break" style="margin-bottom: 15px;">
           <div class="chart-container">
             <h4>Daily Submission Velocity (30 Day Trend)</h4>
             <img src="${timelineImg}" class="chart-img large" style="max-height: 250px;">
@@ -3697,45 +3698,31 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="section-title">Demographic Distribution Analysis</div>
-        <div class="no-break">
-          <div class="sub-section-title">Gender Analysis</div>
-          <div class="grid-3">
-            <div class="chart-container"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div>
-            <div class="chart-container"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div>
-            <div class="chart-container"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div>
-          </div>
-          <div class="grid-3">
-            ${generateDataHtml('Enq Gender', lastGraphs.enquiry_gender, 'gender', 'count')}
-            ${generateDataHtml('App Gender', lastGraphs.application_gender, 'gender', 'count')}
-            ${generateDataHtml('Adm Gender', lastGraphs.admission_gender, 'gender', 'count')}
-          </div>
+        <div class="sub-section-title">Gender Analysis</div>
+        <div class="grid-3">
+          <div class="no-break"><div class="chart-container"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div></div>
+          <div class="no-break"><div class="chart-container"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div></div>
+          <div class="no-break"><div class="chart-container"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div></div>
+        </div>
+        <div class="grid-3">
+          <div class="no-break">${generateDataHtml('Enq Gender', lastGraphs.enquiry_gender, 'gender', 'count')}</div>
+          <div class="no-break">${generateDataHtml('App Gender', lastGraphs.application_gender, 'gender', 'count')}</div>
+          <div class="no-break">${generateDataHtml('Adm Gender', lastGraphs.admission_gender, 'gender', 'count')}</div>
         </div>
 
         <div class="section-title">Geographic / Area Reach Analysis</div>
-        <div class="no-break">
-          <div class="grid-3">
-            <div class="chart-container"><h4>Enquiry Map</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
-            <div class="chart-container"><h4>Application Map</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
-            <div class="chart-container"><h4>Admission Map</h4><img src="${snapshots.admission.pin}" class="chart-img"></div>
-          </div>
-          <div class="grid-3">
-            ${generateDataHtml('Enq Region', lastGraphs.enquiry_pincodes, 'pincode', 'count')}
-            ${generateDataHtml('App Region', lastGraphs.application_pincodes, 'pincode', 'count')}
-            ${generateDataHtml('Adm Region', lastGraphs.admission_pincodes, 'pincode', 'count')}
-          </div>
+        <div class="grid-3">
+          <div class="no-break"><div class="chart-container"><h4>Enquiry Map</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div></div>
+          <div class="no-break"><div class="chart-container"><h4>Application Map</h4><img src="${snapshots.application.pin}" class="chart-img"></div></div>
+          <div class="no-break"><div class="chart-container"><h4>Admission Map</h4><img src="${snapshots.admission.pin}" class="chart-img"></div></div>
+        </div>
+        <div class="grid-3">
+          <div class="no-break">${generateDataHtml('Enq Region', lastGraphs.enquiry_pincodes, 'pincode', 'count')}</div>
+          <div class="no-break">${generateDataHtml('App Region', lastGraphs.application_pincodes, 'pincode', 'count')}</div>
+          <div class="no-break">${generateDataHtml('Adm Region', lastGraphs.admission_pincodes, 'pincode', 'count')}</div>
         </div>
 
-
         <div class="section-title">Course Preference & Demand Analysis</div>
-        <div class="no-break">
-          <div class="sub-section-title">Course Preference Funnel</div>
-          <div class="grid-3">
-            <div class="chart-container"><h4>Enq Interest</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
-            <div class="chart-container"><h4>App Demand</h4><img src="${snapshots.application.course}" class="chart-img"></div>
-            <div class="chart-container"><h4>Adm Confirmed</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
-          </div>
-          <div class="grid-3">
-            ${generateDataHtml('Enq Preference', lastGraphs.enquiry_courses, 'course', 'count')}
             ${generateDataHtml('App Preference', lastGraphs.application_courses, 'course', 'count')}
             ${generateDataHtml('Adm Course', lastGraphs.admission_courses, 'course', 'count')}
           </div>
