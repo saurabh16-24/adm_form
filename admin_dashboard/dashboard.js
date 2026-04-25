@@ -3616,41 +3616,41 @@ async function exportOverviewPDF() {
         <title>SVCE Full Analytics Report - ${academicYear}</title>
         <style>
           @page { size: A4 portrait; margin: 8mm; }
-          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.2; font-size: 10px; background: #fff; }
+          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.3; font-size: 11px; background: #fff; }
           
           /* Header & Metrics */
           .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #3b82f6; padding-bottom: 8px; margin-bottom: 12px; }
-          .logo { height: 50px; }
-          .title-area h1 { margin: 0; color: #1e40af; font-size: 16px; font-weight: 800; }
-          .title-area p { margin: 0; color: #64748b; font-size: 9px; font-weight: 600; }
+          .logo { height: 55px; }
+          .title-area h1 { margin: 0; color: #1e40af; font-size: 18px; font-weight: 800; }
+          .title-area p { margin: 0; color: #64748b; font-size: 10px; font-weight: 600; }
           
-          .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
-          .metric-card { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px; border-radius: 6px; text-align: center; }
-          .metric-label { font-size: 8px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; }
-          .metric-value { font-size: 16px; font-weight: 800; color: #1e40af; }
+          .metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+          .metric-card { background: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; text-align: center; }
+          .metric-label { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; }
+          .metric-value { font-size: 18px; font-weight: 800; color: #1e40af; }
 
           /* Sections */
-          .section-title { page-break-before: always; font-size: 11px; font-weight: 800; margin: 0 0 10px; color: #fff; background: #1e40af; padding: 6px 12px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.8px; display: block; }
+          .section-title { page-break-before: always; font-size: 12px; font-weight: 800; margin: 0 0 12px; color: #fff; background: #1e40af; padding: 8px 15px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; display: block; }
           .section-title:first-of-type { page-break-before: avoid; margin-top: 0; }
-          .sub-section-title { font-size: 10px; font-weight: 700; color: #1e40af; margin: 12px 0 6px; border-bottom: 1.5px solid #bfdbfe; padding-bottom: 2px; text-transform: uppercase; }
+          .sub-section-title { font-size: 11px; font-weight: 700; color: #1e40af; margin: 15px 0 8px; border-bottom: 2px solid #bfdbfe; padding-bottom: 3px; text-transform: uppercase; }
           
-          .insight-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 6px 10px; font-size: 9px; margin-bottom: 10px; color: #1e40af; }
+          .insight-box { background: #eff6ff; border-left: 5px solid #3b82f6; padding: 8px 12px; font-size: 10px; margin-bottom: 15px; color: #1e40af; line-height: 1.4; }
 
           /* Layout Grids */
-          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-          .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+          .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
           
           /* Table Styles */
-          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 5px; table-layout: fixed; }
-          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 3px 4px; text-align: center; word-wrap: break-word; }
-          .report-data-table th { background: #f8fafc; color: #475569; font-weight: 700; font-size: 7.5px; }
-          .report-data-table td { font-size: 8px; }
+          .report-data-table { width: 100%; border-collapse: collapse; font-size: 9px; margin-bottom: 8px; table-layout: fixed; }
+          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 5px 4px; text-align: center; word-wrap: break-word; }
+          .report-data-table th { background: #f8fafc; color: #475569; font-weight: 700; font-size: 8.5px; }
+          .report-data-table td { font-size: 9px; line-height: 1.2; }
           
           /* Charts */
-          .chart-container { border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px; background: #fff; text-align: center; margin-bottom: 5px; }
-          .chart-container h4 { margin: 0 0 4px; font-size: 8px; color: #64748b; font-weight: 700; text-transform: uppercase; }
-          .chart-img { width: 100%; height: auto; max-height: 110px; object-fit: contain; }
-          .chart-img.large { max-height: 180px; }
+          .chart-container { border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; background: #fff; text-align: center; margin-bottom: 8px; }
+          .chart-container h4 { margin: 0 0 6px; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+          .chart-img { width: 100%; height: auto; max-height: 130px; object-fit: contain; }
+          .chart-img.large { max-height: 220px; }
 
           .footer { position: fixed; bottom: 8mm; left: 8mm; right: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 7px; color: #94a3b8; display: flex; justify-content: space-between; }
           .page-break { page-break-before: always; }
@@ -3674,7 +3674,7 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="no-break">
-          <div class="section-title">Admission Funnel & Trends</div>
+          <div class="section-title">Admission Funnel & Growth Trends</div>
           <div class="insight-box">
             <strong>Funnel Analysis:</strong> Enq→App: <b>${enqToApp}%</b> | App→Adm: <b>${appToAdm}%</b> | Overall: <b>${enqToAdm}%</b>
           </div>
@@ -3684,7 +3684,7 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
-        <div class="section-title">Demographic Distribution (Comparative View)</div>
+        <div class="section-title">Demographic Distribution Analysis</div>
         
         <div class="no-break">
           <div class="sub-section-title">Gender Analysis</div>
@@ -3700,8 +3700,9 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
-        <div class="no-break" style="margin-top:15px;">
-          <div class="sub-section-title">Area / Pincode Reach</div>
+        <div class="no-break">
+          <div class="section-title">Geographic / Area Reach Analysis</div>
+          <div class="sub-section-title">Gender Analysis</div>
           <div class="grid-3">
             <div class="chart-container"><h4>Enquiry Map</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
             <div class="chart-container"><h4>Application Map</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
@@ -3715,7 +3716,7 @@ async function exportOverviewPDF() {
         </div>
 
 
-        <div class="section-title">Academic & Marketing Intelligence</div>
+        <div class="section-title">Course Preference & Demand Analysis</div>
         
         <div class="no-break">
           <div class="sub-section-title">Course Preference Funnel</div>
@@ -3731,8 +3732,9 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
-        <div class="no-break" style="margin-top:15px;">
-          <div class="sub-section-title">Lead Source & Regional Distribution</div>
+        <div class="no-break">
+          <div class="section-title">Lead Source & Marketing Insights</div>
+          <div class="sub-section-title">Course Preference Funnel</div>
           <div class="grid-2">
             <div>
               <div class="chart-container"><h4>Lead Channels</h4><img src="${sourceImg}" class="chart-img large"></div>
