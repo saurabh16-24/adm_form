@@ -164,6 +164,7 @@ async function initDB() {
         sequence_number INTEGER,
         enquiry_date DATE,
         student_name VARCHAR(100),
+        gender VARCHAR(50),
         father_name VARCHAR(100),
         mother_name VARCHAR(100),
         student_email VARCHAR(100),
@@ -218,6 +219,7 @@ async function initDB() {
 
     // Ensure all new columns exist (Migration)
     const columns = [
+      ['gender', 'VARCHAR(50)'],
       ['physics_11', 'NUMERIC(5,2)'], ['chemistry_11', 'NUMERIC(5,2)'], ['math_11a', 'NUMERIC(5,2)'],
       ['math_11b', 'NUMERIC(5,2)'], ['english_11', 'NUMERIC(5,2)'], ['language_11', 'NUMERIC(5,2)'],
       ['physics_12_prac', 'NUMERIC(5,2)'], ['chemistry_12_prac', 'NUMERIC(5,2)'], ['math_12a', 'NUMERIC(5,2)'],
