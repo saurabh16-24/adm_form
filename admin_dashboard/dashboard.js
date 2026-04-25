@@ -3745,7 +3745,7 @@ async function exportOverviewPDF() {
           </div>
         </div>
 
-        <div class="section-title">Admitted Students Performance Details</div>
+        <div class="section-title">Seat Intake & Filling Distribution Details</div>
         <div style="margin-top: 10px; overflow-x: visible;">
           <style>
             .stats-table { width: 100%; border-collapse: collapse; font-size: 7px; table-layout: auto; }
