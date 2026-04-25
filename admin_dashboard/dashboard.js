@@ -3675,12 +3675,24 @@ async function exportOverviewPDF() {
 
         <div class="no-break">
           <div class="section-title">Admission Funnel & Growth Trends</div>
-          <div class="insight-box">
-            <strong>Funnel Analysis:</strong> Enq→App: <b>${enqToApp}%</b> | App→Adm: <b>${appToAdm}%</b> | Overall: <b>${enqToAdm}%</b>
+          <div class="insight-box" style="margin-bottom: 20px;">
+            <strong>Overall Pipeline Performance:</strong> Your conversion funnel currently shows an Enquiry-to-Application rate of <b>${enqToApp}%</b>, an Application-to-Admission rate of <b>${appToAdm}%</b>, and an overall institutional conversion of <b>${enqToAdm}%</b>.
           </div>
-          <div class="grid-2">
-            <div class="chart-container"><h4>Funnel Lifecycle</h4><img src="${ratioImg}" class="chart-img large"></div>
-            <div class="chart-container"><h4>Daily Velocity (30d)</h4><img src="${timelineImg}" class="chart-img large"></div>
+          
+          <div class="chart-container" style="margin-bottom: 10px;">
+            <h4>Funnel Lifecycle Analysis</h4>
+            <img src="${ratioImg}" class="chart-img large" style="max-height: 250px;">
+            <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
+              <b>Visualization Explanation:</b> This lifecycle chart represents the progressive conversion of potential leads through the admission stages. The steepness of the curve indicates where the highest drop-off occurs. A balanced funnel should show a gradual transition, ensuring that a healthy volume of initial interest (Enquiries) successfully matures into confirmed enrollments (Admissions).
+            </p>
+          </div>
+
+          <div class="chart-container">
+            <h4>Daily Submission Velocity (30 Day Trend)</h4>
+            <img src="${timelineImg}" class="chart-img large" style="max-height: 250px;">
+            <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
+              <b>Visualization Explanation:</b> The velocity chart tracks the real-time pulse of your admission department. It highlights daily submission peaks for enquiries, applications, and admissions over the last 30 days. This allows you to identify high-engagement periods, measure the impact of marketing campaigns, and allocate counseling staff effectively during surge days.
+            </p>
           </div>
         </div>
 
