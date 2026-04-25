@@ -16,6 +16,7 @@ let sourceChartInstance = null;
 let stateChartInstance = null;
 let courseChartInstance = null;
 let qualityChartInstance = null;
+let conversionChartInstance = null;
 
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -215,6 +216,12 @@ async function loadOverview() {
     }
     document.getElementById('stat-today-enq').textContent    = stats.today_enquiries    || 0;
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
+
+    if (document.getElementById('stat-raw-conv') && stats.graphs.raw_conversion) {
+      const { total_raw, converted } = stats.graphs.raw_conversion;
+      const rate = total_raw > 0 ? ((converted / total_raw) * 100).toFixed(1) : 0;
+      document.getElementById('stat-raw-conv').textContent = `${rate}%`;
+    }
 
     if (stats.quality) {
       if (document.getElementById('stat-avg-pcm')) document.getElementById('stat-avg-pcm').textContent = (stats.quality.avg_pcm || 0) + '%';
@@ -995,6 +1002,11 @@ function renderCharts(graphs, stats) {
         }
       }
     });
+  }
+
+  // 9. Raw Conversion Chart
+  if (stats.graphs && stats.graphs.raw_conversion) {
+    renderConversionChart(stats.graphs.raw_conversion);
   }
 }
 
@@ -3250,7 +3262,7 @@ function renderRawEnquiries(data) {
   if (countEl) countEl.textContent = `${data.length} records`;
   
   tbody.innerHTML = data.map(r => `
-    <tr>
+    <tr class="${r.is_converted ? 'row-converted' : ''}">
       <td><span class="token-badge">${r.serial_no}</span></td>
       <td><strong>${r.student_name}</strong></td>
       <td>${r.phone_number}</td>
@@ -3259,8 +3271,9 @@ function renderRawEnquiries(data) {
       <td>${r.place}</td>
       <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : 'tag-management'}">${r.mode}</span></td>
       <td>${new Date(r.created_at).toLocaleDateString()}</td>
-      <td>
-        <button class="btn btn-delete" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+      <td style="display:flex; gap:8px;">
+        <button class="btn btn-secondary" style="padding: 6px; border-radius: 8px;" onclick="openQRModal(${r.id})" title="Generate QR"><span class="material-icons-round" style="font-size:18px">qr_code_2</span></button>
+        <button class="btn btn-delete" style="padding: 6px; border-radius: 8px;" onclick="deleteRawEnquiry(${r.id})" title="Delete"><span class="material-icons-round" style="font-size:18px">delete</span></button>
       </td>
     </tr>
   `).join('');
@@ -3359,4 +3372,80 @@ function exportRawEnquiries() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+// ═══════════════ CONVERSION TRACKING & QR ═══════════════
+
+function renderConversionChart(convData) {
+  const ctx = document.getElementById('conversionChart');
+  if (!ctx || !convData) return;
+  if (conversionChartInstance) conversionChartInstance.destroy();
+
+  const total = parseInt(convData.total_raw) || 0;
+  const converted = parseInt(convData.converted) || 0;
+  const pending = Math.max(0, total - converted);
+
+  conversionChartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Converted', 'Pending Leads'],
+      datasets: [{
+        data: [converted, pending],
+        backgroundColor: ['#06b6d4', '#e2e8f0'],
+        borderWidth: 0,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      plugins: {
+        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: '600' } } },
+        tooltip: {
+          backgroundColor: '#1e293b',
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            label: (info) => ` ${info.label}: ${info.raw} students`
+          }
+        }
+      }
+    }
+  });
+}
+
+let activeQRLink = "";
+function openQRModal(rawId) {
+  const modal = document.getElementById('qr-modal');
+  const container = document.getElementById('qr-container');
+  const linkText = document.getElementById('qr-link-text');
+  
+  container.innerHTML = "";
+  const origin = window.location.origin;
+  activeQRLink = `${origin}/index.html?raw_id=${rawId}`;
+  linkText.textContent = activeQRLink;
+  
+  new QRCode(container, {
+    text: activeQRLink,
+    width: 160,
+    height: 160,
+    colorDark : "#1e293b",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  
+  modal.classList.add('open');
+}
+
+function closeQRModal() {
+  document.getElementById('qr-modal').classList.remove('open');
+}
+
+function copyQRLink() {
+  navigator.clipboard.writeText(activeQRLink).then(() => {
+    showToast('Link copied to clipboard!');
+  }).catch(err => {
+    alert('Failed to copy link: ' + err);
+  });
 }

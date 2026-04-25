@@ -114,6 +114,7 @@
         </header>
         
         <form id="enquiryForm" autocomplete="off">
+            <input type="hidden" id="raw_id" name="raw_id">
             <div class="form-grid">
                 <div class="form-group">
                     <label for="studentName"><i class="fas fa-user"></i> Student Name:</label>
@@ -1190,6 +1191,16 @@
                 } finally {
                     spinner.style.display = 'none';
                 }
+            }
+        })();
+        // Capture raw_id from URL if present
+        (function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const rawId = urlParams.get('raw_id');
+            if (rawId) {
+                const el = document.getElementById('raw_id');
+                if (el) el.value = rawId;
+                console.log('Conversion link detected. Raw ID:', rawId);
             }
         })();
     </script>

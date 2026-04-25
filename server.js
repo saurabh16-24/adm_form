@@ -235,7 +235,8 @@ async function initDB() {
       ['hostel_type', 'TEXT'], ['hostel_fee', 'NUMERIC'],
       ['transport_route', 'TEXT'], ['transport_fee', 'NUMERIC'],
       ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)'],
-      ['follow_up_status', "VARCHAR(50) DEFAULT 'Active'"]
+      ['follow_up_status', "VARCHAR(50) DEFAULT 'Active'"],
+      ['raw_id', 'INTEGER REFERENCES raw_enquiries(id) ON DELETE SET NULL']
     ];
 
     for (const [col, type] of columns) {
@@ -330,7 +331,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
         hostel_required, transport_required,
         hostel_type, hostel_fee,
         transport_route, transport_fee,
-        institution_name, year_of_passing
+        institution_name, year_of_passing, raw_id
       )
       VALUES (
         $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,  $9,  $10,
@@ -338,7 +339,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
         $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
         $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
         $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-        $51, $52, $53, $54, $55, $56, $57, $58, $59
+        $51, $52, $53, $54, $55, $56, $57, $58, $59, $60
       ) RETURNING id;
     `;
 
@@ -401,7 +402,8 @@ app.post('/api/submit-enquiry', async (req, res) => {
       /* $56 */ d.transport_route || null,
       /* $57 */ d.transport_fee || null,
       /* $58 */ d.institution_name || null,
-      /* $59 */ d.year_of_passing || null
+      /* $59 */ d.year_of_passing || null,
+      /* $60 */ d.raw_id || null
     ];
 
     const result = await client.query(query, values);
@@ -1420,7 +1422,12 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         application_states:   appStates.rows,
         enquiry_timeline:     enqTimeline.rows,
         admission_timeline:   admTimeline.rows,
-        management_timeline:  mgtTimeline.rows
+        management_timeline:  mgtTimeline.rows,
+        raw_conversion: (await pool.query(`
+          SELECT 
+            (SELECT COUNT(*) FROM raw_enquiries) as total_raw,
+            (SELECT COUNT(*) FROM enquiries WHERE raw_id IS NOT NULL) as converted
+        `)).rows[0]
       },
       quality: academicQuality.rows[0]
     });
@@ -1479,10 +1486,15 @@ app.put('/api/admin/enquiry/:id/stop-follow-up', adminAuth, async (req, res) => 
 
 // ═══════════════ RAW ENQUIRIES ═══════════════
 
-// Get all raw enquiries
+// Get all raw enquiries with conversion status
 app.get('/api/admin/raw-enquiries', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM raw_enquiries ORDER BY id DESC');
+    const result = await pool.query(`
+      SELECT r.*, 
+        EXISTS(SELECT 1 FROM enquiries e WHERE e.raw_id = r.id) as is_converted
+      FROM raw_enquiries r 
+      ORDER BY r.id DESC
+    `);
     res.json({ rows: result.rows });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
