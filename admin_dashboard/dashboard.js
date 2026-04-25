@@ -8,6 +8,7 @@ let allAdmissions = [];
 let allManagement = [];
 let allRawEnquiries = [];
 let lastGraphs     = null;
+let lastStats      = null;
 let pincodeChartInstance = null;
 let genderChartInstance = null;
 let ratioChartInstance   = null;
@@ -232,6 +233,7 @@ async function loadOverview() {
     // Render Charts
     if (stats.graphs) {
       lastGraphs = stats.graphs;
+      lastStats = stats;
       renderCharts(stats.graphs, stats);
     }
 
@@ -3544,27 +3546,49 @@ async function exportOverviewPDF() {
     const academicYear = document.getElementById('stats-academic-year')?.value || '2026-27';
     const logoUrl = window.location.origin + '/admin_dashboard/image_copy.png';
     
+    showToast('Preparing multi-view report... please wait', 'info');
+
+    // Save current dropdown values
+    const currentPin = document.getElementById('pincode-data-type')?.value;
+    const currentGen = document.getElementById('gender-data-type')?.value;
+    const currentCourse = document.getElementById('course-data-type')?.value;
+
+    const captureStates = ['enquiry', 'application', 'admission'];
+    const snapshots = {};
+
+    for (const type of captureStates) {
+      if (document.getElementById('pincode-data-type')) document.getElementById('pincode-data-type').value = type;
+      if (document.getElementById('gender-data-type')) document.getElementById('gender-data-type').value = type;
+      if (document.getElementById('course-data-type')) document.getElementById('course-data-type').value = type;
+      
+      renderCharts(lastGraphs, lastStats);
+      await new Promise(r => setTimeout(r, 300)); // Wait for animation
+      
+      snapshots[type] = {
+        pin: document.getElementById('pincodeChart')?.toDataURL(),
+        gen: document.getElementById('genderChart')?.toDataURL(),
+        course: document.getElementById('courseChart')?.toDataURL()
+      };
+    }
+
+    // Capture fixed charts
+    const ratioImg = document.getElementById('ratioChart')?.toDataURL();
+    const timelineImg = document.getElementById('timelineChart')?.toDataURL();
+    const sourceImg = document.getElementById('sourceChart')?.toDataURL();
+    const stateImg = document.getElementById('stateChart')?.toDataURL();
+
+    // Restore UI
+    if (document.getElementById('pincode-data-type')) document.getElementById('pincode-data-type').value = currentPin;
+    if (document.getElementById('gender-data-type')) document.getElementById('gender-data-type').value = currentGen;
+    if (document.getElementById('course-data-type')) document.getElementById('course-data-type').value = currentCourse;
+    renderCharts(lastGraphs, lastStats);
+
     const metrics = {
       enq: document.getElementById('stat-enquiries').textContent,
       adm: document.getElementById('stat-admissions').textContent,
       mgt: document.getElementById('stat-management').textContent,
       conv: document.getElementById('stat-raw-conv').textContent
     };
-
-    // Capture chart images
-    const getChartImg = (id) => {
-      const canvas = document.getElementById(id);
-      return canvas ? canvas.toDataURL('image/png', 1.0) : null;
-    };
-
-    const ratioImg = getChartImg('ratioChart');
-    const timelineImg = getChartImg('timelineChart');
-    const genderImg = getChartImg('genderChart');
-    const sourceImg = getChartImg('sourceChart');
-    const stateImg = getChartImg('stateChart');
-    const courseImg = getChartImg('courseChart');
-    const pinImg = getChartImg('pincodeChart');
-    const rawConvImg = getChartImg('conversionChart'); // Doughnut
 
     const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
@@ -3575,43 +3599,43 @@ async function exportOverviewPDF() {
       <head>
         <title>SVCE Full Analytics Report - ${academicYear}</title>
         <style>
-          @page { size: A4 portrait; margin: 12mm; }
-          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.4; }
-          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; }
-          .logo { height: 65px; }
-          .title-area h1 { margin: 0; color: #1e40af; font-size: 20px; font-weight: 800; }
-          .title-area p { margin: 3px 0 0; color: #64748b; font-size: 12px; font-weight: 600; }
+          @page { size: A4 portrait; margin: 10mm; }
+          body { font-family: 'Inter', system-ui, sans-serif; color: #1e293b; margin: 0; padding: 0; line-height: 1.3; font-size: 11px; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+          .logo { height: 60px; }
+          .title-area h1 { margin: 0; color: #1e40af; font-size: 18px; font-weight: 800; }
+          .title-area p { margin: 2px 0 0; color: #64748b; font-size: 10px; font-weight: 600; }
           
-          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
-          .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; text-align: center; }
-          .metric-label { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 3px; }
-          .metric-value { font-size: 20px; font-weight: 800; color: #1e293b; }
+          .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+          .metric-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
+          .metric-label { font-size: 9px; color: #64748b; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 2px; }
+          .metric-value { font-size: 18px; font-weight: 800; color: #1e293b; }
 
-          .section-title { font-size: 15px; font-weight: 800; margin: 25px 0 12px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .section-title { font-size: 13px; font-weight: 800; margin: 20px 0 10px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 8px; text-transform: uppercase; background: #f8fafc; padding-top: 4px; padding-bottom: 4px; }
+          .sub-section-title { font-size: 11px; font-weight: 700; color: #475569; margin: 15px 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
           
-          .stats-table-wrap { overflow-x: hidden; margin-bottom: 20px; }
-          table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
-          th, td { border: 1px solid #e2e8f0; padding: 4px 2px; text-align: center; }
+          table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 15px; }
+          th, td { border: 1px solid #e2e8f0; padding: 3px 2px; text-align: center; }
           th { background: #f1f5f9; font-weight: 700; color: #475569; }
-          .course-name { text-align: left; padding-left: 6px; font-weight: 700; }
+          .course-name { text-align: left; padding-left: 5px; font-weight: 700; }
           .total-row { font-weight: 800; background: #f1f5f9; }
 
-          .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; page-break-inside: avoid; }
-          .chart-box { border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center; background: #fff; }
-          .chart-box h4 { margin: 0 0 10px; font-size: 11px; color: #475569; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
-          .chart-img { width: 100%; height: auto; max-height: 200px; object-fit: contain; }
+          .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; }
+          .chart-box h4 { margin: 0 0 8px; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; }
+          .chart-img { width: 100%; height: auto; max-height: 140px; object-fit: contain; }
           
-          .full-chart-box { grid-column: 1 / -1; min-height: 250px; }
-          .full-chart-box .chart-img { max-height: 280px; }
+          .full-chart-box { grid-column: 1 / -1; }
+          .full-chart-box .chart-img { max-height: 220px; }
 
-          .footer { margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
+          .footer { margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 8px; color: #94a3b8; display: flex; justify-content: space-between; }
           .page-break { page-break-before: always; }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="title-area">
-            <h1>Comprehensive Analytics Report</h1>
+            <h1>Comprehensive Admission Analytics</h1>
             <p>Academic Year: ${academicYear} | Report Generated: ${new Date().toLocaleString()}</p>
           </div>
           <img src="${logoUrl}" class="logo">
@@ -3624,47 +3648,48 @@ async function exportOverviewPDF() {
           <div class="metric-card"><span class="metric-label">Lead Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
-        <div class="section-title">Admission Distribution & Statistics</div>
-        <div class="stats-table-wrap">
-          ${cleanTableHtml}
-        </div>
+        <div class="section-title">Admitted Students Stats (${academicYear})</div>
+        ${cleanTableHtml}
 
-        <div class="section-title">Conversion & Growth Trends</div>
-        <div class="charts-container">
-          <div class="chart-box full-chart-box">
-            <h4>Conversion Lifecycle (Enquiry → App → Admission)</h4>
-            <img src="${ratioImg}" class="chart-img">
-          </div>
-          <div class="chart-box full-chart-box">
-            <h4>Application Velocity (Last 30 Days)</h4>
-            <img src="${timelineImg}" class="chart-img">
-          </div>
+        <div class="section-title">Admission Funnel & Trends</div>
+        <div class="chart-box full-chart-box" style="margin-bottom: 20px;">
+          <h4>Conversion Lifecycle (Enquiry → Application → Admission)</h4>
+          <img src="${ratioImg}" class="chart-img">
+        </div>
+        <div class="chart-box full-chart-box">
+          <h4>Daily Application Velocity (Last 30 Days)</h4>
+          <img src="${timelineImg}" class="chart-img">
         </div>
 
         <div class="page-break"></div>
 
-        <div class="section-title">Demographics & Source Analysis</div>
-        <div class="charts-container">
-          <div class="chart-box">
-            <h4>Gender Distribution</h4>
-            <img src="${genderImg}" class="chart-img">
-          </div>
-          <div class="chart-box">
-            <h4>Source of Lead</h4>
-            <img src="${sourceImg}" class="chart-img">
-          </div>
-          <div class="chart-box">
-            <h4>State Distribution</h4>
-            <img src="${stateImg}" class="chart-img">
-          </div>
-          <div class="chart-box">
-            <h4>Area / Pincode Distribution</h4>
-            <img src="${pinImg}" class="chart-img">
-          </div>
-          <div class="chart-box full-chart-box">
-            <h4>Course Preference Distribution</h4>
-            <img src="${courseImg}" class="chart-img">
-          </div>
+        <div class="section-title">Demographic Multi-View (Enquiry vs App vs Adm)</div>
+        
+        <div class="sub-section-title">Gender Distribution</div>
+        <div class="charts-row">
+          <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div>
+          <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div>
+          <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div>
+        </div>
+
+        <div class="sub-section-title">Area / Pincode Distribution</div>
+        <div class="charts-row">
+          <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
+          <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
+          <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.pin}" class="chart-img"></div>
+        </div>
+
+        <div class="sub-section-title">Course Preference Demand</div>
+        <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Enquiry Demand</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
+        <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Application Demand</h4><img src="${snapshots.application.course}" class="chart-img"></div>
+        <div class="chart-box full-chart-box"><h4>Confirmed Admission Branch</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
+
+        <div class="page-break"></div>
+        
+        <div class="section-title">Geographic & Lead Analysis</div>
+        <div class="charts-row" style="grid-template-columns: 1fr 1fr;">
+          <div class="chart-box"><h4>Source of Lead (All)</h4><img src="${sourceImg}" class="chart-img"></div>
+          <div class="chart-box"><h4>State Distribution (Applications)</h4><img src="${stateImg}" class="chart-img"></div>
         </div>
 
         <div class="footer">
