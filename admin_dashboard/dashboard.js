@@ -3267,7 +3267,7 @@ function renderRawEnquiries(data) {
 }
 
 function openRawEnquiryModal() {
-  document.getElementById('raw-enquiry-modal').classList.add('active');
+  document.getElementById('raw-enquiry-modal').classList.add('open');
   // Reset form
   ['raw-name', 'raw-phone', 'raw-email', 'raw-course', 'raw-place'].forEach(id => {
       const el = document.getElementById(id);
@@ -3278,7 +3278,7 @@ function openRawEnquiryModal() {
 }
 
 function closeRawEnquiryModal() {
-  document.getElementById('raw-enquiry-modal').classList.remove('active');
+  document.getElementById('raw-enquiry-modal').classList.remove('open');
 }
 
 async function saveRawEnquiry() {
