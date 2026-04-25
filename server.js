@@ -1323,6 +1323,10 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       `SELECT TO_CHAR(application_date, 'YYYY-MM-DD') as date, COUNT(*) as count FROM admissions${admWhere} AND application_date >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(application_date, 'YYYY-MM-DD') ORDER BY date ASC`,
       admParams
     );
+    const mgtTimeline = await pool.query(
+      `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count FROM management_forms m WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND created_at >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD') ORDER BY date ASC`,
+      mgtParams
+    );
 
     // Advanced Stats: Academic Quality (Filtered by Year and optionally by Course)
     const filterCourse = req.query.course;
@@ -1387,7 +1391,8 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         lead_sources:         references.rows,
         application_states:   appStates.rows,
         enquiry_timeline:     enqTimeline.rows,
-        admission_timeline:   admTimeline.rows
+        admission_timeline:   admTimeline.rows,
+        management_timeline:  mgtTimeline.rows
       },
       quality: academicQuality.rows[0]
     });

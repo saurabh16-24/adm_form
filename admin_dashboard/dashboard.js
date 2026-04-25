@@ -714,15 +714,22 @@ function renderCharts(graphs, stats) {
     
     // Merge dates
     const dateMap = {};
-    (graphs.enquiry_timeline || []).forEach(t => { dateMap[t.date] = { enq: parseInt(t.count) || 0, adm: 0 }; });
+    (graphs.enquiry_timeline || []).forEach(t => { 
+      dateMap[t.date] = { enq: parseInt(t.count) || 0, app: 0, adm: 0 }; 
+    });
     (graphs.admission_timeline || []).forEach(t => { 
-      if (!dateMap[t.date]) dateMap[t.date] = { enq: 0, adm: 0 };
+      if (!dateMap[t.date]) dateMap[t.date] = { enq: 0, app: 0, adm: 0 };
+      dateMap[t.date].app = parseInt(t.count) || 0;
+    });
+    (graphs.management_timeline || []).forEach(t => { 
+      if (!dateMap[t.date]) dateMap[t.date] = { enq: 0, app: 0, adm: 0 };
       dateMap[t.date].adm = parseInt(t.count) || 0;
     });
 
     const sortedDates = Object.keys(dateMap).sort();
     const enqData = sortedDates.map(d => dateMap[d].enq);
-    const admData = sortedDates.map(d => dateMap[d].adm);
+    const appData = sortedDates.map(d => dateMap[d].app);
+    const mgtData = sortedDates.map(d => dateMap[d].adm);
 
     // Dynamic width for scrollability
     const container = document.getElementById('timelineContainer');
@@ -737,7 +744,8 @@ function renderCharts(graphs, stats) {
         labels: sortedDates,
         datasets: [
           { label: 'Enquiries', data: enqData, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#f59e0b' },
-          { label: 'Applications', data: admData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#3b82f6' }
+          { label: 'Applications', data: appData, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#3b82f6' },
+          { label: 'Admissions', data: mgtData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#10b981' }
         ]
       },
       options: {
