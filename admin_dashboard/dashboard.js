@@ -1367,6 +1367,7 @@ async function viewEnquiry(id) {
         ${detailItem('Token Number', r.token_number, false, 'token_number', true)}
         ${detailItem('Date', formatDate(r.enquiry_date), false)}
         ${detailItem('Student Name', r.student_name, false, 'student_name', true)}
+        ${detailItem('Gender', r.gender, false, 'gender', true)}
         ${detailItem('Email', r.student_email, false, 'student_email', true)}
         ${detailItem('Mobile', r.student_mobile, false, 'student_mobile', true)}
         ${detailItem('Father', r.father_name, false, 'father_name', true)}
