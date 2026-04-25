@@ -3568,23 +3568,32 @@ async function exportOverviewPDF() {
     const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
 
-    // Data Table Helper
+    // Data Table Helper (Expanded to show ALL data)
     const generateDataHtml = (title, dataArray, labelKey, valueKey) => {
       if (!dataArray || dataArray.length === 0) return `<p style="color:#94a3b8; font-style:italic; font-size:9px;">No data available for ${title}</p>`;
       const total = dataArray.reduce((sum, item) => sum + parseInt(item[valueKey] || 0), 0);
       
       return `
-        <div class="data-section">
+        <div class="data-section" style="margin-top: 10px;">
           <table class="report-data-table">
-            <thead><tr><th>${title}</th><th>Count</th><th>%</th></tr></thead>
+            <thead>
+              <tr>
+                <th style="text-align:left; background: #1e40af; color: white;">${title}</th>
+                <th style="width: 50px; background: #1e40af; color: white;">Count</th>
+                <th style="width: 40px; background: #1e40af; color: white;">%</th>
+              </tr>
+            </thead>
             <tbody>
-              ${dataArray.slice(0, 10).map(item => {
+              ${dataArray.map((item, idx) => {
                 const val = parseInt(item[valueKey] || 0);
                 const pct = total > 0 ? ((val/total)*100).toFixed(1) : 0;
-                return `<tr><td style="text-align:left;">${item[labelKey] || 'Other'}</td><td>${val}</td><td>${pct}%</td></tr>`;
+                const rowBg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                return `<tr style="background: ${rowBg};"><td style="text-align:left; font-weight:600; color:#334155;">${item[labelKey] || 'Other'}</td><td style="font-weight:700; color:#1e293b;">${val}</td><td style="color:#64748b;">${pct}%</td></tr>`;
               }).join('')}
-              ${dataArray.length > 10 ? `<tr><td colspan="3" style="font-size:8px; color:#64748b; background:#f8fafc;">... and ${dataArray.length - 10} more categories</td></tr>` : ''}
             </tbody>
+            <tfoot style="background: #f1f5f9; font-weight: 800;">
+              <tr><td style="text-align:left;">TOTAL</td><td>${total}</td><td>100%</td></tr>
+            </tfoot>
           </table>
         </div>
       `;
@@ -3624,13 +3633,15 @@ async function exportOverviewPDF() {
           .insight-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 8px; font-size: 10px; margin-bottom: 15px; color: #1e40af; }
           .insight-box strong { color: #1d4ed8; }
 
-          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 10px; }
-          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 4px; text-align: center; }
-          .report-data-table th { background: #f8fafc; font-weight: 700; color: #64748b; }
+          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 20px; table-layout: fixed; }
+          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 6px 4px; text-align: center; word-wrap: break-word; }
+          .report-data-table th { font-weight: 700; text-transform: uppercase; font-size: 8px; letter-spacing: 0.3px; }
+          .report-data-table td { font-size: 9px; }
 
-          .content-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 20px; page-break-inside: avoid; }
-          .charts-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
-          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; display: flex; flex-direction: column; }
+          .data-section { page-break-inside: avoid; }
+          .content-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; page-break-inside: auto; }
+          .charts-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 10px; page-break-inside: avoid; }
+          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; display: flex; flex-direction: column; page-break-inside: avoid; }
           .chart-box h4 { margin: 0 0 8px; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; }
           .chart-img { width: 100%; height: auto; max-height: 140px; object-fit: contain; }
           
