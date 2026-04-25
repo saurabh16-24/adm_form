@@ -3546,7 +3546,7 @@ async function exportOverviewPDF() {
     const academicYear = document.getElementById('stats-academic-year')?.value || '2026-27';
     const logoUrl = window.location.origin + '/admin_dashboard/image_copy.png';
     
-    showToast('Preparing multi-view report... please wait', 'info');
+    showToast('Generating detailed report with data tables...', 'info');
 
     // Save current dropdown values
     const currentPin = document.getElementById('pincode-data-type')?.value;
@@ -3562,7 +3562,7 @@ async function exportOverviewPDF() {
       if (document.getElementById('course-data-type')) document.getElementById('course-data-type').value = type;
       
       renderCharts(lastGraphs, lastStats);
-      await new Promise(r => setTimeout(r, 300)); // Wait for animation
+      await new Promise(r => setTimeout(r, 400)); // Longer wait for full animation
       
       snapshots[type] = {
         pin: document.getElementById('pincodeChart')?.toDataURL(),
@@ -3593,6 +3593,38 @@ async function exportOverviewPDF() {
     const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
 
+    // Data Table Helper
+    const generateDataHtml = (title, dataArray, labelKey, valueKey) => {
+      if (!dataArray || dataArray.length === 0) return `<p style="color:#94a3b8; font-style:italic; font-size:9px;">No data available for ${title}</p>`;
+      const total = dataArray.reduce((sum, item) => sum + parseInt(item[valueKey] || 0), 0);
+      
+      return `
+        <div class="data-section">
+          <table class="report-data-table">
+            <thead><tr><th>${title}</th><th>Count</th><th>%</th></tr></thead>
+            <tbody>
+              ${dataArray.slice(0, 10).map(item => {
+                const val = parseInt(item[valueKey] || 0);
+                const pct = total > 0 ? ((val/total)*100).toFixed(1) : 0;
+                return `<tr><td style="text-align:left;">${item[labelKey] || 'Other'}</td><td>${val}</td><td>${pct}%</td></tr>`;
+              }).join('')}
+              ${dataArray.length > 10 ? `<tr><td colspan="3" style="font-size:8px; color:#64748b; background:#f8fafc;">... and ${dataArray.length - 10} more categories</td></tr>` : ''}
+            </tbody>
+          </table>
+        </div>
+      `;
+    };
+
+    // Automated Insight Helpers
+    const getInsight = (title, dataArray, labelKey, valueKey) => {
+      if (!dataArray || dataArray.length === 0) return `No significant trends observed in ${title}.`;
+      const sorted = [...dataArray].sort((a,b) => b[valueKey] - a[valueKey]);
+      const top = sorted[0];
+      const total = dataArray.reduce((sum, item) => sum + parseInt(item[valueKey] || 0), 0);
+      const pct = total > 0 ? ((top[valueKey]/total)*100).toFixed(1) : 0;
+      return `<strong>${top[labelKey]}</strong> is the leading category in ${title}, accounting for <strong>${pct}%</strong> of the total (Count: ${top[valueKey]}).`;
+    };
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -3612,16 +3644,18 @@ async function exportOverviewPDF() {
           .metric-value { font-size: 18px; font-weight: 800; color: #1e293b; }
 
           .section-title { font-size: 13px; font-weight: 800; margin: 20px 0 10px; color: #1e293b; border-left: 4px solid #3b82f6; padding-left: 8px; text-transform: uppercase; background: #f8fafc; padding-top: 4px; padding-bottom: 4px; }
-          .sub-section-title { font-size: 11px; font-weight: 700; color: #475569; margin: 15px 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
+          .sub-section-title { font-size: 11px; font-weight: 700; color: #475569; margin: 20px 0 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
           
-          table { width: 100%; border-collapse: collapse; font-size: 8px; margin-bottom: 15px; }
-          th, td { border: 1px solid #e2e8f0; padding: 3px 2px; text-align: center; }
-          th { background: #f1f5f9; font-weight: 700; color: #475569; }
-          .course-name { text-align: left; padding-left: 5px; font-weight: 700; }
-          .total-row { font-weight: 800; background: #f1f5f9; }
+          .insight-box { background: #eff6ff; border: 1px solid #bfdbfe; padding: 10px; border-radius: 8px; font-size: 10px; margin-bottom: 15px; color: #1e40af; }
+          .insight-box strong { color: #1d4ed8; }
 
-          .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; }
+          .report-data-table { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 10px; }
+          .report-data-table th, .report-data-table td { border: 1px solid #e2e8f0; padding: 4px; text-align: center; }
+          .report-data-table th { background: #f8fafc; font-weight: 700; color: #64748b; }
+
+          .content-row { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-bottom: 20px; page-break-inside: avoid; }
+          .charts-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px; }
+          .chart-box { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; background: #fff; display: flex; flex-direction: column; }
           .chart-box h4 { margin: 0 0 8px; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; }
           .chart-img { width: 100%; height: auto; max-height: 140px; object-fit: contain; }
           
@@ -3635,7 +3669,7 @@ async function exportOverviewPDF() {
       <body>
         <div class="header">
           <div class="title-area">
-            <h1>Comprehensive Admission Analytics</h1>
+            <h1>Comprehensive Admission Intelligence Report</h1>
             <p>Academic Year: ${academicYear} | Report Generated: ${new Date().toLocaleString()}</p>
           </div>
           <img src="${logoUrl}" class="logo">
@@ -3648,52 +3682,87 @@ async function exportOverviewPDF() {
           <div class="metric-card"><span class="metric-label">Lead Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
-        <div class="section-title">Admitted Students Stats (${academicYear})</div>
+        <div class="section-title">Admitted Students Performance Stats</div>
         ${cleanTableHtml}
 
-        <div class="section-title">Admission Funnel & Trends</div>
-        <div class="chart-box full-chart-box" style="margin-bottom: 20px;">
-          <h4>Conversion Lifecycle (Enquiry → Application → Admission)</h4>
-          <img src="${ratioImg}" class="chart-img">
+        <div class="section-title">Admission Funnel & Velocity</div>
+        <div class="insight-box">
+          <strong>Funnel Insight:</strong> Your conversion rate from initial Enquiry to confirmed Admission is currently <strong>${((parseInt(metrics.adm)/parseInt(metrics.enq))*100).toFixed(1)}%</strong>. 
+          The velocity chart below indicates daily submission patterns over the last 30 days.
         </div>
-        <div class="chart-box full-chart-box">
-          <h4>Daily Application Velocity (Last 30 Days)</h4>
-          <img src="${timelineImg}" class="chart-img">
+        <div class="charts-row" style="grid-template-columns: 1fr;">
+          <div class="chart-box full-chart-box" style="margin-bottom: 20px;">
+            <h4>Funnel Lifecycle (Enquiry → App → Admission)</h4>
+            <img src="${ratioImg}" class="chart-img">
+          </div>
+          <div class="chart-box full-chart-box">
+            <h4>Daily Submission Trends (Last 30 Days)</h4>
+            <img src="${timelineImg}" class="chart-img">
+          </div>
         </div>
 
         <div class="page-break"></div>
 
-        <div class="section-title">Demographic Multi-View (Enquiry vs App vs Adm)</div>
+        <div class="section-title">Demographics Analysis (Comparative View)</div>
         
-        <div class="sub-section-title">Gender Distribution</div>
+        <div class="sub-section-title">Gender Distribution Details</div>
+        <div class="insight-box">
+          <strong>Gender Trend:</strong> ${getInsight('Applications', lastGraphs.application_gender, 'gender', 'count')}
+        </div>
         <div class="charts-row">
           <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.gen}" class="chart-img"></div>
           <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.gen}" class="chart-img"></div>
           <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.gen}" class="chart-img"></div>
         </div>
+        <div class="charts-row" style="margin-top:-10px;">
+          ${generateDataHtml('Enq Gender', lastGraphs.enquiry_gender, 'gender', 'count')}
+          ${generateDataHtml('App Gender', lastGraphs.application_gender, 'gender', 'count')}
+          ${generateDataHtml('Adm Gender', lastGraphs.admission_gender, 'gender', 'count')}
+        </div>
 
-        <div class="sub-section-title">Area / Pincode Distribution</div>
+        <div class="sub-section-title">Geographic / Pincode Reach</div>
+        <div class="insight-box">
+          <strong>Geographic Insight:</strong> ${getInsight('Admission Regions', lastGraphs.admission_pincodes, 'pincode', 'count')}
+        </div>
         <div class="charts-row">
           <div class="chart-box"><h4>Enquiry</h4><img src="${snapshots.enquiry.pin}" class="chart-img"></div>
           <div class="chart-box"><h4>Application</h4><img src="${snapshots.application.pin}" class="chart-img"></div>
           <div class="chart-box"><h4>Admission</h4><img src="${snapshots.admission.pin}" class="chart-img"></div>
         </div>
-
-        <div class="sub-section-title">Course Preference Demand</div>
-        <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Enquiry Demand</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
-        <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Application Demand</h4><img src="${snapshots.application.course}" class="chart-img"></div>
-        <div class="chart-box full-chart-box"><h4>Confirmed Admission Branch</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
+        <div class="charts-row" style="margin-top:-10px;">
+          ${generateDataHtml('Enq Pincode', lastGraphs.enquiry_pincodes, 'pincode', 'count')}
+          ${generateDataHtml('App Pincode', lastGraphs.application_pincodes, 'pincode', 'count')}
+          ${generateDataHtml('Adm Pincode', lastGraphs.admission_pincodes, 'pincode', 'count')}
+        </div>
 
         <div class="page-break"></div>
+
+        <div class="section-title">Course Demand & Channel Analysis</div>
         
-        <div class="section-title">Geographic & Lead Analysis</div>
-        <div class="charts-row" style="grid-template-columns: 1fr 1fr;">
-          <div class="chart-box"><h4>Source of Lead (All)</h4><img src="${sourceImg}" class="chart-img"></div>
-          <div class="chart-box"><h4>State Distribution (Applications)</h4><img src="${stateImg}" class="chart-img"></div>
+        <div class="sub-section-title">Course Preference Funnel</div>
+        <div class="insight-box">
+          <strong>Academic Demand:</strong> ${getInsight('Course Interest', lastGraphs.application_courses, 'course', 'count')}
+        </div>
+        <div class="charts-row" style="grid-template-columns: 1fr;">
+          <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Lead Interest (Enquiry)</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
+          <div class="chart-box full-chart-box" style="margin-bottom:10px;"><h4>Weighted Demand (Application)</h4><img src="${snapshots.application.course}" class="chart-img"></div>
+          <div class="chart-box full-chart-box"><h4>Confirmed Admissions</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
+        </div>
+
+        <div class="sub-section-title">Lead Source & Regional Distribution</div>
+        <div class="content-row">
+          <div>
+            <div class="chart-box" style="height:280px;"><h4>Marketing Source</h4><img src="${sourceImg}" class="chart-img"></div>
+            ${generateDataHtml('Source Categories', lastGraphs.lead_sources, 'reference', 'count')}
+          </div>
+          <div>
+            <div class="chart-box" style="height:280px;"><h4>State Distribution</h4><img src="${stateImg}" class="chart-img"></div>
+            ${generateDataHtml('State Presence', lastGraphs.application_states, 'state', 'count')}
+          </div>
         </div>
 
         <div class="footer">
-          <div>SVCE Admission Management Intelligence</div>
+          <div>SVCE Admission Management Intelligence System</div>
           <div>Generated by Admin Panel</div>
           <div>Confidential Administrative Report</div>
         </div>
