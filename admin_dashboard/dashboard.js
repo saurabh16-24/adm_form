@@ -3546,6 +3546,11 @@ async function exportOverviewPDF() {
     const timelineImg = document.getElementById('timelineChart')?.toDataURL();
     const sourceImg = document.getElementById('sourceChart')?.toDataURL();
     const stateImg = document.getElementById('stateChart')?.toDataURL();
+    const qualityImg = document.getElementById('qualityChart')?.toDataURL();
+    const rawConvImg = document.getElementById('conversionChart')?.toDataURL();
+    
+    const pcmAvg = document.getElementById('stat-avg-pcm')?.innerText || '0%';
+    const overallAvg = document.getElementById('stat-avg-overall')?.innerText || '0%';
 
     // Restore UI
     if (document.getElementById('pincode-data-type')) document.getElementById('pincode-data-type').value = currentPin;
@@ -3693,6 +3698,31 @@ async function exportOverviewPDF() {
             <img src="${timelineImg}" class="chart-img large" style="max-height: 250px;">
             <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
               <b>Visualization Explanation:</b> The velocity chart tracks the real-time pulse of your admission department. It highlights daily submission peaks for enquiries, applications, and admissions over the last 30 days. This allows you to identify high-engagement periods, measure the impact of marketing campaigns, and allocate counseling staff effectively during surge days.
+            </p>
+          </div>
+        </div>
+
+        <div class="section-title">Batch Quality & Lead Conversion</div>
+        <div class="insight-box">
+          <strong>Batch Excellence Metrics:</strong> The confirmed admissions for this cycle show a <b>PCM Average of ${pcmAvg}</b> and an <b>Overall Average of ${overallAvg}</b>.
+        </div>
+        
+        <div class="no-break" style="margin-bottom: 15px;">
+          <div class="chart-container">
+            <h4>Academic Batch Quality Analysis</h4>
+            <img src="${qualityImg}" class="chart-img large" style="max-height: 220px;">
+            <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
+              <b>Visualization Explanation:</b> This bar chart analyzes the academic strength of your admitted students. By comparing the PCM (Physics, Chemistry, Math) and Overall percentages, you can assess if you are attracting high-caliber candidates. Higher averages indicate a strong institutional reputation and academic competitive advantage.
+            </p>
+          </div>
+        </div>
+
+        <div class="no-break">
+          <div class="chart-container">
+            <h4>Raw Lead-to-Enquiry Conversion</h4>
+            <img src="${rawConvImg}" class="chart-img large" style="max-height: 220px;">
+            <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
+              <b>Visualization Explanation:</b> This chart tracks the very first stage of your marketing ROI—how effectively raw leads are being converted into formal enquiries. A high conversion percentage here validates that your marketing channels are targeting the right audience and that your initial counseling engagement is effective.
             </p>
           </div>
         </div>
