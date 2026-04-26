@@ -1433,7 +1433,16 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
             (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL) as converted
         `)).rows[0]
       },
-      quality: academicQuality.rows[0]
+      quality: academicQuality.rows[0],
+      course_quality: (await pool.query(
+        `SELECT 
+           branch as course,
+           ROUND(AVG(NULLIF(regexp_replace(pcm_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+           ROUND(AVG(NULLIF(regexp_replace(overall_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+         FROM management_forms m WHERE 1=1 ${mgtWhere.replace('WHERE 1=1', '')}
+         GROUP BY branch ORDER BY branch ASC`,
+        mgtParams
+      )).rows
     });
 
   } catch (err) { console.error('Stats error:', err); res.status(500).json({ error: err.message }); }

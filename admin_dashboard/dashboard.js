@@ -900,34 +900,50 @@ function renderCharts(graphs, stats) {
   if (qualityCtx) {
     if (qualityChartInstance) qualityChartInstance.destroy();
     
-    // Use values directly from UI elements populated in loadOverview
-    const pcmVal = parseFloat(document.getElementById('stat-avg-pcm').textContent) || 0;
-    const overallVal = parseFloat(document.getElementById('stat-avg-overall').textContent) || 0;
+    const pcmVal = parseFloat(document.getElementById('stat-avg-pcm')?.textContent) || 0;
+    const overallVal = parseFloat(document.getElementById('stat-avg-overall')?.textContent) || 0;
+
+    // Course-wise quality if available
+    let qLabels = ['Overall Institutional Average'];
+    let pcmData = [pcmVal];
+    let overallData = [overallVal];
+
+    if (graphs.course_quality && graphs.course_quality.length > 0) {
+      // If "All Branches" is selected (no specific course filter), show all
+      const selectedCourse = document.getElementById('quality-course-filter')?.value;
+      if (!selectedCourse) {
+        graphs.course_quality.forEach(q => {
+          qLabels.push(q.course.replace(/^BE /, ''));
+          pcmData.push(parseFloat(q.avg_pcm) || 0);
+          overallData.push(parseFloat(q.avg_overall) || 0);
+        });
+      }
+    }
 
     qualityChartInstance = new Chart(qualityCtx, {
       type: 'bar',
       data: {
-        labels: ['Current Batch Quality'],
+        labels: qLabels,
         datasets: [
           {
             label: 'Avg PCM %',
-            data: [pcmVal],
+            data: pcmData,
             backgroundColor: createChartGradient(qualityCtx, '#10b981', 'rgba(16, 185, 129, 0.1)'),
             borderColor: '#10b981',
             borderWidth: 1.5,
-            borderRadius: { topRight: 15, bottomRight: 15, topLeft: 8, bottomLeft: 8 },
-            barPercentage: 0.5,
-            categoryPercentage: 0.6
+            borderRadius: { topRight: 10, bottomRight: 10, topLeft: 4, bottomLeft: 4 },
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
           },
           {
             label: 'Avg Overall %',
-            data: [overallVal],
+            data: overallData,
             backgroundColor: createChartGradient(qualityCtx, '#6366f1', 'rgba(99, 102, 241, 0.1)'),
             borderColor: '#6366f1',
             borderWidth: 1.5,
-            borderRadius: { topRight: 15, bottomRight: 15, topLeft: 8, bottomLeft: 8 },
-            barPercentage: 0.5,
-            categoryPercentage: 0.6
+            borderRadius: { topRight: 10, bottomRight: 10, topLeft: 4, bottomLeft: 4 },
+            barPercentage: 0.7,
+            categoryPercentage: 0.8
           }
         ]
       },
@@ -941,8 +957,8 @@ function renderCharts(graphs, stats) {
             labels: { 
               usePointStyle: true, 
               boxWidth: 8, 
-              padding: 20,
-              font: { size: 11, weight: '700' } 
+              padding: 15,
+              font: { size: 10, weight: '700' } 
             } 
           },
           tooltip: {
@@ -960,18 +976,19 @@ function renderCharts(graphs, stats) {
             beginAtZero: true, 
             grid: { color: 'rgba(226, 232, 240, 0.5)', borderDash: [5, 5] },
             ticks: { 
-              font: { size: 10, weight: '600' },
+              font: { size: 9, weight: '600' },
               callback: v => v + '%' 
             }
           },
           y: { 
-            display: false,
-            grid: { display: false } 
+            display: true,
+            grid: { display: false },
+            ticks: { font: { size: 10, weight: '700' }, color: '#334155' }
           }
         },
         animation: {
-          duration: 1800,
-          easing: 'easeOutBounce'
+          duration: 1500,
+          easing: 'easeOutQuart'
         }
       }
     });
