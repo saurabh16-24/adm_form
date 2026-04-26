@@ -3672,7 +3672,7 @@ async function exportOverviewPDF() {
           <div class="metric-card"><span class="metric-label">Conversion</span><div class="metric-value">${metrics.conv}</div></div>
         </div>
 
-        <div class="section-title">Admission Funnel & Growth Trends</div>
+        <div class="section-title" style="page-break-before: avoid !important; margin-top: 5px;">Admission Funnel & Growth Trends</div>
         <div class="insight-box" style="margin-bottom: 20px;">
           <strong>Overall Pipeline Performance:</strong> Your conversion funnel currently shows an Enquiry-to-Application rate of <b>${enqToApp}%</b>, an Application-to-Admission rate of <b>${appToAdm}%</b>, and an overall institutional conversion of <b>${enqToAdm}%</b>.
         </div>
@@ -3723,6 +3723,14 @@ async function exportOverviewPDF() {
         </div>
 
         <div class="section-title">Course Preference & Demand Analysis</div>
+        <div class="no-break">
+          <div class="grid-3">
+            <div class="chart-container"><h4>Enq Interest</h4><img src="${snapshots.enquiry.course}" class="chart-img"></div>
+            <div class="chart-container"><h4>App Demand</h4><img src="${snapshots.application.course}" class="chart-img"></div>
+            <div class="chart-container"><h4>Adm Confirmed</h4><img src="${snapshots.admission.course}" class="chart-img"></div>
+          </div>
+          <div class="grid-3">
+            ${generateDataHtml('Enq Preference', lastGraphs.enquiry_courses, 'course', 'count')}
             ${generateDataHtml('App Preference', lastGraphs.application_courses, 'course', 'count')}
             ${generateDataHtml('Adm Course', lastGraphs.admission_courses, 'course', 'count')}
           </div>
