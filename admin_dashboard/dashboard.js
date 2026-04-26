@@ -3721,23 +3721,54 @@ async function exportOverviewPDF() {
 
         <div class="section-title">Batch Quality & Lead Conversion</div>
         <div class="insight-box">
-          <strong>Batch Excellence Metrics:</strong> The confirmed admissions for this cycle show a <b>PCM Average of ${pcmAvg}</b> and an <b>Overall Average of ${overallAvg}</b>.
-        </div>
-        
-        <div class="no-break" style="margin-bottom: 15px;">
-          <div class="chart-container">
-            <h4>Academic Batch Quality Analysis</h4>
-            <img src="${qualityImg}" class="chart-img large" style="max-height: 220px;">
-            <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
-              <b>Visualization Explanation:</b> This bar chart analyzes the academic strength of your admitted students. By comparing the PCM (Physics, Chemistry, Math) and Overall percentages, you can assess if you are attracting high-caliber candidates. Higher averages indicate a strong institutional reputation and academic competitive advantage.
-            </p>
-          </div>
+          <strong>Batch Excellence Metrics:</strong> Overall admitted batch PCM Average: <b>${pcmAvg}</b> | Overall Percentage Average: <b>${overallAvg}</b>. The table below breaks down academic quality by individual course.
         </div>
 
         <div class="no-break">
+          <div class="grid-2">
+            <div>
+              <div class="chart-container">
+                <h4>Academic Batch Quality – Course-wise</h4>
+                <img src="${qualityImg}" class="chart-img large" style="max-height: 260px;">
+              </div>
+            </div>
+            <div>
+              <table class="report-data-table" style="margin-top:0;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left; background:#1e40af; color:white; font-size:8.5px;">Course</th>
+                    <th style="background:#1e40af; color:white; font-size:8.5px; width:60px;">PCM Avg %</th>
+                    <th style="background:#1e40af; color:white; font-size:8.5px; width:70px;">Overall Avg %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="background:#eff6ff; font-weight:800;">
+                    <td style="text-align:left; font-weight:800; color:#1e40af; font-size:9px;">⭐ Overall Institutional Average</td>
+                    <td style="font-weight:800; color:#10b981; font-size:9px;">${pcmAvg}</td>
+                    <td style="font-weight:800; color:#6366f1; font-size:9px;">${overallAvg}</td>
+                  </tr>
+                  ${(lastStats?.course_quality || []).map((q, idx) => {
+                    const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    const shortName = (q.course || '').replace(/^BE /, '').replace('Computer Science and Engineering', 'CSE').replace('Electronics and Communication Engineering', 'ECE').replace('Information Science and Engineering', 'ISE').replace('Mechanical Engineering', 'ME').replace('Civil Engineering', 'CE');
+                    return `<tr style="background:${bg};">
+                      <td style="text-align:left; font-weight:600; color:#334155; font-size:8.5px;">${shortName}</td>
+                      <td style="font-weight:700; color:#1e293b; font-size:9px;">${q.avg_pcm ? q.avg_pcm + '%' : 'N/A'}</td>
+                      <td style="color:#64748b; font-size:9px;">${q.avg_overall ? q.avg_overall + '%' : 'N/A'}</td>
+                    </tr>`;
+                  }).join('')}
+                </tbody>
+              </table>
+              <p style="font-size: 8.5px; color: #475569; margin: 8px 4px; text-align: justify; line-height: 1.4;">
+                <b>Visualization Explanation:</b> Academic quality per course reflects the average PCM and Overall scores of admitted students in each branch. Higher values indicate academically stronger intake, which correlates with better outcomes and institutional reputation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-break" style="margin-top:12px;">
           <div class="chart-container">
             <h4>Raw Lead-to-Enquiry Conversion</h4>
-            <img src="${rawConvImg}" class="chart-img large" style="max-height: 220px;">
+            <img src="${rawConvImg}" class="chart-img large" style="max-height: 200px;">
             <p style="font-size: 9px; color: #475569; margin: 10px 15px; text-align: justify; line-height: 1.4;">
               <b>Visualization Explanation:</b> This chart tracks the very first stage of your marketing ROI—how effectively raw leads are being converted into formal enquiries. A high conversion percentage here validates that your marketing channels are targeting the right audience and that your initial counseling engagement is effective.
             </p>
