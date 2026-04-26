@@ -909,16 +909,49 @@ function renderCharts(graphs, stats) {
     let qLabels = ['Overall Institutional Average'];
     let pcmData = [pcmVal];
     let overallData = [overallVal];
+    let countData = [parseFloat(stats?.quality?.student_count) || 0];
 
     if (graphs.course_quality && graphs.course_quality.length > 0) {
-      // If "All Branches" is selected (no specific course filter), show all
       const selectedCourse = document.getElementById('quality-course-filter')?.value;
+      
       if (!selectedCourse) {
+        // No filter → show all courses
         graphs.course_quality.forEach(q => {
-          qLabels.push(q.course.replace(/^BE /, ''));
+          const shortName = (q.course || '')
+            .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
+            .replace('BE Computer Science and Engineering (Cyber Security)', 'CSE (Cyber Sec)')
+            .replace('BE Computer Science and Engineering (Data Science)', 'CSE (DS)')
+            .replace('BE Computer Science and Engineering', 'CSE')
+            .replace('BE Electronics and Communication Engineering', 'ECE')
+            .replace('BE Information Science and Engineering', 'ISE')
+            .replace('BE Mechanical Engineering', 'ME')
+            .replace('BE Civil Engineering', 'CE');
+          qLabels.push(shortName);
           pcmData.push(parseFloat(q.avg_pcm) || 0);
           overallData.push(parseFloat(q.avg_overall) || 0);
+          countData.push(parseInt(q.student_count) || 0);
         });
+      } else {
+        // Filter selected → show Overall + the specific course for comparison
+        // selectedCourse value = full branch name, same as stored in management_forms.branch
+        const match = graphs.course_quality.find(q => q.course === selectedCourse)
+                   || graphs.course_quality.find(q => q.course && q.course.toLowerCase().includes(
+                        selectedCourse.toLowerCase().replace(/^be /i, '')));
+        if (match) {
+          const shortName = (match.course || '')
+            .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
+            .replace('BE Computer Science and Engineering (Cyber Security)', 'CSE (Cyber Sec)')
+            .replace('BE Computer Science and Engineering (Data Science)', 'CSE (DS)')
+            .replace('BE Computer Science and Engineering', 'CSE')
+            .replace('BE Electronics and Communication Engineering', 'ECE')
+            .replace('BE Information Science and Engineering', 'ISE')
+            .replace('BE Mechanical Engineering', 'ME')
+            .replace('BE Civil Engineering', 'CE');
+          qLabels.push(shortName + ` (${match.student_count} student${match.student_count!=1?'s':''})`);
+          pcmData.push(parseFloat(match.avg_pcm) || 0);
+          overallData.push(parseFloat(match.avg_overall) || 0);
+          countData.push(parseInt(match.student_count) || 0);
+        }
       }
     }
 

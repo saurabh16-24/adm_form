@@ -715,6 +715,16 @@ app.get('/api/enquiry/:id', async (req, res) => {
     ];
     for (const sql of mgtAlter) await pool.query(sql);
 
+    // Alter admissions table to ensure quality-related columns exist
+    const admAlter = [
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS pcm_percentage NUMERIC(5,2)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS total_percentage NUMERIC(5,2)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS jee_rank VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS comedk_rank VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS cet_rank VARCHAR(50)"
+    ];
+    for (const sql of admAlter) await pool.query(sql);
+
     // Create admin_activity_log table for tracking all admin actions
     await pool.query(`
       CREATE TABLE IF NOT EXISTS admin_activity_log (
@@ -1374,9 +1384,14 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const academicQuality = await pool.query(
       `SELECT 
          COUNT(*) as student_count,
-         ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.pcm_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
-         ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.overall_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+         ROUND(AVG(NULLIF(regexp_replace(
+           COALESCE(NULLIF(m.pcm_percentage,''), a.pcm_percentage::text),
+           '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+         ROUND(AVG(NULLIF(regexp_replace(
+           COALESCE(NULLIF(m.overall_percentage,''), a.total_percentage::text),
+           '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
        FROM management_forms m
+       LEFT JOIN admissions a ON m.admission_id = a.id
        WHERE 1=1 ${qualityWhere.replace('WHERE 1=1', '')}`,
       qualityParams
     );
@@ -1440,9 +1455,14 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         `SELECT 
            m.branch as course,
            COUNT(*) as student_count,
-           ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.pcm_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
-           ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.overall_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+           ROUND(AVG(NULLIF(regexp_replace(
+             COALESCE(NULLIF(m.pcm_percentage,''), a.pcm_percentage::text),
+             '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+           ROUND(AVG(NULLIF(regexp_replace(
+             COALESCE(NULLIF(m.overall_percentage,''), a.total_percentage::text),
+             '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
          FROM management_forms m
+         LEFT JOIN admissions a ON m.admission_id = a.id
          WHERE 1=1 ${mgtWhere.replace('WHERE 1=1', '')}
          AND m.branch IS NOT NULL AND m.branch != ''
          GROUP BY m.branch ORDER BY m.branch ASC`,
