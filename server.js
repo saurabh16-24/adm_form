@@ -1373,9 +1373,16 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 
     const academicQuality = await pool.query(
       `SELECT 
-         ROUND(AVG(NULLIF(regexp_replace(pcm_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
-         ROUND(AVG(NULLIF(regexp_replace(overall_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
-       FROM management_forms m WHERE 1=1 ${qualityWhere.replace('WHERE 1=1', '')}`,
+         COUNT(*) as student_count,
+         ROUND(AVG(NULLIF(regexp_replace(
+           COALESCE(NULLIF(m.pcm_percentage,''), a.pcm_percentage::text),
+           '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+         ROUND(AVG(NULLIF(regexp_replace(
+           COALESCE(NULLIF(m.overall_percentage,''), a.total_percentage::text),
+           '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+       FROM management_forms m
+       LEFT JOIN admissions a ON m.admission_id = a.id
+       WHERE 1=1 ${qualityWhere.replace('WHERE 1=1', '')}`,
       qualityParams
     );
 
@@ -1436,11 +1443,19 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       quality: academicQuality.rows[0],
       course_quality: (await pool.query(
         `SELECT 
-           branch as course,
-           ROUND(AVG(NULLIF(regexp_replace(pcm_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
-           ROUND(AVG(NULLIF(regexp_replace(overall_percentage, '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
-         FROM management_forms m WHERE 1=1 ${mgtWhere.replace('WHERE 1=1', '')}
-         GROUP BY branch ORDER BY branch ASC`,
+           m.branch as course,
+           COUNT(*) as student_count,
+           ROUND(AVG(NULLIF(regexp_replace(
+             COALESCE(NULLIF(m.pcm_percentage,''), a.pcm_percentage::text),
+             '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
+           ROUND(AVG(NULLIF(regexp_replace(
+             COALESCE(NULLIF(m.overall_percentage,''), a.total_percentage::text),
+             '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
+         FROM management_forms m
+         LEFT JOIN admissions a ON m.admission_id = a.id
+         WHERE 1=1 ${mgtWhere.replace('WHERE 1=1', '')}
+         AND m.branch IS NOT NULL AND m.branch != ''
+         GROUP BY m.branch ORDER BY m.branch ASC`,
         mgtParams
       )).rows
     });

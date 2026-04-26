@@ -229,6 +229,8 @@ async function loadOverview() {
       if (document.getElementById('stat-avg-pcm')) document.getElementById('stat-avg-pcm').textContent = (stats.quality.avg_pcm || 0) + '%';
       if (document.getElementById('stat-avg-overall')) document.getElementById('stat-avg-overall').textContent = (stats.quality.avg_overall || 0) + '%';
     }
+    // Store course_quality on lastStats for chart and PDF
+    lastStats = { ...stats };
 
     if (stats.graphs) {
       lastGraphs = stats.graphs;
@@ -3721,7 +3723,7 @@ async function exportOverviewPDF() {
 
         <div class="section-title">Batch Quality & Lead Conversion</div>
         <div class="insight-box">
-          <strong>Batch Excellence Metrics:</strong> Overall admitted batch PCM Average: <b>${pcmAvg}</b> | Overall Percentage Average: <b>${overallAvg}</b>. The table below breaks down academic quality by individual course.
+          <strong>Batch Excellence Metrics:</strong> Overall admitted batch PCM Average: <b>${pcmAvg}</b> | Overall Percentage Average: <b>${overallAvg}</b>. The table below breaks down academic quality and admission count by individual course.
         </div>
 
         <div class="no-break">
@@ -3736,30 +3738,50 @@ async function exportOverviewPDF() {
               <table class="report-data-table" style="margin-top:0;">
                 <thead>
                   <tr>
-                    <th style="text-align:left; background:#1e40af; color:white; font-size:8.5px;">Course</th>
-                    <th style="background:#1e40af; color:white; font-size:8.5px; width:60px;">PCM Avg %</th>
-                    <th style="background:#1e40af; color:white; font-size:8.5px; width:70px;">Overall Avg %</th>
+                    <th style="text-align:left; background:#1e40af; color:white; font-size:8px;">Course</th>
+                    <th style="background:#1e40af; color:white; font-size:8px; width:40px;">Count</th>
+                    <th style="background:#1e40af; color:white; font-size:8px; width:55px;">PCM Avg%</th>
+                    <th style="background:#1e40af; color:white; font-size:8px; width:60px;">Overall%</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr style="background:#eff6ff; font-weight:800;">
-                    <td style="text-align:left; font-weight:800; color:#1e40af; font-size:9px;">⭐ Overall Institutional Average</td>
+                    <td style="text-align:left; font-weight:800; color:#1e40af; font-size:8.5px;">⭐ Overall Institutional Average</td>
+                    <td style="font-weight:800; color:#1e293b; font-size:9px;">${lastStats?.quality?.student_count || '-'}</td>
                     <td style="font-weight:800; color:#10b981; font-size:9px;">${pcmAvg}</td>
                     <td style="font-weight:800; color:#6366f1; font-size:9px;">${overallAvg}</td>
                   </tr>
                   ${(lastStats?.course_quality || []).map((q, idx) => {
                     const bg = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                    const shortName = (q.course || '').replace(/^BE /, '').replace('Computer Science and Engineering', 'CSE').replace('Electronics and Communication Engineering', 'ECE').replace('Information Science and Engineering', 'ISE').replace('Mechanical Engineering', 'ME').replace('Civil Engineering', 'CE');
+                    const shortName = (q.course || '')
+                      .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
+                      .replace('BE Computer Science and Engineering (Cyber Security)', 'CSE (Cyber Security)')
+                      .replace('BE Computer Science and Engineering (Data Science)', 'CSE (Data Science)')
+                      .replace('BE Computer Science and Engineering', 'CSE')
+                      .replace('BE Electronics and Communication Engineering', 'ECE')
+                      .replace('BE Information Science and Engineering', 'ISE')
+                      .replace('BE Mechanical Engineering', 'ME')
+                      .replace('BE Civil Engineering', 'CE');
+                    const pcm = q.avg_pcm ? q.avg_pcm + '%' : '—';
+                    const overall = q.avg_overall ? q.avg_overall + '%' : '—';
                     return `<tr style="background:${bg};">
-                      <td style="text-align:left; font-weight:600; color:#334155; font-size:8.5px;">${shortName}</td>
-                      <td style="font-weight:700; color:#1e293b; font-size:9px;">${q.avg_pcm ? q.avg_pcm + '%' : 'N/A'}</td>
-                      <td style="color:#64748b; font-size:9px;">${q.avg_overall ? q.avg_overall + '%' : 'N/A'}</td>
+                      <td style="text-align:left; font-weight:600; color:#334155; font-size:8px;">${shortName}</td>
+                      <td style="font-weight:700; color:#1e40af; font-size:9px;">${q.student_count || 0}</td>
+                      <td style="font-weight:700; color:#10b981; font-size:9px;">${pcm}</td>
+                      <td style="color:#6366f1; font-size:9px;">${overall}</td>
                     </tr>`;
                   }).join('')}
                 </tbody>
+                <tfoot style="background:#f1f5f9; font-weight:800;">
+                  <tr>
+                    <td style="text-align:left; font-size:8.5px;">TOTAL</td>
+                    <td style="font-size:9px;">${(lastStats?.course_quality || []).reduce((s,q)=>s+parseInt(q.student_count||0),0)}</td>
+                    <td colspan="2" style="font-size:8px; color:#64748b;">Avg from admitted batch</td>
+                  </tr>
+                </tfoot>
               </table>
-              <p style="font-size: 8.5px; color: #475569; margin: 8px 4px; text-align: justify; line-height: 1.4;">
-                <b>Visualization Explanation:</b> Academic quality per course reflects the average PCM and Overall scores of admitted students in each branch. Higher values indicate academically stronger intake, which correlates with better outcomes and institutional reputation.
+              <p style="font-size: 8px; color: #475569; margin: 6px 4px; text-align: justify; line-height: 1.4;">
+                <b>Note:</b> PCM/Overall averages are sourced from the management admission form. '—' indicates data was not recorded at admission time.
               </p>
             </div>
           </div>
