@@ -117,12 +117,12 @@
             <input type="hidden" id="raw_id" name="raw_id">
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="studentName"><i class="fas fa-user"></i> Student Name:</label>
+                    <label for="studentName"><i class="fas fa-user"></i> Student Name: <span style="color:#ef4444;">*</span></label>
                     <input type="text" id="studentName" name="studentName" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter full name">
                 </div>
                 
                 <div class="form-group">
-                    <label for="fatherName"><i class="fas fa-user-tie"></i> Father Name:</label>
+                    <label for="fatherName"><i class="fas fa-user-tie"></i> Father Name: <span style="color:#ef4444;">*</span></label>
                     <input type="text" id="fatherName" name="fatherName" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter father's name">
                 </div>
                 
@@ -146,18 +146,18 @@
             
             <div class="form-grid">
                 <div class="form-group">
-                    <label for="studentEmail"><i class="fas fa-envelope"></i> Student Email:</label>
+                    <label for="studentEmail"><i class="fas fa-envelope"></i> Student Email: <span style="color:#ef4444;">*</span></label>
                     <input type="email" id="studentEmail" name="studentEmail" required placeholder="example@email.com">
                 </div>
                 
                 <div class="form-group">
-                    <label for="studentMobile"><i class="fas fa-mobile-alt"></i> Student Mobile Number:</label>
-                    <input type="tel" id="studentMobile" name="studentMobile" maxlength="10" placeholder="10-digit number">
+                    <label for="studentMobile"><i class="fas fa-mobile-alt"></i> Student Mobile Number: <span style="color:#ef4444;">*</span></label>
+                    <input type="tel" id="studentMobile" name="studentMobile" maxlength="10" required pattern="[0-9]{10}" placeholder="10-digit number">
                 </div>
                 
                 <div class="form-group">
-                    <label for="fatherMobile"><i class="fas fa-phone"></i> Father Mobile Number:</label>
-                    <input type="tel" id="fatherMobile" name="fatherMobile" maxlength="10" placeholder="10-digit number">
+                    <label for="fatherMobile"><i class="fas fa-phone"></i> Father Mobile Number: <span style="color:#ef4444;">*</span></label>
+                    <input type="tel" id="fatherMobile" name="fatherMobile" maxlength="10" required pattern="[0-9]{10}" placeholder="10-digit number">
                 </div>
                 
                 <div class="form-group">
@@ -263,13 +263,13 @@
             </div>
             
             <div class="form-group" style="max-width: 400px;">
-                <label for="institution_name"><i class="fas fa-school"></i> Institution / School Name:</label>
-                <input type="text" id="institution_name" name="institution_name" oninput="this.value = this.value.toUpperCase()" placeholder="Enter your school/college name">
+                <label for="institution_name"><i class="fas fa-school"></i> Institution / School Name: <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="institution_name" name="institution_name" required oninput="this.value = this.value.toUpperCase()" placeholder="Enter your school/college name">
             </div>
             
             <div class="form-group" style="max-width: 400px;">
-                <label for="year_of_passing"><i class="fas fa-calendar-alt"></i> Year of Passing:</label>
-                <input type="text" id="year_of_passing" name="year_of_passing" maxlength="4" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="e.g. 2024">
+                <label for="year_of_passing"><i class="fas fa-calendar-alt"></i> Year of Passing: <span style="color:#ef4444;">*</span></label>
+                <input type="text" id="year_of_passing" name="year_of_passing" required maxlength="4" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="e.g. 2024">
             </div>
 
             <!-- Result Status – shown after board is selected -->
@@ -430,7 +430,7 @@
             </div>
             
             <div class="form-group course-preference">
-                <label><i class="fas fa-list-ol"></i> Course Preference Order: <span class="required-note">(Choose up to 8 rank-ordered preferences)</span></label>
+                <label><i class="fas fa-list-ol"></i> Course Preference Order: <span style="color:#ef4444;">*</span> <span class="required-note">(Choose at least 1, up to 8 rank-ordered preferences)</span></label>
                 <div class="preference-instruction">
                     <p><i class="fas fa-info-circle"></i> Select your course preferences in order of priority.</p>
                 </div>
@@ -950,6 +950,29 @@
                 if (!pincodeVal || pincodeVal.trim().length !== 6) {
                     alert('Error: A valid 6-digit Pincode is mandatory.');
                     document.getElementById('pincode').focus();
+                    return;
+                }
+
+                // Validate student mobile
+                const mobVal = document.getElementById('studentMobile').value;
+                if (!mobVal || mobVal.trim().length !== 10) {
+                    alert('Error: A valid 10-digit Student Mobile Number is mandatory.');
+                    document.getElementById('studentMobile').focus();
+                    return;
+                }
+
+                // Validate father mobile
+                const fmobVal = document.getElementById('fatherMobile').value;
+                if (!fmobVal || fmobVal.trim().length !== 10) {
+                    alert('Error: A valid 10-digit Father Mobile Number is mandatory.');
+                    document.getElementById('fatherMobile').focus();
+                    return;
+                }
+
+                // Validate at least 1 course preference selected
+                if (!coursePreferencesOrder || coursePreferencesOrder.length === 0) {
+                    alert('Error: Please select at least 1 Course Preference.');
+                    document.getElementById('preferenceDropdownsContainer').scrollIntoView({ behavior: 'smooth' });
                     return;
                 }
                 
