@@ -19,6 +19,380 @@ let courseChartInstance = null;
 let qualityChartInstance = null;
 let conversionChartInstance = null;
 
+// ═══════════════ SECTION EXPORT UTILITIES (PDF & CSV) ═══════════════
+
+/**
+ * Get the SVCE college logo as a base64 data URL for PDF embedding.
+ * Returns a promise that resolves with the data URL.
+ */
+function getLogoDataURL() {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = '/admin_dashboard/image_copy_2.png';
+  });
+}
+
+/**
+ * Build a branded PDF header HTML block.
+ * @param {string} title - Section title
+ * @param {string} subtitle - Brief description
+ * @param {string} logoDataUrl - base64 logo or null
+ */
+function buildPDFHeader(title, subtitle, logoDataUrl) {
+  const today = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  const yearSel = document.getElementById('academic-year-select');
+  const session = yearSel ? yearSel.value : '';
+  return `
+    <div style="display:flex;align-items:center;gap:18px;padding-bottom:16px;border-bottom:2px solid #1e40af;margin-bottom:18px;">
+      ${logoDataUrl ? `<img src="${logoDataUrl}" style="width:64px;height:64px;object-fit:contain;" />` : ''}
+      <div style="flex:1;">
+        <div style="font-size:16px;font-weight:800;color:#1e293b;letter-spacing:-0.02em;">Sri Venkateshwara College of Engineering</div>
+        <div style="font-size:10px;color:#64748b;margin-top:2px;">ESTD. 2001 | Autonomous Institution | Bengaluru</div>
+      </div>
+      <div style="text-align:right;font-size:9px;color:#64748b;">
+        <div>Generated: ${today}</div>
+        ${session ? `<div>Session: ${session}</div>` : ''}
+      </div>
+    </div>
+    <div style="margin-bottom:18px;">
+      <div style="font-size:14px;font-weight:800;color:#0f172a;">${title}</div>
+      <div style="font-size:10px;color:#64748b;margin-top:3px;">${subtitle}</div>
+    </div>`;
+}
+
+/**
+ * Export a chart canvas as a branded PDF.
+ * @param {string} canvasId - ID of the Chart.js canvas
+ * @param {string} title - Title for the PDF
+ * @param {string} subtitle - Subtitle/description
+ * @param {Object} [opts] - Additional options: { tableData: [{label, values}], summaryText: '' }
+ */
+async function exportChartPDF(canvasId, title, subtitle, opts = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return alert('Chart not found.');
+  const logoUrl = await getLogoDataURL();
+  const chartImg = canvas.toDataURL('image/png', 1.0);
+
+  // Build summary table if data provided
+  let tableHTML = '';
+  if (opts.tableData && opts.tableData.length > 0) {
+    tableHTML = `
+      <table style="width:100%;border-collapse:collapse;margin-top:16px;font-size:10px;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            ${opts.tableData[0].values ? Object.keys(opts.tableData[0]).map(k => `<th style="padding:6px 10px;text-align:left;border:1px solid #e2e8f0;font-weight:700;color:#475569;text-transform:uppercase;font-size:8px;">${k}</th>`).join('') : ''}
+          </tr>
+        </thead>
+        <tbody>
+          ${opts.tableData.map((row, i) => `
+            <tr style="background:${i%2===0?'#fff':'#f8fafc'};">
+              ${Object.values(row).map(v => `<td style="padding:5px 10px;border:1px solid #e2e8f0;">${v}</td>`).join('')}
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  let summaryHTML = '';
+  if (opts.summaryText) {
+    summaryHTML = `<div style="margin-top:14px;padding:10px 14px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:9.5px;color:#0c4a6e;line-height:1.5;">${opts.summaryText}</div>`;
+  }
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`
+    <!DOCTYPE html><html><head><title>${title} — SVCE Report</title>
+    <style>
+      @page { size: A4 landscape; margin: 15mm; }
+      body { font-family: 'Inter','Segoe UI',sans-serif; padding: 0; margin: 0; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style></head><body>
+    ${buildPDFHeader(title, subtitle, logoUrl)}
+    <div style="text-align:center;margin-bottom:14px;">
+      <img src="${chartImg}" style="max-width:100%;max-height:420px;object-fit:contain;" />
+    </div>
+    ${tableHTML}
+    ${summaryHTML}
+    <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between;">
+      <span>SVCE Admissions Intelligence System</span>
+      <span>Confidential — For Internal Use Only</span>
+    </div>
+    </body></html>`);
+  printWin.document.close();
+  setTimeout(() => { printWin.focus(); printWin.print(); }, 600);
+}
+
+/**
+ * Export an HTML table as a branded PDF.
+ * @param {string} tableId - ID of the table element
+ * @param {string} title - Title
+ * @param {string} subtitle - Subtitle
+ */
+async function exportTablePDF(tableId, title, subtitle) {
+  const table = document.getElementById(tableId);
+  if (!table) return alert('Table not found.');
+  const logoUrl = await getLogoDataURL();
+
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`
+    <!DOCTYPE html><html><head><title>${title} — SVCE Report</title>
+    <style>
+      @page { size: A4 landscape; margin: 12mm; }
+      body { font-family: 'Inter','Segoe UI',sans-serif; padding: 0; margin: 0; font-size: 9px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 5px 8px; border: 1px solid #cbd5e1; text-align: center; }
+      th { background: #f1f5f9; font-weight: 700; color: #475569; text-transform: uppercase; font-size: 7.5px; letter-spacing: 0.03em; }
+      td { font-size: 9px; }
+      tr:nth-child(even) { background: #f8fafc; }
+      .total-row, tfoot tr { background: #eef2ff !important; font-weight: 800; }
+      input { border: none; background: transparent; text-align: center; font-weight: 600; width: 100%; font-size: 9px; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style></head><body>
+    ${buildPDFHeader(title, subtitle, logoUrl)}
+    ${table.outerHTML}
+    <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between;">
+      <span>SVCE Admissions Intelligence System</span>
+      <span>Confidential — For Internal Use Only</span>
+    </div>
+    </body></html>`);
+  printWin.document.close();
+  setTimeout(() => { printWin.focus(); printWin.print(); }, 600);
+}
+
+/**
+ * Export chart data or table data as CSV.
+ * @param {Array} rows - Array of objects [{col1: val1, col2: val2}, ...]
+ * @param {string} filename - File name without extension
+ */
+function exportDataCSV(rows, filename) {
+  if (!rows || rows.length === 0) return alert('No data to export.');
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(','),
+    ...rows.map(r => headers.map(h => {
+      let v = (r[h] ?? '').toString().replace(/"/g, '""');
+      return `"${v}"`;
+    }).join(','))
+  ].join('\n');
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/**
+ * Export HTML table to CSV by parsing its DOM.
+ * @param {string} tableId - Table element ID
+ * @param {string} filename - File name
+ */
+function exportTableCSV(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return alert('Table not found.');
+  const rows = [];
+  const headerRows = table.querySelectorAll('thead tr');
+  // Flatten header — use last header row for column names
+  const lastHR = headerRows[headerRows.length - 1];
+  if (lastHR) {
+    const hCells = [];
+    lastHR.querySelectorAll('th').forEach(th => hCells.push(th.textContent.trim()));
+    // If multi-row header, prepend group names
+    if (headerRows.length > 1) {
+      // Use combined header from both rows
+      const allThs = [];
+      table.querySelectorAll('thead th').forEach(th => allThs.push(th.textContent.trim()));
+      rows.push(allThs);
+    } else {
+      rows.push(hCells);
+    }
+  }
+  table.querySelectorAll('tbody tr, tfoot tr').forEach(tr => {
+    const cells = [];
+    tr.querySelectorAll('td').forEach(td => {
+      const inp = td.querySelector('input');
+      cells.push(inp ? inp.value : td.textContent.trim());
+    });
+    if (cells.length > 0) rows.push(cells);
+  });
+  const csvContent = rows.map(r => r.map(c => `"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+/**
+ * Get chart data rows from a Chart.js instance for CSV export.
+ * @param {Chart} chartInstance - Chart.js instance
+ * @returns {Array} rows
+ */
+function getChartDataRows(chartInstance) {
+  if (!chartInstance) return [];
+  const labels = chartInstance.data.labels || [];
+  const datasets = chartInstance.data.datasets || [];
+  return labels.map((label, i) => {
+    const row = { 'Label': label };
+    datasets.forEach(ds => { row[ds.label || 'Value'] = ds.data[i] ?? ''; });
+    return row;
+  });
+}
+
+/**
+ * Build the small export dropdown button HTML.
+ * @param {string} pdfAction - JS onclick for PDF
+ * @param {string} csvAction - JS onclick for CSV
+ */
+function exportBtnHTML(pdfAction, csvAction) {
+  return `
+    <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+      <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" 
+        style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;color:#64748b;transition:all 0.2s;"
+        onmouseover="this.style.background='#eef2ff';this.style.borderColor='#93c5fd'" 
+        onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0'">
+        <span class="material-icons-round" style="font-size:15px;">download</span>Export
+      </button>
+      <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+        <button onclick="${pdfAction};this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;text-align:left;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'">
+          <span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>Export PDF
+        </button>
+        <div style="height:1px;background:#f1f5f9;"></div>
+        <button onclick="${csvAction};this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;text-align:left;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'">
+          <span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>Export CSV
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── Per-section export actions ──────────────────────────────────────────
+
+function exportAdmittedStatsPDF() {
+  exportTablePDF('admitted-stats-table', 'Admitted Students Statistics', 'Course-wise intake, seat allocation, and admission status across CET, COMEDK, and Management quotas.');
+}
+function exportAdmittedStatsCSV() {
+  exportTableCSV('admitted-stats-table', 'SVCE_Admitted_Statistics');
+}
+
+function exportConversionRatioPDF() {
+  exportChartPDF('ratioChart', 'Conversion Ratio Analysis', 'Comparison of Enquiries vs Applications vs Admissions — measures the admission funnel efficiency.', {
+    tableData: getChartDataRows(ratioChartInstance),
+    summaryText: 'This chart shows how effectively enquiries are converting into applications, and applications into confirmed admissions. A higher conversion ratio indicates better student engagement and follow-up performance.'
+  });
+}
+function exportConversionRatioCSV() {
+  exportDataCSV(getChartDataRows(ratioChartInstance), 'SVCE_Conversion_Ratio');
+}
+
+function exportPincodePDF() {
+  exportChartPDF('pincodeChart', 'Area / Pincode Distribution', 'Geographic distribution of students by pincode/area — helps identify high-potential regions for marketing outreach.', {
+    tableData: getChartDataRows(pincodeChartInstance),
+    summaryText: 'This chart visualizes the regional spread of enquiries/applications. Areas with higher concentration represent key feeder zones and should be prioritized in marketing and outreach campaigns.'
+  });
+}
+function exportPincodeCSV() {
+  exportDataCSV(getChartDataRows(pincodeChartInstance), 'SVCE_Area_Pincode_Distribution');
+}
+
+function exportGenderPDF() {
+  exportChartPDF('genderChart', 'Gender Distribution', 'Male vs Female vs Other ratio across enquiries, applications, and admissions.', {
+    tableData: getChartDataRows(genderChartInstance),
+    summaryText: 'Gender distribution helps the institution track diversity metrics and plan for gender-inclusive infrastructure and policies.'
+  });
+}
+function exportGenderCSV() {
+  exportDataCSV(getChartDataRows(genderChartInstance), 'SVCE_Gender_Distribution');
+}
+
+function exportTimelinePDF() {
+  exportChartPDF('timelineChart', 'Application Velocity (Last 30 Days)', 'Daily application submission trend — tracks admission momentum and identifies peak/low activity periods.', {
+    tableData: getChartDataRows(timelineChartInstance),
+    summaryText: 'Application velocity helps forecast admission volumes and plan resource allocation. Sudden dips may indicate technical issues or market changes requiring immediate attention.'
+  });
+}
+function exportTimelineCSV() {
+  exportDataCSV(getChartDataRows(timelineChartInstance), 'SVCE_Application_Velocity');
+}
+
+function exportSourcePDF() {
+  exportChartPDF('sourceChart', 'Source of Lead Analysis', 'Breakdown of how students discover SVCE — measures effectiveness of each marketing channel.', {
+    tableData: getChartDataRows(sourceChartInstance),
+    summaryText: 'Understanding lead sources helps optimize marketing budgets. Channels with higher conversion should receive increased investment, while underperforming sources need strategy revision.'
+  });
+}
+function exportSourceCSV() {
+  exportDataCSV(getChartDataRows(sourceChartInstance), 'SVCE_Lead_Source_Analysis');
+}
+
+function exportStatePDF() {
+  exportChartPDF('stateChart', 'Geographic Distribution (States)', 'State-wise distribution of enquiries — identifies geographic reach and potential for interstate recruitment.', {
+    tableData: getChartDataRows(stateChartInstance),
+    summaryText: 'State-wise data helps track the institution's national reach. States with growing interest may benefit from targeted recruitment drives and alumni engagement programs.'
+  });
+}
+function exportStateCSV() {
+  exportDataCSV(getChartDataRows(stateChartInstance), 'SVCE_State_Distribution');
+}
+
+function exportCourseDemandPDF() {
+  exportChartPDF('courseChart', 'Course Demand Analysis', 'Relative demand for each engineering branch based on student preferences — guides seat and resource planning.', {
+    tableData: getChartDataRows(courseChartInstance),
+    summaryText: 'Course demand data is critical for academic planning, faculty hiring, and infrastructure development. High-demand courses may warrant intake increases in future academic sessions.'
+  });
+}
+function exportCourseDemandCSV() {
+  exportDataCSV(getChartDataRows(courseChartInstance), 'SVCE_Course_Demand');
+}
+
+function exportQualityPDF() {
+  exportChartPDF('qualityChart', 'Academic Batch Quality Report', 'Average PCM and Overall percentage of admitted students per branch — institutional quality benchmark.', {
+    tableData: getChartDataRows(qualityChartInstance),
+    summaryText: 'Batch quality metrics are essential for NAAC/NBA accreditation and academic planning. A higher average PCM indicates stronger STEM fundamentals in the incoming batch.'
+  });
+}
+function exportQualityCSV() {
+  exportDataCSV(getChartDataRows(qualityChartInstance), 'SVCE_Batch_Quality');
+}
+
+function exportConversionPerfPDF() {
+  exportChartPDF('conversionChart', 'Raw Enquiry Conversion Performance', 'Success rate of converting raw leads into formal enquiry submissions — measures outreach team efficiency.', {
+    tableData: getChartDataRows(conversionChartInstance),
+    summaryText: 'This metric tracks the counselling team\'s effectiveness. A low conversion rate may indicate issues with lead quality, follow-up timing, or communication strategies.'
+  });
+}
+function exportConversionPerfCSV() {
+  exportDataCSV(getChartDataRows(conversionChartInstance), 'SVCE_Raw_Enquiry_Conversion');
+}
+
+function exportRecentEnquiriesPDF() {
+  exportTablePDF('recent-enquiries-table', 'Recent Enquiries', 'Latest student enquiry submissions with token numbers, contact details, and referral information.');
+}
+function exportRecentEnquiriesCSV() {
+  exportTableCSV('recent-enquiries-table', 'SVCE_Recent_Enquiries');
+}
+
+function exportRecentApplicationsPDF() {
+  exportTablePDF('recent-admissions-table', 'Recent Applications', 'Latest admission application submissions with application numbers, student details, and course selections.');
+}
+function exportRecentApplicationsCSV() {
+  exportTableCSV('recent-admissions-table', 'SVCE_Recent_Applications');
+}
+
+// Close export dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.export-dropdown-wrap')) {
+    document.querySelectorAll('.export-dropdown-wrap > div:last-child').forEach(d => d.style.display = 'none');
+  }
+});
+
 // ═══════════════ LOGIN ═══════════════
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();

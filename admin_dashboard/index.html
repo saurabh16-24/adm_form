@@ -191,6 +191,14 @@
               <button class="btn btn-primary" onclick="saveAdmittedStats()" style="padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; background: #1e40af;">
                 <span class="material-icons-round" style="font-size: 16px;">save</span> Save Changes
               </button>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:16px;">download</span>Export</button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+                  <button onclick="exportAdmittedStatsPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <div style="height:1px;background:#f1f5f9;"></div>
+                  <button onclick="exportAdmittedStatsCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="table-wrap" style="padding: 0;">
@@ -269,7 +277,17 @@
                 </div>
                 <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Conversion Ratio (Enquiry vs Application vs Admission)</h3>
               </div>
-              <div id="conversion-stats" style="font-size: 0.85rem; font-weight: 600; color: #64748b;"></div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div id="conversion-stats" style="font-size: 0.85rem; font-weight: 600; color: #64748b;"></div>
+                <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                  <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:15px;">download</span>Export</button>
+                  <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+                    <button onclick="exportConversionRatioPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                    <div style="height:1px;background:#f1f5f9;"></div>
+                    <button onclick="exportConversionRatioCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>CSV</button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div style="position: relative; flex: 1; min-height: 400px; width: 100%;">
               <canvas id="ratioChart"></canvas>
@@ -291,6 +309,13 @@
                   <option value="application">Application</option>
                   <option value="admission">Admission</option>
                 </select>
+                <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                  <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+                  <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                    <button onclick="exportPincodePDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                    <button onclick="exportPincodeCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+                  </div>
+                </div>
               </div>
               <div style="position: relative; flex: 1; min-height: 220px; width: 100%;">
                 <canvas id="pincodeChart"></canvas>
@@ -309,6 +334,13 @@
                   <option value="application" selected>Application</option>
                   <option value="admission">Admission</option>
                 </select>
+                <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                  <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+                  <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                    <button onclick="exportGenderPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                    <button onclick="exportGenderCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+                  </div>
+                </div>
               </div>
               <div style="position: relative; flex: 1; min-height: 220px; width: 100%;">
                 <canvas id="genderChart"></canvas>
@@ -329,6 +361,14 @@
                 </div>
                 <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Application Velocity (Last 30 Days)</h3>
               </div>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:15px;">download</span>Export</button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+                  <button onclick="exportTimelinePDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <div style="height:1px;background:#f1f5f9;"></div>
+                  <button onclick="exportTimelineCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
             </div>
             <div style="position: relative; flex: 1; min-height: 300px; width: 100%; overflow-x: auto; overflow-y: hidden;">
               <div id="timelineContainer" style="height: 100%; min-width: 100%;">
@@ -346,9 +386,14 @@
                 </div>
                 <h3 style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin: 0;">Source of Lead</h3>
               </div>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                  <button onclick="exportSourcePDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <button onclick="exportSourceCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
             </div>
-            <div style="position: relative; flex: 1; min-height: 300px; width: 100%;">
-              <canvas id="sourceChart"></canvas>
             </div>
           </div>
 
@@ -361,9 +406,15 @@
                 </div>
                 <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0;">Geographic Distribution (States)</h3>
               </div>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:5px 10px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.72rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:15px;">download</span>Export</button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+                  <button onclick="exportStatePDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <div style="height:1px;background:#f1f5f9;"></div>
+                  <button onclick="exportStateCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
             </div>
-            <div style="position: relative; flex: 1; min-height: 300px; width: 100%;">
-              <canvas id="stateChart"></canvas>
             </div>
           </div>
 
@@ -381,6 +432,13 @@
                 <option value="application" selected>Application</option>
                 <option value="admission">Admission</option>
               </select>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                  <button onclick="exportCourseDemandPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <button onclick="exportCourseDemandCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
             </div>
             <div style="position: relative; flex: 1; min-height: 300px; width: 100%;">
               <canvas id="courseChart"></canvas>
@@ -430,6 +488,13 @@
                     <div id="stat-avg-overall" style="font-size: 1.4rem; font-weight: 900; color: #0f172a; font-variant-numeric: tabular-nums;">0%</div>
                   </div>
                 </div>
+                <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                  <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+                  <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                    <button onclick="exportQualityPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                    <button onclick="exportQualityCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+                  </div>
+                </div>
               </div>
             </div>
             <div style="position: relative; height: 180px; width: 100%; padding-top: 10px;">
@@ -456,8 +521,15 @@
 
         <!-- Recent activity -->
         <div class="card recent-card">
-          <div class="card-header">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
             <h3><span class="material-icons-round">history</span> Recent Enquiries</h3>
+            <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+              <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+              <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                <button onclick="exportRecentEnquiriesPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                <button onclick="exportRecentEnquiriesCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+              </div>
+            </div>
           </div>
           <div class="table-wrap">
             <table class="data-table" id="recent-enquiries-table">
@@ -471,8 +543,15 @@
           </div>
         </div>
         <div class="card recent-card">
-          <div class="card-header">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
             <h3><span class="material-icons-round">history</span> Recent Applications</h3>
+            <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+              <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:4px 8px;cursor:pointer;display:flex;align-items:center;gap:3px;font-size:0.68rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:14px;">download</span></button>
+              <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:130px;overflow:hidden;">
+                <button onclick="exportRecentApplicationsPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                <button onclick="exportRecentApplicationsCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;border:none;background:none;cursor:pointer;font-size:0.78rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:14px;color:#10b981;">table_chart</span>CSV</button>
+              </div>
+            </div>
           </div>
           <div class="table-wrap">
             <table class="data-table" id="recent-admissions-table">
