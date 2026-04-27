@@ -171,20 +171,36 @@ async function exportTablePDF(tableId, title, subtitle) {
  * @param {Array} rows - Array of objects [{col1: val1, col2: val2}, ...]
  * @param {string} filename - File name without extension
  */
-function exportDataCSV(rows, filename) {
+function exportDataCSV(rows, filename, title = '') {
   if (!rows || rows.length === 0) return alert('No data to export.');
+  if (!title) title = filename.replace(/_/g, ' ').toUpperCase();
   const headers = Object.keys(rows[0]);
-  const csvContent = [
-    headers.join(','),
-    ...rows.map(r => headers.map(h => {
-      let v = (r[h] ?? '').toString().replace(/"/g, '""');
-      return `"${v}"`;
-    }).join(','))
-  ].join('\n');
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  
+  const tableHTML = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        table { border-collapse: collapse; font-family: 'Segoe UI', Arial, sans-serif; }
+        .title-row th { background-color: #0f172a; color: #ffffff; font-size: 16px; height: 45px; text-align: left; padding: 10px; font-weight: bold; border: 1px solid #cbd5e1; }
+        .header-row th { background-color: #3b82f6; color: #ffffff; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: center; }
+        td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: center; font-size: 14px; }
+        .even { background-color: #f8fafc; }
+        .odd { background-color: #ffffff; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <tr class="title-row"><th colspan="${headers.length}">${title}</th></tr>
+        <tr class="header-row">${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+        ${rows.map((r, i) => `<tr class="${i % 2 === 0 ? 'even' : 'odd'}">${headers.map(h => `<td>${r[h] ?? ''}</td>`).join('')}</tr>`).join('\n')}
+      </table>
+    </body>
+  </html>`;
+
+  const blob = new Blob(['\\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.xls`;
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -194,39 +210,53 @@ function exportDataCSV(rows, filename) {
  * @param {string} tableId - Table element ID
  * @param {string} filename - File name
  */
-function exportTableCSV(tableId, filename) {
+function exportTableCSV(tableId, filename, title = '') {
   const table = document.getElementById(tableId);
   if (!table) return alert('Table not found.');
+  if (!title) title = filename.replace(/_/g, ' ').toUpperCase();
+
   const rows = [];
   const headerRows = table.querySelectorAll('thead tr');
-  // Flatten header — use last header row for column names
   const lastHR = headerRows[headerRows.length - 1];
+  let hCells = [];
   if (lastHR) {
-    const hCells = [];
     lastHR.querySelectorAll('th').forEach(th => hCells.push(th.textContent.trim()));
-    // If multi-row header, prepend group names
-    if (headerRows.length > 1) {
-      // Use combined header from both rows
-      const allThs = [];
-      table.querySelectorAll('thead th').forEach(th => allThs.push(th.textContent.trim()));
-      rows.push(allThs);
-    } else {
-      rows.push(hCells);
-    }
   }
+
   table.querySelectorAll('tbody tr, tfoot tr').forEach(tr => {
     const cells = [];
-    tr.querySelectorAll('td').forEach(td => {
+    tr.querySelectorAll('td, th').forEach(td => {
       const inp = td.querySelector('input');
       cells.push(inp ? inp.value : td.textContent.trim());
     });
     if (cells.length > 0) rows.push(cells);
   });
-  const csvContent = rows.map(r => r.map(c => `"${(c||'').toString().replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+
+  const tableHTML = `<html xmlns:x="urn:schemas-microsoft-com:office:excel">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        table { border-collapse: collapse; font-family: 'Segoe UI', Arial, sans-serif; }
+        .title-row th { background-color: #0f172a; color: #ffffff; font-size: 16px; height: 45px; text-align: left; padding: 10px; font-weight: bold; border: 1px solid #cbd5e1; }
+        .header-row th { background-color: #3b82f6; color: #ffffff; font-weight: bold; border: 1px solid #94a3b8; padding: 10px; text-align: center; }
+        td { border: 1px solid #cbd5e1; padding: 8px 12px; text-align: center; font-size: 14px; }
+        .even { background-color: #f8fafc; }
+        .odd { background-color: #ffffff; }
+      </style>
+    </head>
+    <body>
+      <table>
+        <tr class="title-row"><th colspan="${Math.max(hCells.length, 1)}">${title}</th></tr>
+        <tr class="header-row">${hCells.map(h => `<th>${h}</th>`).join('')}</tr>
+        ${rows.map((r, i) => `<tr class="${i % 2 === 0 ? 'even' : 'odd'}">${r.map(c => `<td>${c ?? ''}</td>`).join('')}</tr>`).join('\n')}
+      </table>
+    </body>
+  </html>`;
+
+  const blob = new Blob(['\\ufeff' + tableHTML], { type: 'application/vnd.ms-excel' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `${filename}_${new Date().toISOString().split('T')[0]}.xls`;
   link.click();
   URL.revokeObjectURL(link.href);
 }
