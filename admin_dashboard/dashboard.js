@@ -905,18 +905,22 @@ function renderCharts(graphs, stats) {
     const pcmVal = parseFloat(document.getElementById('stat-avg-pcm')?.textContent) || 0;
     const overallVal = parseFloat(document.getElementById('stat-avg-overall')?.textContent) || 0;
 
-    // Course-wise quality if available
+    // course_quality is on stats (top-level), NOT inside stats.graphs
+    const courseQuality = stats?.course_quality || lastStats?.course_quality || [];
+    console.log('[Quality Chart] course_quality data:', courseQuality);
+
+    // Build chart data arrays
     let qLabels = ['Overall Institutional Average'];
     let pcmData = [pcmVal];
     let overallData = [overallVal];
-    let countData = [parseFloat(stats?.quality?.student_count) || 0];
+    let countData = [parseInt(stats?.quality?.student_count) || 0];
 
-    if (graphs.course_quality && graphs.course_quality.length > 0) {
+    if (courseQuality.length > 0) {
       const selectedCourse = document.getElementById('quality-course-filter')?.value;
       
       if (!selectedCourse) {
         // No filter → show all courses
-        graphs.course_quality.forEach(q => {
+        courseQuality.forEach(q => {
           const shortName = (q.course || '')
             .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
             .replace('BE Computer Science and Engineering (Cyber Security)', 'CSE (Cyber Sec)')
@@ -933,10 +937,11 @@ function renderCharts(graphs, stats) {
         });
       } else {
         // Filter selected → show Overall + the specific course for comparison
-        // selectedCourse value = full branch name, same as stored in management_forms.branch
-        const match = graphs.course_quality.find(q => q.course === selectedCourse)
-                   || graphs.course_quality.find(q => q.course && q.course.toLowerCase().includes(
+        console.log('[Quality Chart] Looking for course:', selectedCourse, 'in', courseQuality.map(q=>q.course));
+        const match = courseQuality.find(q => q.course === selectedCourse)
+                   || courseQuality.find(q => q.course && q.course.toLowerCase().includes(
                         selectedCourse.toLowerCase().replace(/^be /i, '')));
+        console.log('[Quality Chart] Match found:', match);
         if (match) {
           const shortName = (match.course || '')
             .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
