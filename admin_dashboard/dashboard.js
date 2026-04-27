@@ -335,7 +335,7 @@ function exportSourceCSV() {
 function exportStatePDF() {
   exportChartPDF('stateChart', 'Geographic Distribution (States)', 'State-wise distribution of enquiries — identifies geographic reach and potential for interstate recruitment.', {
     tableData: getChartDataRows(stateChartInstance),
-    summaryText: 'State-wise data helps track the institution's national reach. States with growing interest may benefit from targeted recruitment drives and alumni engagement programs.'
+    summaryText: 'State-wise data helps track the institution\\'s national reach. States with growing interest may benefit from targeted recruitment drives and alumni engagement programs.'
   });
 }
 function exportStateCSV() {
