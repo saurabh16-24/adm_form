@@ -736,7 +736,7 @@ async function renderAdmittedStats() {
     const act_vac = act_int - act_fill;
     const tot_snq = act_fill + cet_snq_val;
     const overall = tot_snq + aicte_val;
-    const actual_pct = act_int > 0 ? ((overall / act_int) * 100).toFixed(2) : '0.00';
+    const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
 
     // Update totals
     totals.cet_int += c.cet_int;
@@ -777,7 +777,7 @@ async function renderAdmittedStats() {
     `;
   }).join('');
 
-  const final_pct = totals.act_int > 0 ? ((totals.overall / totals.act_int) * 100).toFixed(2) : '0.00';
+  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
   tfoot.innerHTML = `
     <tr>
       <td colspan="2">TOTAL</td>
@@ -819,7 +819,7 @@ function updateStatsRow(el) {
   const act_vac = act_int - act_fill;
   const tot_snq = act_fill + cet_snq;
   const overall = tot_snq + aicte;
-  const actual_pct = act_int > 0 ? ((overall / act_int) * 100).toFixed(2) : '0.00';
+  const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
 
   row.querySelector('[data-calc="cet_tot"]').textContent = cet_tot;
   row.querySelector('[data-calc="act_fill"]').textContent = act_fill;
@@ -855,7 +855,7 @@ function updateStatsTotals() {
     totals.overall += getVal('overall');
   });
 
-  const final_pct = totals.act_int > 0 ? ((totals.overall / totals.act_int) * 100).toFixed(2) : '0.00';
+  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
 
   document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
   document.getElementById('tot-cet-snq').textContent = totals.cet_snq;
