@@ -238,6 +238,9 @@ function exportTableCSV(tableId, filename) {
  */
 function getChartDataRows(chartInstance) {
   if (!chartInstance) return [];
+  if (chartInstance.rawData && chartInstance.rawData.length > 0) {
+    return chartInstance.rawData;
+  }
   const labels = chartInstance.data.labels || [];
   const datasets = chartInstance.data.datasets || [];
   return labels.map((label, i) => {
@@ -1017,6 +1020,7 @@ function renderCharts(graphs, stats) {
         }
       }
     });
+    pincodeChartInstance.rawData = pinDataRaw.map(p => ({ 'Pincode/Area': p.pincode || 'Unspecified', 'Total Count': parseInt(p.count) || 0 }));
   }
 
   // 3. Gender Chart (Individual Filter)
@@ -1170,6 +1174,7 @@ function renderCharts(graphs, stats) {
         plugins: { legend: { position: 'right', labels: { boxWidth: 8, usePointStyle: true, font: { size: 10 } } } }
       }
     });
+    sourceChartInstance.rawData = rawSrcData.map(s => ({ 'Lead Source': s.reference || 'Unknown', 'Total Count': parseInt(s.count) || 0 }));
   }
 
   // 6. Geographic Distribution Chart (Horizontal Bar)
@@ -1199,6 +1204,7 @@ function renderCharts(graphs, stats) {
         }
       }
     });
+    stateChartInstance.rawData = stateData.map(s => ({ 'State': s.state || 'Unknown', 'Total Count': parseInt(s.count) || 0 }));
   }
 
   // 7. Course Demand Chart (Horizontal Bar - Modern 3D Style)
@@ -1269,6 +1275,7 @@ function renderCharts(graphs, stats) {
         }
       }
     });
+    courseChartInstance.rawData = cData.map(c => ({ 'Course Name': c.course || 'Unknown', 'Total Count': parseInt(c.count) || 0 }));
   }
 
   // 8. Academic Quality Comparison Chart (Modern Bar Style)
