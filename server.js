@@ -165,10 +165,13 @@ async function initDB() {
         course VARCHAR(150),
         place VARCHAR(150),
         mode VARCHAR(50), 
+        remarks VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by VARCHAR(100)
       );
     `);
+    // Migration: add remarks column if missing (safe for existing DBs)
+    await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS remarks VARCHAR(255)`);
 
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
@@ -1557,6 +1560,18 @@ app.delete('/api/admin/raw-enquiry/:id', adminAuth, async (req, res) => {
     const old = await pool.query('SELECT student_name FROM raw_enquiries WHERE id = $1', [req.params.id]);
     await pool.query('DELETE FROM raw_enquiries WHERE id = $1', [req.params.id]);
     logAdminActivity(req.userName, 'Deleted Raw Enquiry', 'raw_enquiry', parseInt(req.params.id), old.rows[0]?.student_name, 'Raw record deleted');
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Update raw enquiry remarks
+app.put('/api/admin/raw-enquiry/:id/remarks', adminAuth, async (req, res) => {
+  try {
+    const { remarks } = req.body;
+    const old = await pool.query('SELECT student_name, remarks FROM raw_enquiries WHERE id = $1', [req.params.id]);
+    await pool.query('UPDATE raw_enquiries SET remarks = $1 WHERE id = $2', [remarks || null, req.params.id]);
+    const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
+    logAdminActivity(req.userName, 'Updated Raw Enquiry Remark', 'raw_enquiry', parseInt(req.params.id), studentName, `Remark → "${remarks || '-'}"`);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

@@ -3706,9 +3706,9 @@ function renderRawEnquiries(data) {
   const countEl = document.getElementById('raw-count');
   if (countEl) countEl.textContent = `${data.length} records`;
   
-  console.log('Rendering Raw Enquiries:', data);
-  
-  tbody.innerHTML = data.map(r => `
+  tbody.innerHTML = data.map(r => {
+    const remark = r.remarks || '— Select Action —';
+    return `
     <tr class="${r.is_converted ? 'row-converted' : ''}">
       <td><span class="token-badge">${r.serial_no}</span></td>
       <td><strong>${r.student_name}</strong></td>
@@ -3717,6 +3717,22 @@ function renderRawEnquiries(data) {
       <td>${r.course}</td>
       <td>${r.place}</td>
       <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : r.mode === 'College Database' ? '' : 'tag-management'}" style="${r.mode === 'College Database' ? 'background:#dcfce7; color:#059669;' : ''}">${r.mode}</span></td>
+      <td class="remarks-cell">
+        <div class="remarks-group-unified">
+          <div class="remarks-pill-main" onclick="openRawActionMenu(${r.id}, this)">
+            <div class="pill-remark">${remark}</div>
+          </div>
+          <div class="remarks-menu-popover" id="raw-menu-${r.id}">
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'Booking Done')">Booking Done</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'After CET')">After CET</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'After COMEDK')">After COMEDK</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'Not Interested')">Not Interested</div>
+            <div class="menu-option action-opt" style="color: #6366f1; font-weight: 700;" onclick="promptOtherRawRemark(${r.id})">
+              <span class="material-icons-round" style="font-size: 16px; vertical-align: middle;">add</span> Other...
+            </div>
+          </div>
+        </div>
+      </td>
       <td>${new Date(r.created_at).toLocaleDateString()}</td>
       <td style="display:flex; gap:8px; align-items:center;">
         ${!r.is_converted ? `
@@ -3729,8 +3745,55 @@ function renderRawEnquiries(data) {
         ` : ''}
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 }
+
+function openRawActionMenu(id, pillElement) {
+  // Close all other raw menus first
+  document.querySelectorAll('.remarks-menu-popover.active').forEach(m => m.classList.remove('active'));
+  const menu = document.getElementById(`raw-menu-${id}`);
+  menu.classList.toggle('active');
+  
+  const closeMenu = (e) => {
+    if (!pillElement.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.remove('active');
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
+}
+
+async function updateRawRemarks(id, value) {
+  try {
+    const rowIdx = allRawEnquiries.findIndex(r => r.id === id);
+    if (rowIdx !== -1) {
+      allRawEnquiries[rowIdx].remarks = value;
+      
+      // Close all menus
+      document.querySelectorAll('.remarks-menu-popover.active').forEach(m => m.classList.remove('active'));
+
+      // Re-render UI immediately
+      renderRawEnquiries(allRawEnquiries);
+
+      // Persist to database
+      await apiFetch(`/api/admin/raw-enquiry/${id}/remarks`, {
+        method: 'PUT',
+        body: JSON.stringify({ remarks: value })
+      });
+      showToast('Remark saved');
+    }
+  } catch (err) {
+    console.error('Update raw remarks error:', err);
+    showToast('Failed to save remark', 'error');
+  }
+}
+
+window.promptOtherRawRemark = function(id) {
+  const custom = prompt("Enter custom remark:");
+  if (custom !== null && custom.trim() !== "") {
+    updateRawRemarks(id, custom.trim());
+  }
+};
 
 function openRawEnquiryModal() {
   document.getElementById('raw-enquiry-modal').classList.add('open');
@@ -3798,16 +3861,17 @@ function filterRawEnquiries() {
     (r.phone_number || '').toLowerCase().includes(search) ||
     (r.email_id || '').toLowerCase().includes(search) ||
     (r.course || '').toLowerCase().includes(search) ||
-    (r.place || '').toLowerCase().includes(search)
+    (r.place || '').toLowerCase().includes(search) ||
+    (r.remarks || '').toLowerCase().includes(search)
   );
   renderRawEnquiries(filtered);
 }
 
 function exportRawEnquiries() {
   if (allRawEnquiries.length === 0) return alert('No data to export');
-  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Date', 'Created By'];
+  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Remarks', 'Date', 'Created By'];
   const rows = allRawEnquiries.map(r => [
-    r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, 
+    r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, r.remarks,
     new Date(r.created_at).toLocaleString(), r.created_by
   ]);
   
