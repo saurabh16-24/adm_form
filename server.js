@@ -160,7 +160,7 @@ async function initDB() {
         id SERIAL PRIMARY KEY,
         serial_no VARCHAR(50),
         student_name VARCHAR(150),
-        phone_number VARCHAR(50),
+        phone_number VARCHAR(255),
         email_id VARCHAR(150),
         course VARCHAR(150),
         place VARCHAR(150),
@@ -171,9 +171,10 @@ async function initDB() {
         created_by VARCHAR(100)
       );
     `);
-    // Migration: add remarks and follow_up_date columns if missing (safe for existing DBs)
+    // Migration: add/widen columns if missing (safe for existing DBs)
     await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS remarks VARCHAR(255)`);
     await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS follow_up_date DATE`);
+    await client.query(`ALTER TABLE raw_enquiries ALTER COLUMN phone_number TYPE VARCHAR(255)`);
 
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");

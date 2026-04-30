@@ -3983,7 +3983,21 @@ function parseCSVFile(file) {
     // Smart column mapping (case-insensitive, flexible naming)
     const colMap = mapCSVColumns(rawHeaders);
     
-    if (!colMap.student_name) {
+    // Auto-detect phone columns from data if headers didn't reveal them
+    if (colMap.phone_columns.length === 0 && lines.length >= 2) {
+      const firstDataRow = parseCSVLine(lines[1]);
+      firstDataRow.forEach((cell, idx) => {
+        // Skip columns already mapped to name, email, course, place
+        if (idx === colMap.student_name || idx === colMap.email_id || idx === colMap.course || idx === colMap.place) return;
+        // Check if cell looks like a phone number (7-15 digits, possibly with + or spaces)
+        const cleaned = cell.replace(/[\s\-\+\(\)]/g, '');
+        if (/^\d{7,15}$/.test(cleaned)) {
+          colMap.phone_columns.push(idx);
+        }
+      });
+    }
+
+    if (colMap.student_name === null) {
       showToast('CSV must have a column for student name (e.g., "Name", "Student Name", "Candidate Name")', 'error');
       return;
     }
@@ -3994,9 +4008,16 @@ function parseCSVFile(file) {
       const cells = parseCSVLine(lines[i]);
       if (cells.length === 0 || cells.every(c => !c.trim())) continue; // Skip empty rows
       
+      // Collect all phone numbers from multiple columns, filter empty/duplicate
+      const phoneNumbers = colMap.phone_columns
+        .map(idx => (cells[idx] || '').trim())
+        .filter(p => p && p.length >= 5); // Only keep valid-looking numbers
+      // Remove duplicates
+      const uniquePhones = [...new Set(phoneNumbers)];
+
       const row = {
         student_name: (cells[colMap.student_name] || '').trim(),
-        phone_number: (cells[colMap.phone_number] || '').trim(),
+        phone_number: uniquePhones.join(', '),
         email_id: (cells[colMap.email_id] || '').trim(),
         course: (cells[colMap.course] || '').trim(),
         place: (cells[colMap.place] || '').trim(),
@@ -4054,32 +4075,57 @@ function parseCSVLine(line) {
 }
 
 function mapCSVColumns(headers) {
-  const map = { student_name: null, phone_number: null, email_id: null, course: null, place: null };
+  const map = { student_name: null, phone_columns: [], email_id: null, course: null, place: null };
   
+  // Columns to explicitly skip (false positives)
+  const skipPatterns = ['admission', 'class', 'section', 'pcm', 'jee', 'cet', 'comedk', 'pcmc',
+    'roll', 'rank', 'marks', 'percentage', 'subject', 'language', 'sanskrit', 'hindi', 
+    'kannada', 'french', 'board', 'year', 'serial', 'sl no', 'sl.no', 'sno'];
+
   headers.forEach((h, idx) => {
     const lc = h.toLowerCase().trim().replace(/[^a-z0-9 ]/g, '');
     
-    // Student name
-    if (!map.student_name && (lc.includes('name') || lc.includes('student') || lc.includes('candidate'))) {
+    // Check if this column should be skipped entirely
+    const shouldSkip = skipPatterns.some(p => lc.includes(p));
+    
+    // Student name — match "name" or "student" but NOT "admission no", "username" etc.
+    if (map.student_name === null && !shouldSkip && (lc.includes('student name') || lc.includes('candidate name') || lc === 'name' || lc === 'student')) {
       map.student_name = idx;
     }
-    // Phone
-    if (map.phone_number === null && (lc.includes('phone') || lc.includes('mobile') || lc.includes('contact') || lc.includes('number') || lc === 'tel')) {
-      map.phone_number = idx;
+    // If still no name found, try broader match but exclude skip patterns
+    if (map.student_name === null && !shouldSkip && lc.includes('name') && !lc.includes('user')) {
+      map.student_name = idx;
     }
+    
+    // Phone/Contact — collect ALL matching columns (supports multiple contact numbers)
+    if (!shouldSkip && (lc.includes('phone') || lc.includes('mobile') || lc.includes('contact') || lc === 'tel' || lc.includes('cell'))) {
+      map.phone_columns.push(idx);
+    }
+    // Also detect columns that are purely numeric headers or contain "no" in context of phone
+    // but NOT "admission no", "sl no", "serial no" etc.
+    if (!shouldSkip && map.phone_columns.indexOf(idx) === -1) {
+      // Match patterns like "contact no 1", "phone 2", "mobile no", "contact number"
+      if ((lc.includes('contact') || lc.includes('phone') || lc.includes('mobile')) && (lc.includes('no') || lc.includes('number') || /\d/.test(lc))) {
+        map.phone_columns.push(idx);
+      }
+    }
+    
     // Email
     if (map.email_id === null && (lc.includes('email') || lc.includes('mail'))) {
       map.email_id = idx;
     }
     // Course
-    if (map.course === null && (lc.includes('course') || lc.includes('branch') || lc.includes('program') || lc.includes('department') || lc.includes('stream'))) {
+    if (map.course === null && !shouldSkip && (lc.includes('course') || lc.includes('branch') || lc.includes('program') || lc.includes('department') || lc.includes('stream'))) {
       map.course = idx;
     }
     // Place
-    if (map.place === null && (lc.includes('place') || lc.includes('city') || lc.includes('location') || lc.includes('address') || lc.includes('area'))) {
+    if (map.place === null && !shouldSkip && (lc.includes('place') || lc.includes('city') || lc.includes('location') || lc.includes('area') || lc.includes('district'))) {
       map.place = idx;
     }
   });
+
+  // If no phone columns found by header names, try to detect by looking at data patterns
+  // (columns with 10-digit numbers are likely phone numbers)
 
   return map;
 }
