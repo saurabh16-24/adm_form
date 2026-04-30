@@ -3708,6 +3708,7 @@ function renderRawEnquiries(data) {
   
   tbody.innerHTML = data.map(r => {
     const remark = r.remarks || '— Select Action —';
+    const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
     return `
     <tr class="${r.is_converted ? 'row-converted' : ''}">
       <td><span class="token-badge">${r.serial_no}</span></td>
@@ -3721,15 +3722,21 @@ function renderRawEnquiries(data) {
         <div class="remarks-group-unified">
           <div class="remarks-pill-main" onclick="openRawActionMenu(${r.id}, this)">
             <div class="pill-remark">${remark}</div>
+            <div class="pill-date"><span class="material-icons-round">event</span> ${followUpText}</div>
           </div>
           <div class="remarks-menu-popover" id="raw-menu-${r.id}">
-            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'Booking Done')">Booking Done</div>
-            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'After CET')">After CET</div>
-            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'After COMEDK')">After COMEDK</div>
-            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'Not Interested')">Not Interested</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'remarks', 'Booking Done')">Booking Done</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'remarks', 'After CET')">After CET</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'remarks', 'After COMEDK')">After COMEDK</div>
+            <div class="menu-option action-opt" onclick="updateRawRemarks(${r.id}, 'remarks', 'Not Interested')">Not Interested</div>
             <div class="menu-option action-opt" style="color: #6366f1; font-weight: 700;" onclick="promptOtherRawRemark(${r.id})">
               <span class="material-icons-round" style="font-size: 16px; vertical-align: middle;">add</span> Other...
             </div>
+            <div class="menu-divider"></div>
+            <div class="menu-option date-opt" onclick="this.nextElementSibling.showPicker()">Set/Change Follow-up Date</div>
+            <input type="date" value="${r.follow_up_date ? new Date(r.follow_up_date).toISOString().split('T')[0] : ''}" 
+                   onchange="updateRawRemarks(${r.id}, 'follow_up_date', this.value)" 
+                   style="position:absolute;visibility:hidden;width:0;height:0;">
           </div>
         </div>
       </td>
@@ -3763,11 +3770,11 @@ function openRawActionMenu(id, pillElement) {
   setTimeout(() => document.addEventListener('click', closeMenu), 0);
 }
 
-async function updateRawRemarks(id, value) {
+async function updateRawRemarks(id, field, value) {
   try {
     const rowIdx = allRawEnquiries.findIndex(r => r.id === id);
     if (rowIdx !== -1) {
-      allRawEnquiries[rowIdx].remarks = value;
+      allRawEnquiries[rowIdx][field] = value;
       
       // Close all menus
       document.querySelectorAll('.remarks-menu-popover.active').forEach(m => m.classList.remove('active'));
@@ -3778,20 +3785,23 @@ async function updateRawRemarks(id, value) {
       // Persist to database
       await apiFetch(`/api/admin/raw-enquiry/${id}/remarks`, {
         method: 'PUT',
-        body: JSON.stringify({ remarks: value })
+        body: JSON.stringify({
+          remarks: allRawEnquiries[rowIdx].remarks,
+          follow_up_date: allRawEnquiries[rowIdx].follow_up_date
+        })
       });
-      showToast('Remark saved');
+      showToast('Changes saved');
     }
   } catch (err) {
     console.error('Update raw remarks error:', err);
-    showToast('Failed to save remark', 'error');
+    showToast('Failed to save changes', 'error');
   }
 }
 
 window.promptOtherRawRemark = function(id) {
   const custom = prompt("Enter custom remark:");
   if (custom !== null && custom.trim() !== "") {
-    updateRawRemarks(id, custom.trim());
+    updateRawRemarks(id, 'remarks', custom.trim());
   }
 };
 
@@ -3869,9 +3879,10 @@ function filterRawEnquiries() {
 
 function exportRawEnquiries() {
   if (allRawEnquiries.length === 0) return alert('No data to export');
-  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Remarks', 'Date', 'Created By'];
+  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Remarks', 'Follow-up Date', 'Date', 'Created By'];
   const rows = allRawEnquiries.map(r => [
     r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, r.remarks,
+    r.follow_up_date ? formatDate(r.follow_up_date) : '',
     new Date(r.created_at).toLocaleString(), r.created_by
   ]);
   

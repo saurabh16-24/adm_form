@@ -166,12 +166,14 @@ async function initDB() {
         place VARCHAR(150),
         mode VARCHAR(50), 
         remarks VARCHAR(255),
+        follow_up_date DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         created_by VARCHAR(100)
       );
     `);
-    // Migration: add remarks column if missing (safe for existing DBs)
+    // Migration: add remarks and follow_up_date columns if missing (safe for existing DBs)
     await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS remarks VARCHAR(255)`);
+    await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS follow_up_date DATE`);
 
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
@@ -1564,14 +1566,19 @@ app.delete('/api/admin/raw-enquiry/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Update raw enquiry remarks
+// Update raw enquiry remarks and follow-up date
 app.put('/api/admin/raw-enquiry/:id/remarks', adminAuth, async (req, res) => {
   try {
-    const { remarks } = req.body;
-    const old = await pool.query('SELECT student_name, remarks FROM raw_enquiries WHERE id = $1', [req.params.id]);
-    await pool.query('UPDATE raw_enquiries SET remarks = $1 WHERE id = $2', [remarks || null, req.params.id]);
+    const { remarks, follow_up_date } = req.body;
+    const old = await pool.query('SELECT student_name, remarks, follow_up_date FROM raw_enquiries WHERE id = $1', [req.params.id]);
+    await pool.query('UPDATE raw_enquiries SET remarks = $1, follow_up_date = $2 WHERE id = $3', [remarks || null, follow_up_date || null, req.params.id]);
     const studentName = old.rows.length ? old.rows[0].student_name : 'Unknown';
-    logAdminActivity(req.userName, 'Updated Raw Enquiry Remark', 'raw_enquiry', parseInt(req.params.id), studentName, `Remark → "${remarks || '-'}"`);
+    const changes = [];
+    if (old.rows.length) {
+      if ((old.rows[0].remarks || '') !== (remarks || '')) changes.push(`Remark → "${remarks || '-'}"`);
+      if ((old.rows[0].follow_up_date || '') !== (follow_up_date || '')) changes.push(`Follow-up → ${follow_up_date || 'cleared'}`);
+    }
+    logAdminActivity(req.userName, 'Updated Raw Enquiry', 'raw_enquiry', parseInt(req.params.id), studentName, changes.join(', ') || 'Remark/follow-up updated');
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
