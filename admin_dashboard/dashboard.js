@@ -2700,8 +2700,8 @@ async function finalPrintManagementForm() {
           .guidelines ol { padding-left: 18px; margin: 0; }
           .guidelines li { margin-bottom: 3px; }
 
-          .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
-          .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
+          .footer-signs { display: flex; justify-content: space-between; margin-top: 120px; font-weight: 800; font-size: 10px; width: 100%; }
+          .sign-col { text-align: center; width: 23%; border-top: 2px solid #000; padding-top: 5px; }
 
           @media print {
             body { -webkit-print-color-adjust: exact; }
@@ -2834,6 +2834,7 @@ async function finalPrintManagementForm() {
           <div class="sign-col">Student Signature</div>
           <div class="sign-col">Parents/Guardian Signature</div>
           <div class="sign-col">Admission Head Signature</div>
+          <div class="sign-col">Managing Director</div>
         </div>
 
       </body>
@@ -3175,8 +3176,8 @@ async function printManagementFromRecord(id) {
               .guidelines ol { padding-left: 18px; margin: 0; }
               .guidelines li { margin-bottom: 3px; }
 
-              .footer-signs { display: flex; justify-content: space-between; margin-top: 160px; font-weight: 800; font-size: 11px; width: 100%; }
-              .sign-col { text-align: center; width: 30%; border-top: 2px solid #000; padding-top: 5px; }
+              .footer-signs { display: flex; justify-content: space-between; margin-top: 120px; font-weight: 800; font-size: 10px; width: 100%; }
+              .sign-col { text-align: center; width: 23%; border-top: 2px solid #000; padding-top: 5px; }
 
               @media print { body { -webkit-print-color-adjust: exact; } }
             </style>
@@ -3260,6 +3261,7 @@ async function printManagementFromRecord(id) {
               <div class="sign-col">Student Signature</div>
               <div class="sign-col">Parents/Guardian Signature</div>
               <div class="sign-col">Admission Head Signature</div>
+              <div class="sign-col">Managing Director</div>
             </div>
             <div style="margin-top:15px; font-size:8px; color:#94a3b8; text-align:center;">* Re-printed from Dashboard record #${m.id} on ${new Date().toLocaleString()}</div>
           </body>
@@ -3714,7 +3716,7 @@ function renderRawEnquiries(data) {
       <td>${r.email_id || '—'}</td>
       <td>${r.course}</td>
       <td>${r.place}</td>
-      <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : 'tag-management'}">${r.mode}</span></td>
+      <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : r.mode === 'College Database' ? '' : 'tag-management'}" style="${r.mode === 'College Database' ? 'background:#dcfce7; color:#059669;' : ''}">${r.mode}</span></td>
       <td>${new Date(r.created_at).toLocaleDateString()}</td>
       <td style="display:flex; gap:8px; align-items:center;">
         ${!r.is_converted ? `
@@ -3823,6 +3825,255 @@ function exportRawEnquiries() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+}
+
+// ═══════════════ CSV IMPORT FOR RAW ENQUIRIES ═══════════════
+
+let csvParsedRows = [];
+
+function openCSVUploadModal() {
+  const modal = document.getElementById('csv-upload-modal');
+  modal.classList.add('open');
+  // Reset state
+  csvParsedRows = [];
+  document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-preview-section').style.display = 'none';
+  document.getElementById('csv-drop-zone').style.display = '';
+  const btn = document.getElementById('csv-import-btn');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+}
+
+function closeCSVUploadModal() {
+  document.getElementById('csv-upload-modal').classList.remove('open');
+  csvParsedRows = [];
+}
+
+// Drag-and-drop support
+document.addEventListener('DOMContentLoaded', () => {
+  const dropZone = document.getElementById('csv-drop-zone');
+  if (!dropZone) return;
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = '#059669';
+      dropZone.style.background = '#dcfce7';
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.style.borderColor = '#a7f3d0';
+      dropZone.style.background = '#f0fdf4';
+    });
+  });
+
+  dropZone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+      parseCSVFile(file);
+    } else {
+      showToast('Please drop a .csv file', 'error');
+    }
+  });
+});
+
+function handleCSVFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.name.endsWith('.csv')) {
+    showToast('Please select a .csv file', 'error');
+    return;
+  }
+  parseCSVFile(file);
+}
+
+function parseCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) {
+      showToast('CSV file must have a header row and at least one data row', 'error');
+      return;
+    }
+
+    // Parse header
+    const rawHeaders = parseCSVLine(lines[0]);
+    
+    // Smart column mapping (case-insensitive, flexible naming)
+    const colMap = mapCSVColumns(rawHeaders);
+    
+    if (!colMap.student_name) {
+      showToast('CSV must have a column for student name (e.g., "Name", "Student Name", "Candidate Name")', 'error');
+      return;
+    }
+
+    // Parse data rows
+    csvParsedRows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cells = parseCSVLine(lines[i]);
+      if (cells.length === 0 || cells.every(c => !c.trim())) continue; // Skip empty rows
+      
+      const row = {
+        student_name: (cells[colMap.student_name] || '').trim(),
+        phone_number: (cells[colMap.phone_number] || '').trim(),
+        email_id: (cells[colMap.email_id] || '').trim(),
+        course: (cells[colMap.course] || '').trim(),
+        place: (cells[colMap.place] || '').trim(),
+        mode: 'College Database'
+      };
+
+      // Only add if at least name exists
+      if (row.student_name) {
+        csvParsedRows.push(row);
+      }
+    }
+
+    if (csvParsedRows.length === 0) {
+      showToast('No valid data rows found in CSV', 'error');
+      return;
+    }
+
+    // Show preview
+    renderCSVPreview(file.name, rawHeaders, csvParsedRows);
+  };
+  reader.readAsText(file);
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function mapCSVColumns(headers) {
+  const map = { student_name: null, phone_number: null, email_id: null, course: null, place: null };
+  
+  headers.forEach((h, idx) => {
+    const lc = h.toLowerCase().trim().replace(/[^a-z0-9 ]/g, '');
+    
+    // Student name
+    if (!map.student_name && (lc.includes('name') || lc.includes('student') || lc.includes('candidate'))) {
+      map.student_name = idx;
+    }
+    // Phone
+    if (map.phone_number === null && (lc.includes('phone') || lc.includes('mobile') || lc.includes('contact') || lc.includes('number') || lc === 'tel')) {
+      map.phone_number = idx;
+    }
+    // Email
+    if (map.email_id === null && (lc.includes('email') || lc.includes('mail'))) {
+      map.email_id = idx;
+    }
+    // Course
+    if (map.course === null && (lc.includes('course') || lc.includes('branch') || lc.includes('program') || lc.includes('department') || lc.includes('stream'))) {
+      map.course = idx;
+    }
+    // Place
+    if (map.place === null && (lc.includes('place') || lc.includes('city') || lc.includes('location') || lc.includes('address') || lc.includes('area'))) {
+      map.place = idx;
+    }
+  });
+
+  return map;
+}
+
+function renderCSVPreview(fileName, rawHeaders, rows) {
+  document.getElementById('csv-drop-zone').style.display = 'none';
+  document.getElementById('csv-preview-section').style.display = '';
+  document.getElementById('csv-file-name').textContent = fileName;
+  document.getElementById('csv-row-count').textContent = `${rows.length} record(s) found`;
+
+  // Enable import button
+  const btn = document.getElementById('csv-import-btn');
+  btn.style.opacity = '1';
+  btn.style.pointerEvents = 'auto';
+
+  // Render preview headers
+  const thead = document.getElementById('csv-preview-header');
+  thead.innerHTML = '<th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Course</th><th>Place</th><th>Mode</th>';
+
+  // Render preview rows (max 20 for preview)
+  const tbody = document.getElementById('csv-preview-body');
+  const previewRows = rows.slice(0, 20);
+  tbody.innerHTML = previewRows.map((r, i) => `
+    <tr>
+      <td style="color:#64748b; font-weight:600;">${i + 1}</td>
+      <td><strong>${r.student_name}</strong></td>
+      <td>${r.phone_number || '—'}</td>
+      <td>${r.email_id || '—'}</td>
+      <td>${r.course || '—'}</td>
+      <td>${r.place || '—'}</td>
+      <td><span class="status-badge" style="background:#dcfce7; color:#059669; font-weight:700; padding:2px 8px; border-radius:6px; font-size:0.75rem;">College Database</span></td>
+    </tr>
+  `).join('');
+
+  if (rows.length > 20) {
+    tbody.innerHTML += `<tr><td colspan="7" style="text-align:center; color:#64748b; font-style:italic; padding:12px;">... and ${rows.length - 20} more records</td></tr>`;
+  }
+}
+
+async function importCSVData() {
+  if (csvParsedRows.length === 0) return;
+
+  const btn = document.getElementById('csv-import-btn');
+  const ogHtml = btn.innerHTML;
+  btn.innerHTML = '<span class="spinner" style="margin-right: 8px;"></span> Importing...';
+  btn.disabled = true;
+  btn.style.pointerEvents = 'none';
+
+  try {
+    const res = await apiFetch('/api/admin/raw-enquiry/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ rows: csvParsedRows })
+    });
+
+    if (res.success) {
+      showToast(`Successfully imported ${res.count} records from CSV`);
+      closeCSVUploadModal();
+      loadRawEnquiries();
+    } else {
+      showToast(res.error || 'Import failed', 'error');
+    }
+  } catch (err) {
+    showToast('Failed to import CSV: ' + err.message, 'error');
+    console.error('CSV import error:', err);
+  } finally {
+    btn.innerHTML = ogHtml;
+    btn.disabled = false;
+    btn.style.pointerEvents = 'auto';
+  }
 }
 
 // ═══════════════ CONVERSION TRACKING & QR ═══════════════

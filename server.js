@@ -1561,6 +1561,60 @@ app.delete('/api/admin/raw-enquiry/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Bulk import raw enquiries (CSV upload)
+app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { rows } = req.body;
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ error: 'No data rows provided' });
+    }
+
+    await client.query('BEGIN');
+
+    const year = new Date().getFullYear();
+    // Get current count for serial number generation
+    const countRes = await client.query(
+      'SELECT COUNT(*) FROM raw_enquiries WHERE EXTRACT(YEAR FROM created_at) = $1', [year]
+    );
+    let count = parseInt(countRes.rows[0].count);
+
+    let imported = 0;
+    for (const row of rows) {
+      if (!row.student_name || !row.student_name.trim()) continue;
+
+      count++;
+      const serial_no = `RAW/${year}/${String(count).padStart(3, '0')}`;
+
+      await client.query(
+        `INSERT INTO raw_enquiries (serial_no, student_name, phone_number, email_id, course, place, mode, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [
+          serial_no,
+          row.student_name.trim(),
+          (row.phone_number || '').trim(),
+          (row.email_id || '').trim(),
+          (row.course || '').trim(),
+          (row.place || '').trim(),
+          row.mode || 'College Database',
+          req.userName
+        ]
+      );
+      imported++;
+    }
+
+    await client.query('COMMIT');
+    logAdminActivity(req.userName, 'Bulk CSV Import', 'raw_enquiry', null, `${imported} records`, `Imported ${imported} raw enquiries via CSV upload (mode: College Database)`);
+    res.json({ success: true, count: imported });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Bulk import error:', err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+});
+
 // Resume follow-up for an enquiry
 app.put('/api/admin/enquiry/:id/resume-follow-up', adminAuth, async (req, res) => {
   try {
