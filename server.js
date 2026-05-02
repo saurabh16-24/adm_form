@@ -1799,6 +1799,40 @@ app.delete('/api/admin/admission/:id', adminAuth, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Update admission (e.g. photo, DOB)
+app.put('/api/admin/admission/:id', adminAuth, admissionUpload, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date_of_birth } = req.body;
+    let queryArgs = [];
+    let setClauses = [];
+    
+    if (date_of_birth !== undefined) {
+      queryArgs.push(date_of_birth || null);
+      setClauses.push(`date_of_birth = $${queryArgs.length}`);
+    }
+
+    if (req.files && req.files['passport_photo']) {
+      const p = req.files['passport_photo'][0];
+      const photoPath = '/uploads/admissions/' + p.filename;
+      queryArgs.push(photoPath);
+      setClauses.push(`passport_photo_path = $${queryArgs.length}`);
+    }
+
+    if (setClauses.length === 0) return res.json({ success: true, message: 'No changes' });
+
+    queryArgs.push(id);
+    const query = `UPDATE admissions SET ${setClauses.join(', ')} WHERE id = $${queryArgs.length}`;
+    await pool.query(query, queryArgs);
+    
+    logAdminActivity(req.userName, 'Updated Admission', 'admission', parseInt(id), null, 'Updated fields: ' + setClauses.map(c => c.split(' =')[0]).join(', '));
+    res.json({ success: true, message: 'Updated successfully' });
+  } catch (err) {
+    console.error('Update admission error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /api/admin/admissions/:id/enable-edit
 app.post('/api/admin/admissions/:id/enable-edit', adminAuth, async (req, res) => {
   try {

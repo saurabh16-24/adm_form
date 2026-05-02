@@ -2351,7 +2351,7 @@ async function viewAdmission(id) {
         ${detailItem('Student Name', r.student_name)}
         ${detailItem('Email', r.email)}
         ${detailItem('Mobile', r.mobile_no)}
-        ${detailItem('DOB', formatDate(r.date_of_birth))}
+        ${detailItem('DOB', `<input type="date" id="adm-edit-dob" style="padding: 4px; border: 1px solid var(--border); border-radius: 4px; outline: none; width: 130px; font-family: inherit; font-size: 0.9rem;" value="\${r.date_of_birth ? new Date(r.date_of_birth).toISOString().split('T')[0] : ''}">`)}
         ${detailItem('Gender', r.gender)}
         ${detailItem('Aadhaar No.', r.aadhaar_no || '—')}
 
@@ -2429,13 +2429,57 @@ async function viewAdmission(id) {
         ${detailHeader('Payment & Documents')}
         ${detailItem('Payment UTR', r.payment_utr_no || '—')}
         ${detailItem('Declaration Accepted', r.declaration_accepted ? 'Yes' : 'No')}
-        ${r.passport_photo_path ? detailItem('Passport Photo', `<a href="${r.passport_photo_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Photo ↗</a>`) : ''}
+        ${detailItem('Passport Photo', `
+          <div style="display:flex; align-items:center; gap:8px;">
+            ${r.passport_photo_path ? `<a href="\${r.passport_photo_path}" target="_blank" style="color:var(--accent); text-decoration:underline; font-size:0.85rem;">View Current ↗</a>` : '<span style="font-size:0.85rem; color:#64748b;">No photo</span>'}
+            <input type="file" id="adm-edit-photo" accept="image/*" style="font-size: 0.8rem; border: 1px solid var(--border); border-radius: 4px; padding: 2px;">
+          </div>
+        `, true)}
         ${r.signature_path ? detailItem('Signature', `<a href="${r.signature_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Signature ↗</a>`) : ''}
         ${r.twelfth_marksheet_path ? detailItem('12th Marksheet', `<a href="${r.twelfth_marksheet_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Marksheet ↗</a>`) : ''}
         ${r.payment_receipt_path ? detailItem('Payment Receipt', `<a href="${r.payment_receipt_path}" target="_blank" style="color:var(--accent); text-decoration:underline;">View Receipt ↗</a>`) : ''}
+      </div>
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 16px;">
+        <button class="btn" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;" onclick="saveAdmissionChanges(${r.id})">
+          <span class="material-icons-round" style="font-size: 18px;">save</span> Save Changes
+        </button>
       </div>`;
     document.getElementById('detail-modal').classList.add('open');
   } catch (err) { alert('Failed to load admission details'); }
+}
+
+async function saveAdmissionChanges(id) {
+  try {
+    const dobInput = document.getElementById('adm-edit-dob');
+    const photoInput = document.getElementById('adm-edit-photo');
+    
+    const formData = new FormData();
+    if (dobInput && dobInput.value) {
+      formData.append('date_of_birth', dobInput.value);
+    }
+    if (photoInput && photoInput.files[0]) {
+      formData.append('passport_photo', photoInput.files[0]);
+    }
+
+    const token = sessionStorage.getItem('admin_token');
+    const res = await fetch(`${API}/api/admin/admission/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.success) {
+      showToast('Changes saved successfully');
+      loadAdmissions();
+      closeModal();
+    } else {
+      showToast('Failed to save: ' + data.error, 'error');
+    }
+  } catch (err) {
+    showToast('Error saving changes', 'error');
+    console.error(err);
+  }
 }
 
 async function printAdmission(id) {
