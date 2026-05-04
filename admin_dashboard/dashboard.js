@@ -1518,7 +1518,7 @@ function renderEnquiries(rows) {
   document.getElementById('enq-count').textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''}`;
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><span class="material-icons-round">inbox</span><p>No enquiries found</p></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><span class="material-icons-round">inbox</span><p>No enquiries found</p></td></tr>`;
     return;
   }
   
@@ -1539,6 +1539,10 @@ function renderEnquiries(rows) {
     <td>${r.token_number || '—'}</td>
     <td>${r.student_name || '—'}</td>
     <td>${r.student_mobile || '—'}</td>
+    <td>${r.programme === 'PG' 
+      ? `<span style="background:#7c3aed;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">PG</span>`
+      : `<span style="background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:700;">UG</span>`
+    }</td>
     <td>${r.reference || '—'}</td>
     <td class="remarks-cell">
       <div class="remarks-group-unified">
@@ -1766,6 +1770,11 @@ function filterEnquiries() {
       }
       return firstPref === courseFilter.toLowerCase();
     });
+  }
+
+  const programmeFilter = (document.getElementById('enq-filter-programme') || {}).value || '';
+  if (programmeFilter) {
+    filtered = filtered.filter(r => (r.programme || 'UG') === programmeFilter);
   }
 
   renderEnquiries(filtered);

@@ -619,6 +619,11 @@
               <option value="none">Not Applied</option>
               <option value="stopped">Follow-up Stopped</option>
             </select>
+            <select id="enq-filter-programme" onchange="filterEnquiries()">
+              <option value="">All Programmes</option>
+              <option value="UG">Under Graduate (UG)</option>
+              <option value="PG">Post Graduate (PG)</option>
+            </select>
             <button class="btn btn-export" onclick="exportEnquiriesCSV()" id="export-enq-btn">
               <span class="material-icons-round">download</span>
               Export CSV
@@ -634,7 +639,7 @@
             <table class="data-table" id="enquiries-table">
               <thead>
                 <tr>
-                  <th>Sr.No</th><th>ID</th><th>Token</th><th>Name</th><th>Mobile</th><th>Reference</th><th>Remarks</th><th>Date</th><th class="actions-header">Actions</th>
+                  <th>Sr.No</th><th>ID</th><th>Token</th><th>Name</th><th>Mobile</th><th>Programme</th><th>Reference</th><th>Remarks</th><th>Date</th><th class="actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody id="enquiries-body"></tbody>

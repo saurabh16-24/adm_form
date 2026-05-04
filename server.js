@@ -259,12 +259,16 @@ async function initDB() {
       ['transport_route', 'TEXT'], ['transport_fee', 'NUMERIC'],
       ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)'],
       ['follow_up_status', "VARCHAR(50) DEFAULT 'Active'"],
-      ['raw_id', 'INTEGER REFERENCES raw_enquiries(id) ON DELETE SET NULL']
+      ['raw_id', 'INTEGER REFERENCES raw_enquiries(id) ON DELETE SET NULL'],
+      ['programme', "VARCHAR(10) DEFAULT 'UG'"]
     ];
 
     for (const [col, type] of columns) {
       await client.query(`ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS ${col} ${type}`);
     }
+
+    // Backfill: set programme = 'UG' for all existing records where it's null
+    await client.query(`UPDATE enquiries SET programme = 'UG' WHERE programme IS NULL`);
     
     console.log("Database schema is up to date.");
   } catch (err) {
@@ -356,7 +360,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
         hostel_required, transport_required,
         hostel_type, hostel_fee,
         transport_route, transport_fee,
-        institution_name, year_of_passing, raw_id
+        institution_name, year_of_passing, raw_id, programme
       )
       VALUES (
         $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,  $9,  $10,
@@ -364,7 +368,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
         $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
         $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
         $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-        $51, $52, $53, $54, $55, $56, $57, $58, $59, $60
+        $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61
       ) RETURNING id;
     `;
 
@@ -428,7 +432,8 @@ app.post('/api/submit-enquiry', async (req, res) => {
       /* $57 */ d.transport_fee || null,
       /* $58 */ d.institution_name || null,
       /* $59 */ d.year_of_passing || null,
-      /* $60 */ (d.raw_id ? parseInt(d.raw_id, 10) : null)
+      /* $60 */ (d.raw_id ? parseInt(d.raw_id, 10) : null),
+      /* $61 */ d.programme || 'UG'
     ];
 
     const result = await client.query(query, values);
