@@ -260,7 +260,10 @@ async function initDB() {
       ['institution_name', 'VARCHAR(255)'], ['year_of_passing', 'VARCHAR(10)'],
       ['follow_up_status', "VARCHAR(50) DEFAULT 'Active'"],
       ['raw_id', 'INTEGER REFERENCES raw_enquiries(id) ON DELETE SET NULL'],
-      ['programme', "VARCHAR(10) DEFAULT 'UG'"]
+      ['programme', "VARCHAR(10) DEFAULT 'UG'"],
+      ['pg_degree_percentage', 'VARCHAR(50)'], ['pg_recent_percentage', 'VARCHAR(50)'],
+      ['pgcet_rank', 'VARCHAR(50)'], ['gate_score', 'VARCHAR(50)'],
+      ['cat_score', 'VARCHAR(50)'], ['other_pg_exam', 'VARCHAR(100)']
     ];
 
     for (const [col, type] of columns) {
@@ -360,7 +363,9 @@ app.post('/api/submit-enquiry', async (req, res) => {
         hostel_required, transport_required,
         hostel_type, hostel_fee,
         transport_route, transport_fee,
-        institution_name, year_of_passing, raw_id, programme
+        institution_name, year_of_passing, raw_id, programme,
+        pg_degree_percentage, pg_recent_percentage, pgcet_rank,
+        gate_score, cat_score, other_pg_exam
       )
       VALUES (
         $1,  $2,  $3,  $4,  $5,  $6,  $7,  $8,  $9,  $10,
@@ -368,7 +373,8 @@ app.post('/api/submit-enquiry', async (req, res) => {
         $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
         $31, $32, $33, $34, $35, $36, $37, $38, $39, $40,
         $41, $42, $43, $44, $45, $46, $47, $48, $49, $50,
-        $51, $52, $53, $54, $55, $56, $57, $58, $59, $60, $61
+        $51, $52, $53, $54, $55, $56, $57, $58, $59, $60,
+        $61, $62, $63, $64, $65, $66, $67
       ) RETURNING id;
     `;
 
@@ -433,7 +439,13 @@ app.post('/api/submit-enquiry', async (req, res) => {
       /* $58 */ d.institution_name || null,
       /* $59 */ d.year_of_passing || null,
       /* $60 */ (d.raw_id ? parseInt(d.raw_id, 10) : null),
-      /* $61 */ d.programme || 'UG'
+      /* $61 */ d.programme || 'UG',
+      /* $62 */ d.pg_degree_percentage || null,
+      /* $63 */ d.pg_recent_percentage || null,
+      /* $64 */ d.pgcet_rank || null,
+      /* $65 */ d.gate_score || null,
+      /* $66 */ d.cat_score || null,
+      /* $67 */ d.other_pg_exam || null
     ];
 
     const result = await client.query(query, values);

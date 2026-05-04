@@ -143,7 +143,7 @@
 
                 <div class="form-group">
                     <label for="programmeSelect"><i class="fas fa-graduation-cap"></i> Programme: <span style="color:#ef4444;">*</span></label>
-                    <select id="programmeSelect" name="programme" required>
+                    <select id="programmeSelect" name="programme" required onchange="handleProgrammeChange(this.value)">
                         <option value="" disabled selected>Select Programme</option>
                         <option value="UG">Under Graduate (UG)</option>
                         <option value="PG">Post Graduate (PG)</option>
@@ -239,13 +239,16 @@
                     </div>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group" id="qual-form-group">
                     <label for="educationalQualification"><i class="fas fa-graduation-cap"></i> Educational Qualification:</label>
                     <select id="educationalQualification" name="educationalQualification" class="form-select" required>
                         <option value="">-- Select Qualification --</option>
                         <option value="Diploma">Diploma</option>
                         <option value="12th">12th</option>
                     </select>
+                </div>
+                <div id="pg-other-qual-wrapper" style="display:none; margin-top:-10px;">
+                    <input type="text" id="pg_other_qualification" name="pg_other_qualification" placeholder="Enter your UG qualification (e.g. BSc Physics)" oninput="this.value=this.value.toUpperCase()">
                 </div>
             </div>
 
@@ -260,8 +263,8 @@
                 </div>
             </div>
             
-            <div class="form-group" style="max-width: 400px;">
-                <label for="educationBoard"><i class="fas fa-university"></i> Education Board:</label>
+            <div class="form-group" style="max-width: 400px;" id="board-form-group">
+                <label for="educationBoard" id="education-board-label"><i class="fas fa-university"></i> Education Board:</label>
                 <select id="educationBoard" name="educationBoard" required class="form-select">
                     <option value="">-- Select Board --</option>
                     <option value="CBSE">CBSE</option>
@@ -420,7 +423,19 @@
                 </div>
             </div>
 
-            <div class="form-group entrance-exam">
+            <!-- PG Percentage Section -->
+            <div id="pg-percentage-section" style="display:none; margin-top:16px;">
+                <div id="pg-degree-pct-group" class="form-group" style="display:none; max-width:400px;">
+                    <label for="pg_degree_percentage"><i class="fas fa-percentage"></i> Degree Percentage / CGPA: <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="pg_degree_percentage" name="pg_degree_percentage" placeholder="e.g. 72.5% or 7.25 CGPA">
+                </div>
+                <div id="pg-recent-pct-group" class="form-group" style="display:none; max-width:400px;">
+                    <label for="pg_recent_percentage"><i class="fas fa-percentage"></i> Recent CGPA / Percentage:</label>
+                    <input type="text" id="pg_recent_percentage" name="pg_recent_percentage" placeholder="e.g. 7.5 CGPA or 75%">
+                </div>
+            </div>
+
+            <div class="form-group entrance-exam" id="ug-entrance-section">
                 <label><i class="fas fa-file-alt"></i> Entrance Exam Detail:</label>
                 <div class="entrance-fields">
                     <div class="entrance-field">
@@ -434,6 +449,27 @@
                     <div class="entrance-field">
                         <label for="cetRank">CET Rank:</label>
                         <input type="text" id="cetRank" name="cetRank" placeholder="Rank">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group entrance-exam" id="pg-entrance-section" style="display:none;">
+                <label><i class="fas fa-file-alt"></i> PG Entrance Exam Detail:</label>
+                <div class="entrance-fields">
+                    <div class="entrance-field">
+                        <label for="pgcetRank">PGCET Rank:</label>
+                        <input type="text" id="pgcetRank" name="pgcetRank" placeholder="Rank">
+                    </div>
+                    <div class="entrance-field">
+                        <label for="gateScore">GATE Score:</label>
+                        <input type="text" id="gateScore" name="gateScore" placeholder="Score">
+                    </div>
+                    <div class="entrance-field">
+                        <label for="catScore">CAT Score/Percentile:</label>
+                        <input type="text" id="catScore" name="catScore" placeholder="Score">
+                    </div>
+                    <div class="entrance-field">
+                        <label for="otherPgExam">Others:</label>
+                        <input type="text" id="otherPgExam" name="otherPgExam" placeholder="Exam & rank/score">
                     </div>
                 </div>
             </div>
@@ -645,6 +681,96 @@
                 }
             };
 
+            window.handleProgrammeChange = function(prog) {
+                const isPG = prog === 'PG';
+                const qualSelect = document.getElementById('educationalQualification');
+                
+                // -- Qualification dropdown --
+                qualSelect.innerHTML = '<option value="">-- Select Qualification --</option>';
+                if (isPG) {
+                    const courses = ['Other (specify below)','BE Computer Science and Engineering',
+                        'BE Computer Science and Engineering (Artificial Intelligence)',
+                        'BE Computer Science and Engineering (Data Science)',
+                        'BE Computer Science and Engineering (Cyber Security)',
+                        'BE Information Science and Engineering','BE Electronics and Communication Engineering',
+                        'BE Civil Engineering','BE Mechanical Engineering',
+                        'BCA','BSc Computer Science','BSc Electronics','BSc Mathematics',
+                        'BSc Physics','BSc IT','BCom','BA','BBA','BSc (Other)'];
+                    courses.forEach(c => {
+                        qualSelect.add(new Option(c, c === 'Other (specify below)' ? 'Other' : c));
+                    });
+                    qualSelect.onchange = function() {
+                        document.getElementById('pg-other-qual-wrapper').style.display = this.value === 'Other' ? 'block' : 'none';
+                    };
+                } else {
+                    qualSelect.add(new Option('Diploma','Diploma'));
+                    qualSelect.add(new Option('12th','12th'));
+                    qualSelect.onchange = function() {
+                        document.getElementById('diplomaFields').style.display = this.value === 'Diploma' ? 'flex' : 'none';
+                    };
+                    document.getElementById('pg-other-qual-wrapper').style.display = 'none';
+                }
+
+                // -- Board / University --
+                const boardLabel = document.getElementById('education-board-label');
+                const boardSelect = document.getElementById('educationBoard');
+                if (isPG) {
+                    boardLabel.innerHTML = '<i class="fas fa-university"></i> University:';
+                    const unis = ['-- Select University --',
+                        'Visvesvaraya Technological University (VTU)','Anna University',
+                        'Osmania University','JNTU Hyderabad','JNTU Kakinada','JNTU Anantapur',
+                        'University of Mumbai','University of Delhi','Bangalore University',
+                        'Mysore University','Karnataka University','Kuvempu University',
+                        'Mangalore University','Davangere University','Gulbarga University',
+                        'Tumkur University','Rani Channamma University',
+                        'Vijayanagara Sri Krishnadevaraya University',
+                        'Calcutta University','Madras University',
+                        'Savitribai Phule Pune University','Shivaji University',
+                        'Andhra University','Sri Venkateswara University',
+                        'Acharya Nagarjuna University','Kakatiya University',
+                        'Bharathiar University','Bharathidasan University',
+                        'Madurai Kamaraj University','Annamalai University',
+                        'Kerala University','Calicut University','Kannur University',
+                        'CUSAT (Cochin University)','Mahatma Gandhi University Kerala',
+                        'Manipal University','Amrita Vishwa Vidyapeetham',
+                        'Christ University','RV University','SRM University',
+                        'VIT University','BITS Pilani','NIT Karnataka (Surathkal)',
+                        'IISc Bangalore','Gujarat Technological University',
+                        'Rajasthan Technical University','North Maharashtra University',
+                        'Dr. Babasaheb Ambedkar Marathwada University','SNDT Women\'s University',
+                        'Symbiosis International University','Other'];
+                    boardSelect.innerHTML = '';
+                    unis.forEach((u, i) => {
+                        const o = new Option(u, i === 0 ? '' : u);
+                        if (i === 0) { o.disabled = true; o.selected = true; }
+                        boardSelect.add(o);
+                    });
+                } else {
+                    boardLabel.innerHTML = '<i class="fas fa-university"></i> Education Board:';
+                    boardSelect.innerHTML = `<option value="">-- Select Board --</option>
+                        <option value="CBSE">CBSE</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="AP/Telangana">Andhra Pradesh/Telangana</option>
+                        <option value="Other">Other</option>`;
+                }
+
+                // -- Marks sections --
+                ['diplomaFields','marksSection','marks12thSection','marksPercentSection','resultStatusInfo','expectedPercentSection'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+                document.getElementById('pg-percentage-section').style.display = isPG ? 'block' : 'none';
+                document.getElementById('pg-degree-pct-group').style.display = 'none';
+                document.getElementById('pg-recent-pct-group').style.display = 'none';
+
+                // -- Entrance exams --
+                document.getElementById('ug-entrance-section').style.display = isPG ? 'none' : 'block';
+                document.getElementById('pg-entrance-section').style.display = isPG ? 'block' : 'none';
+
+                // Reset result status
+                document.getElementById('resultStatus').value = '';
+            };
+
             document.getElementById('educationalQualification').addEventListener('change', function() {
                 const diplomaFields = document.getElementById('diplomaFields');
                 if (this.value === 'Diploma') {
@@ -687,31 +813,34 @@
 
             // ── Result Status: show/hide marks section ─────────────────────────
             document.getElementById('resultStatus').addEventListener('change', function() {
+                const isPG = document.getElementById('programmeSelect').value === 'PG';
                 const showMarks = this.value === 'Passed';
                 const showExpected = this.value === 'Appearing' || this.value === 'Awaiting';
                 const statusInfo = document.getElementById('resultStatusInfo');
                 const expectedSection = document.getElementById('expectedPercentSection');
 
-                const board = document.getElementById('educationBoard').value;
-                const marksSection11 = document.getElementById('marksSection');
-                if (marksSection11) {
-                    marksSection11.style.display = (showMarks && board === 'AP/Telangana') ? 'block' : 'none';
-                }
-
-                const marks12th = document.getElementById('marks12thSection');
-                if (marks12th) marks12th.style.display = showMarks ? 'block' : 'none';
-
-                const marksPct = document.getElementById('marksPercentSection');
-                if (marksPct) marksPct.style.display = showMarks ? 'block' : 'none';
-
-                // Show/hide info banner and expected % field
-                if (statusInfo)     statusInfo.style.display     = showExpected ? 'block' : 'none';
-                if (expectedSection) expectedSection.style.display = showExpected ? 'block' : 'none';
-
-                // Clear expected % when switching to Passed
-                if (showMarks) {
-                    const ep = document.getElementById('expectedPercentage');
-                    if (ep) ep.value = '';
+                if (isPG) {
+                    // PG mode: show simple percentage fields
+                    document.getElementById('pg-percentage-section').style.display = 'block';
+                    document.getElementById('pg-degree-pct-group').style.display = showMarks ? 'block' : 'none';
+                    document.getElementById('pg-recent-pct-group').style.display = showExpected ? 'block' : 'none';
+                    ['marksSection','marks12thSection','marksPercentSection'].forEach(id => {
+                        const el = document.getElementById(id); if (el) el.style.display = 'none';
+                    });
+                    if (statusInfo) statusInfo.style.display = 'none';
+                    if (expectedSection) expectedSection.style.display = 'none';
+                } else {
+                    // UG mode
+                    const board = document.getElementById('educationBoard').value;
+                    const marksSection11 = document.getElementById('marksSection');
+                    if (marksSection11) marksSection11.style.display = (showMarks && board === 'AP/Telangana') ? 'block' : 'none';
+                    const marks12th = document.getElementById('marks12thSection');
+                    if (marks12th) marks12th.style.display = showMarks ? 'block' : 'none';
+                    const marksPct = document.getElementById('marksPercentSection');
+                    if (marksPct) marksPct.style.display = showMarks ? 'block' : 'none';
+                    if (statusInfo) statusInfo.style.display = showExpected ? 'block' : 'none';
+                    if (expectedSection) expectedSection.style.display = showExpected ? 'block' : 'none';
+                    if (showMarks) { const ep = document.getElementById('expectedPercentage'); if (ep) ep.value = ''; }
                 }
             });
 
@@ -1028,7 +1157,14 @@
                             if (cat === 'Direct' || cat === 'Online') return cat;
                             return detail ? `${cat}: ${detail}` : cat;
                         })(),
-                        education_qualification: document.getElementById('educationalQualification').value,
+                        education_qualification: (() => {
+                            const prog = document.getElementById('programmeSelect').value;
+                            if (prog === 'PG') {
+                                const q = document.getElementById('educationalQualification').value;
+                                return q === 'Other' ? document.getElementById('pg_other_qualification').value : q;
+                            }
+                            return document.getElementById('educationalQualification').value;
+                        })(),
                         education_board: document.getElementById('educationBoard').value,
                         result_status: document.getElementById('resultStatus').value,
                         expected_percentage: parseFloat(document.getElementById('expectedPercentage').value) || null,
@@ -1072,7 +1208,15 @@
                         math_12b: parseFloat(document.getElementById('mathematics12b').value) || null,
                         kannada_12: parseFloat(document.getElementById('kannada_marks_12').value) || null,
                         english_12: parseFloat(document.getElementById('english_marks_12').value) || null,
-                        other_12: parseFloat(document.getElementById('other_unnamed_marks_12').value) || null
+                        other_12: parseFloat(document.getElementById('other_unnamed_marks_12').value) || null,
+                        
+                        // New PG Fields
+                        pg_degree_percentage: document.getElementById('pg_degree_percentage').value || null,
+                        pg_recent_percentage: document.getElementById('pg_recent_percentage').value || null,
+                        pgcet_rank: document.getElementById('pgcetRank').value || null,
+                        gate_score: document.getElementById('gateScore').value || null,
+                        cat_score: document.getElementById('catScore').value || null,
+                        other_pg_exam: document.getElementById('otherPgExam').value || null
                     };
 
                     const result = await dbConnection.submitEnquiry(formData);
