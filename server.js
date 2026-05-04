@@ -175,6 +175,7 @@ async function initDB() {
     await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS remarks VARCHAR(255)`);
     await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS follow_up_date DATE`);
     await client.query(`ALTER TABLE raw_enquiries ALTER COLUMN phone_number TYPE VARCHAR(255)`);
+    await client.query(`ALTER TABLE raw_enquiries ADD COLUMN IF NOT EXISTS reference VARCHAR(255)`);
 
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
@@ -1588,7 +1589,7 @@ app.put('/api/admin/raw-enquiry/:id/remarks', adminAuth, async (req, res) => {
 app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
   const client = await pool.connect();
   try {
-    const { rows } = req.body;
+    const { rows, reference } = req.body;
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
       return res.status(400).json({ error: 'No data rows provided' });
     }
@@ -1608,10 +1609,11 @@ app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
 
       count++;
       const serial_no = `RAW/${year}/${String(count).padStart(3, '0')}`;
+      const rowRef = (row.reference || reference || '').trim() || null;
 
       await client.query(
-        `INSERT INTO raw_enquiries (serial_no, student_name, phone_number, email_id, course, place, mode, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO raw_enquiries (serial_no, student_name, phone_number, email_id, course, place, mode, reference, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           serial_no,
           row.student_name.trim(),
@@ -1620,6 +1622,7 @@ app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
           (row.course || '').trim(),
           (row.place || '').trim(),
           row.mode || 'College Database',
+          rowRef,
           req.userName
         ]
       );
@@ -1627,7 +1630,8 @@ app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
     }
 
     await client.query('COMMIT');
-    logAdminActivity(req.userName, 'Bulk CSV Import', 'raw_enquiry', null, `${imported} records`, `Imported ${imported} raw enquiries via CSV upload (mode: College Database)`);
+    const refLabel = reference ? ` | Reference: ${reference}` : '';
+    logAdminActivity(req.userName, 'Bulk CSV Import', 'raw_enquiry', null, `${imported} records`, `Imported ${imported} raw enquiries via CSV upload (mode: College Database${refLabel})`);
     res.json({ success: true, count: imported });
   } catch (err) {
     await client.query('ROLLBACK');

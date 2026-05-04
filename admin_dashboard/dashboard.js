@@ -3740,6 +3740,7 @@ async function loadRawEnquiries() {
     const data = await apiFetch('/api/admin/raw-enquiries');
     allRawEnquiries = data.rows || [];
     renderRawEnquiries(allRawEnquiries);
+    return allRawEnquiries;
   } catch (err) { console.error('Raw enquiries load error:', err); }
 }
 
@@ -3753,6 +3754,7 @@ function renderRawEnquiries(data) {
   tbody.innerHTML = data.map(r => {
     const remark = r.remarks || '— Select Action —';
     const followUpText = r.follow_up_date ? formatDate(r.follow_up_date) : 'No Date';
+    const referenceDisplay = r.reference ? `<span style="background:#ede9fe; color:#6d28d9; font-size:0.72rem; font-weight:700; padding:2px 7px; border-radius:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px; display:inline-block; vertical-align:middle;" title="${r.reference}">${r.reference}</span>` : '<span style="color:#94a3b8;">—</span>';
     return `
     <tr class="${r.is_converted ? 'row-converted' : ''}">
       <td><span class="token-badge">${r.serial_no}</span></td>
@@ -3762,6 +3764,7 @@ function renderRawEnquiries(data) {
       <td>${r.course}</td>
       <td>${r.place}</td>
       <td><span class="status-badge ${r.mode === 'Telephonic' ? 'tag-applied' : r.mode === 'College Database' ? '' : 'tag-management'}" style="${r.mode === 'College Database' ? 'background:#dcfce7; color:#059669;' : ''}">${r.mode}</span></td>
+      <td>${referenceDisplay}</td>
       <td class="remarks-cell">
         <div class="remarks-group-unified">
           <div class="remarks-pill-main" onclick="openRawActionMenu(${r.id}, this)">
@@ -3916,16 +3919,17 @@ function filterRawEnquiries() {
     (r.email_id || '').toLowerCase().includes(search) ||
     (r.course || '').toLowerCase().includes(search) ||
     (r.place || '').toLowerCase().includes(search) ||
-    (r.remarks || '').toLowerCase().includes(search)
+    (r.remarks || '').toLowerCase().includes(search) ||
+    (r.reference || '').toLowerCase().includes(search)
   );
   renderRawEnquiries(filtered);
 }
 
 function exportRawEnquiries() {
   if (allRawEnquiries.length === 0) return alert('No data to export');
-  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Remarks', 'Follow-up Date', 'Date', 'Created By'];
+  const headers = ['Serial No', 'Student Name', 'Phone', 'Email', 'Course', 'Place', 'Mode', 'Reference', 'Remarks', 'Follow-up Date', 'Date', 'Created By'];
   const rows = allRawEnquiries.map(r => [
-    r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, r.remarks,
+    r.serial_no, r.student_name, r.phone_number, r.email_id, r.course, r.place, r.mode, r.reference || '', r.remarks,
     r.follow_up_date ? formatDate(r.follow_up_date) : '',
     new Date(r.created_at).toLocaleString(), r.created_by
   ]);
@@ -3948,6 +3952,7 @@ function exportRawEnquiries() {
 
 // ═══════════════ CSV IMPORT FOR RAW ENQUIRIES ═══════════════
 
+
 let csvParsedRows = [];
 
 function openCSVUploadModal() {
@@ -3956,6 +3961,7 @@ function openCSVUploadModal() {
   // Reset state
   csvParsedRows = [];
   document.getElementById('csv-file-input').value = '';
+  document.getElementById('csv-reference').value = '';
   document.getElementById('csv-preview-section').style.display = 'none';
   document.getElementById('csv-drop-zone').style.display = '';
   const btn = document.getElementById('csv-import-btn');
@@ -4065,7 +4071,8 @@ function parseCSVFile(file) {
         email_id: (cells[colMap.email_id] || '').trim(),
         course: (cells[colMap.course] || '').trim(),
         place: (cells[colMap.place] || '').trim(),
-        mode: 'College Database'
+        mode: 'College Database',
+        reference: '' // will be set from the reference input below
       };
 
       // Only add if at least name exists
@@ -4077,6 +4084,12 @@ function parseCSVFile(file) {
     if (csvParsedRows.length === 0) {
       showToast('No valid data rows found in CSV', 'error');
       return;
+    }
+
+    // Attach reference from input to every row
+    const refVal = (document.getElementById('csv-reference')?.value || '').trim();
+    if (refVal) {
+      csvParsedRows.forEach(r => r.reference = refVal);
     }
 
     // Show preview
@@ -4187,10 +4200,11 @@ function renderCSVPreview(fileName, rawHeaders, rows) {
 
   // Render preview headers
   const thead = document.getElementById('csv-preview-header');
-  thead.innerHTML = '<th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Course</th><th>Place</th><th>Mode</th>';
+  thead.innerHTML = '<th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Course</th><th>Place</th><th>Mode</th><th>Reference</th>';
 
   // Render preview rows (max 20 for preview)
   const tbody = document.getElementById('csv-preview-body');
+  const refVal = (document.getElementById('csv-reference')?.value || '').trim();
   const previewRows = rows.slice(0, 20);
   tbody.innerHTML = previewRows.map((r, i) => `
     <tr>
@@ -4201,16 +4215,23 @@ function renderCSVPreview(fileName, rawHeaders, rows) {
       <td>${r.course || '—'}</td>
       <td>${r.place || '—'}</td>
       <td><span class="status-badge" style="background:#dcfce7; color:#059669; font-weight:700; padding:2px 8px; border-radius:6px; font-size:0.75rem;">College Database</span></td>
+      <td>${refVal ? `<span style="background:#ede9fe; color:#6d28d9; font-weight:700; padding:2px 8px; border-radius:6px; font-size:0.75rem;">${refVal}</span>` : '<span style="color:#94a3b8;">—</span>'}</td>
     </tr>
   `).join('');
 
   if (rows.length > 20) {
-    tbody.innerHTML += `<tr><td colspan="7" style="text-align:center; color:#64748b; font-style:italic; padding:12px;">... and ${rows.length - 20} more records</td></tr>`;
+    tbody.innerHTML += `<tr><td colspan="8" style="text-align:center; color:#64748b; font-style:italic; padding:12px;">... and ${rows.length - 20} more records</td></tr>`;
   }
 }
 
 async function importCSVData() {
   if (csvParsedRows.length === 0) return;
+
+  // Re-read reference value at import time (user may have changed it after parse)
+  const refVal = (document.getElementById('csv-reference')?.value || '').trim();
+  if (refVal) {
+    csvParsedRows.forEach(r => r.reference = refVal);
+  }
 
   const btn = document.getElementById('csv-import-btn');
   const ogHtml = btn.innerHTML;
@@ -4221,13 +4242,24 @@ async function importCSVData() {
   try {
     const res = await apiFetch('/api/admin/raw-enquiry/bulk', {
       method: 'POST',
-      body: JSON.stringify({ rows: csvParsedRows })
+      body: JSON.stringify({ rows: csvParsedRows, reference: refVal })
     });
 
     if (res.success) {
-      showToast(`Successfully imported ${res.count} records from CSV`);
+      const refLabel = refVal ? ` (Reference: "${refVal}")` : '';
+      showToast(`Successfully imported ${res.count} records from CSV${refLabel}`);
       closeCSVUploadModal();
-      loadRawEnquiries();
+      // If reference was set, filter to show only those records
+      loadRawEnquiries().then(() => {
+        if (refVal) {
+          // Set search to the reference value so imported records are visible
+          const searchEl = document.getElementById('raw-enq-search');
+          if (searchEl) {
+            searchEl.value = refVal;
+            filterRawEnquiries();
+          }
+        }
+      });
     } else {
       showToast(res.error || 'Import failed', 'error');
     }

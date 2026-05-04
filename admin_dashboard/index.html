@@ -778,6 +778,7 @@
                 <th>Course</th>
                 <th>Place</th>
                 <th>Mode</th>
+                <th>Reference</th>
                 <th>Remarks</th>
                 <th>Date</th>
                 <th>Actions</th>
@@ -948,6 +949,15 @@
         <button class="modal-close" onclick="closeCSVUploadModal()"><span class="material-icons-round">close</span></button>
       </div>
       <div class="modal-body" style="padding: 24px;">
+        <!-- Reference Input (always visible) -->
+        <div style="margin-bottom: 18px;">
+          <label style="display:block; font-size:0.78rem; font-weight:700; color:#475569; text-transform:uppercase; margin-bottom:7px; letter-spacing:0.5px;">
+            <span class="material-icons-round" style="font-size:16px; vertical-align:middle; margin-right:4px; color:#6366f1;">label</span>
+            Reference / Batch Label <span style="font-weight:400; color:#94a3b8; text-transform: none; font-size:0.75rem;">(Optional — helps identify this import batch)</span>
+          </label>
+          <input type="text" id="csv-reference" placeholder="e.g. College Fair 2026, Bangalore Expo, Dealer Name..." style="width:100%; padding:11px 14px; border-radius:10px; border:1.5px solid #e2e8f0; font-size:0.9rem; outline:none; box-sizing:border-box; transition:border-color 0.2s; font-family:inherit;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e2e8f0'">
+        </div>
+
         <!-- Drag & Drop Zone -->
         <div id="csv-drop-zone" style="border: 2px dashed #a7f3d0; border-radius: 14px; padding: 40px 20px; text-align: center; background: #f0fdf4; cursor: pointer; transition: all 0.3s;" onclick="document.getElementById('csv-file-input').click()">
           <span class="material-icons-round" style="font-size: 48px; color: #10b981; margin-bottom: 12px; display: block;">cloud_upload</span>
