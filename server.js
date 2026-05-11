@@ -2632,12 +2632,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
             height: 100%;
             clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%); 
           }
-          .header-left img { height: 50px; width: auto; object-fit: contain; }
-          .college-info { line-height: 1.15; padding: 4px 0; }
-          .college-name { font-size: 24px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
-          .college-name span { font-weight: 400; font-size: 14px; margin-left: 10px; border-left: 2px solid #94a3b8; padding-left: 10px; display: inline-block; vertical-align: middle; }
-          .sub-name { font-size: 11px; font-weight: 800; color: #334155; display: block; margin-bottom: 4px; text-transform: uppercase; }
-          .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
+          .header-left img { height: 75px; width: auto; object-fit: contain; }
 
           .header-right { 
             flex: 1; 
@@ -2671,17 +2666,6 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           <div class="header-left-wrap">
             <div class="header-left">
               <img src="/Black Background.png" alt="SVCE Logo">
-              <div class="college-info">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
-                  <div style="width:2.5px; height:35px; background:#475569;"></div>
-                  <div style="line-height: 1.1;">
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                    <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
-                  </div>
-                </div>
-                <div class="estd" style="margin-top:8px; letter-spacing: 1.2px; font-size: 9.5px;">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
-              </div>
             </div>
           </div>
           <div class="header-right">

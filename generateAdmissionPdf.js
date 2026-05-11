@@ -75,15 +75,8 @@ function generateAdmissionPdf(data) {
     // SVCE Logo
     const logoBuf = getImageBuffer('Black Background.png');
     if (logoBuf) {
-      doc.image(logoBuf, M + 15, y + 10, { height: 50 });
+      doc.image(logoBuf, M + 15, y + 10, { height: 65 });
     }
-
-    // College Text
-    doc.fillColor('#0f172a').font('Helvetica-Bold').fontSize(28).text('SVCE', M + 85, y + 10);
-    doc.rect(M + 175, y + 10, 2, 40).fill('#475569');
-    doc.fillColor('#1e293b').font('Helvetica-Bold').fontSize(11).text('SRI VENKATESHWARA', M + 185, y + 12);
-    doc.text('COLLEGE OF ENGINEERING', M + 185, y + 25);
-    doc.fillColor('#64748b').font('Helvetica-Bold').fontSize(8).text('ESTD. 2001. AUTONOMOUS INSTITUTE', M + 85, y + 48, { characterSpacing: 1 });
 
     // Right side contact info
     doc.fillColor('#334155').font('Helvetica').fontSize(7.5);
