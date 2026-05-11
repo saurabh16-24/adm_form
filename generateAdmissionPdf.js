@@ -73,7 +73,7 @@ function generateAdmissionPdf(data) {
     ).fill();
 
     // SVCE Logo
-    const logoBuf = getImageBuffer('image copy 2.png');
+    const logoBuf = getImageBuffer('Black Background.png');
     if (logoBuf) {
       doc.image(logoBuf, M + 15, y + 10, { height: 50 });
     }

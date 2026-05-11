@@ -39,7 +39,7 @@ const transporter = nodemailer.createTransport({
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Branded QR generator (server-side logo compositing) ──────────────────────
-const LOGO_PATH = path.join(__dirname, 'image copy 2.png');
+const LOGO_PATH = path.join(__dirname, 'Black Background.png');
 async function generateBrandedQR(url, size = 300) {
   // 1. Generate QR PNG buffer with navy dots, error-correction H
   const qrBuffer = await QRCode.toBuffer(url, {
@@ -2670,7 +2670,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         <div class="official-header">
           <div class="header-left-wrap">
             <div class="header-left">
-              <img src="/image copy 2.png" alt="SVCE Logo">
+              <img src="/Black Background.png" alt="SVCE Logo">
               <div class="college-info">
                 <div style="display:flex; align-items:center; gap:12px;">
                   <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>

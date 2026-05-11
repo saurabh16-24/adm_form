@@ -2766,7 +2766,7 @@ async function finalPrintManagementForm() {
         <div class="official-header">
           <div class="header-left-wrap">
             <div class="header-left">
-              <img src="${window.location.origin}/image copy 2.png" alt="SVCE Logo">
+              <img src="${window.location.origin}/Black Background.png" alt="SVCE Logo">
               <div class="college-info">
                 <div style="display:flex; align-items:center; gap:12px;">
                   <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
@@ -3238,7 +3238,7 @@ async function printManagementFromRecord(id) {
           <body>
             <div class="official-header">
               <div class="header-left-wrap"><div class="header-left">
-                <img src="${window.location.origin}/image copy 2.png" alt="SVCE Logo">
+                <img src="${window.location.origin}/Black Background.png" alt="SVCE Logo">
                 <div class="college-info">
                   <div style="display:flex; align-items:center; gap:12px;">
                     <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
