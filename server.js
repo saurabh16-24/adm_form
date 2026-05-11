@@ -2624,7 +2624,7 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
           }
           
           .header-left { 
-            background: #cbd5e1;
+            background: #000;
             padding: 10px 30px 10px 15px; 
             display: flex; 
             align-items: center; 

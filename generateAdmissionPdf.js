@@ -63,9 +63,9 @@ function generateAdmissionPdf(data) {
     const headerHeight = 70;
     
     // Grey/Blue Shape (Left)
-    doc.fillColor('#cbd5e1').rect(M, y, CW * 0.6, headerHeight).fill();
+    doc.fillColor('#000000').rect(M, y, CW * 0.6, headerHeight).fill();
     // Slanted part
-    doc.fillColor('#cbd5e1').polygon(
+    doc.fillColor('#000000').polygon(
         [M + CW * 0.6, y], 
         [M + CW * 0.6 + 30, y], 
         [M + CW * 0.6 - 10, y + headerHeight],
@@ -75,7 +75,7 @@ function generateAdmissionPdf(data) {
     // SVCE Logo
     const logoBuf = getImageBuffer('Black Background.png');
     if (logoBuf) {
-      doc.image(logoBuf, M + 15, y + 10, { height: 65 });
+      doc.image(logoBuf, M + 15, y + 5, { height: 60 });
     }
 
     // Right side contact info

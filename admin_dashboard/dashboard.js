@@ -2697,7 +2697,7 @@ async function finalPrintManagementForm() {
           }
           
           .header-left { 
-            background: #cbd5e1; 
+            background: #000; 
             padding: 10px 30px 10px 15px; 
             display: flex; 
             align-items: center; 
@@ -3179,7 +3179,7 @@ async function printManagementFromRecord(id) {
               
               .official-header { display: flex; align-items: stretch; margin-bottom: 12px; border-bottom: 2px solid #000; width: 100%; border-top: 1px solid #000; }
               .header-left-wrap { background: #000; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); flex: 1.4; padding-right: 3px; }
-              .header-left { background: #cbd5e1; padding: 10px 30px 10px 15px; display: flex; align-items: center; gap: 15px; height: 100%; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); }
+              .header-left { background: #000; padding: 10px 30px 10px 15px; display: flex; align-items: center; gap: 15px; height: 100%; clip-path: polygon(0 0, 100% 0, 93% 100%, 0% 100%); }
               .header-left img { height: 65px; width: auto; }
               .college-info { line-height: 1.1; }
               .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
