@@ -558,9 +558,6 @@ textarea { resize: vertical; min-height: 80px; }
 .s8 .section-badge { background: linear-gradient(135deg,#059669,#10b981); }
 
 /* ── Payment Section ──────────────────────────────────────── */
-.payment-layout {
-  display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: start;
-}
 /* Amount badge */
 .payment-amount-badge {
   display: inline-flex; align-items: center; gap: 10px;
@@ -573,17 +570,77 @@ textarea { resize: vertical; min-height: 80px; }
 .payment-amount-badge .amount   { font-size: 2rem; color: #10b981; font-weight: 900; line-height: 1; }
 .payment-amount-badge .label    { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* QR card */
-.qr-card {
-  background: #fff;
-  border-radius: 14px;
-  padding: 12px;
-  box-shadow: 0 0 0 1px rgba(16,185,129,0.3), 0 8px 32px rgba(16,185,129,0.2);
-  display: inline-block;
-  transition: box-shadow 0.3s;
+/* Razorpay Pay Button */
+.razorpay-pay-wrap {
+  text-align: center;
+  margin: 24px 0;
 }
-.qr-card:hover { box-shadow: 0 0 0 2px rgba(16,185,129,0.5), 0 12px 40px rgba(16,185,129,0.3); }
-.qr-card img { display: block; width: 220px; height: 220px; object-fit: contain; border-radius: 6px; }
+.razorpay-pay-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #059669, #10b981, #34d399);
+  color: #fff;
+  padding: 16px 48px;
+  border-radius: 14px;
+  font-size: 1.15rem; font-weight: 800;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  box-shadow: 0 6px 24px rgba(16,185,129,0.4), 0 0 0 0 rgba(16,185,129,0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.razorpay-pay-btn::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  pointer-events: none;
+}
+.razorpay-pay-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 36px rgba(16,185,129,0.5), 0 0 0 4px rgba(16,185,129,0.15);
+  background: linear-gradient(135deg, #047857, #059669, #10b981);
+}
+.razorpay-pay-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(16,185,129,0.4);
+}
+
+/* Payment Status Bar */
+.payment-status-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.25);
+}
+.payment-status-bar.status-verified {
+  background: rgba(16,185,129,0.08);
+  border-color: rgba(16,185,129,0.35);
+}
+.payment-status-bar.status-cash {
+  background: rgba(217,119,6,0.08);
+  border-color: rgba(217,119,6,0.35);
+}
+.payment-status-icon {
+  font-size: 1.3rem;
+  color: #ef4444;
+  flex-shrink: 0;
+  transition: color 0.3s;
+}
+.payment-status-bar.status-verified .payment-status-icon { color: #10b981; }
+.payment-status-bar.status-cash .payment-status-icon { color: #d97706; }
+
+.payment-status-text {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+.payment-status-text strong { margin-right: 6px; }
+#paymentStatusLabel { font-weight: 700; color: #ef4444; }
+.payment-status-bar.status-verified #paymentStatusLabel { color: #10b981; }
+.payment-status-bar.status-cash #paymentStatusLabel { color: #d97706; }
 
 /* Payment steps */
 .payment-steps { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
@@ -632,11 +689,6 @@ textarea { resize: vertical; min-height: 80px; }
 .receipt-upload-card.has-file .receipt-file-info { display: flex; }
 .receipt-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 
-.utr-row {
-  display: grid; grid-template-columns: 1fr auto; gap: 12px;
-  align-items: end; margin-top: 16px;
-}
-
 /* ── Responsive uploads ───────────────────────────────────── */
 /* ── Responsive adjustments ────────────────────────────────── */
 @media (max-width: 768px) {
@@ -654,7 +706,7 @@ textarea { resize: vertical; min-height: 80px; }
   .form-grid, .form-grid.cols-2, .form-grid.cols-3 { grid-template-columns: 1fr; }
   .address-cols { grid-template-columns: 1fr; gap: 24px; }
   .sign-row { grid-template-columns: 1fr; gap: 24px; }
-  .payment-layout { grid-template-columns: 1fr; }
+  .razorpay-pay-btn { padding: 14px 32px; font-size: 1rem; }
   .payment-amount-badge { width: 100%; justify-content: space-between; }
   
   .name-row { grid-template-columns: 1fr; }
