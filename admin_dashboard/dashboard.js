@@ -2709,18 +2709,18 @@ async function finalPrintManagementForm() {
 
           .header-right { 
             flex: 1; 
-            padding: 8px 0 8px 15px; 
-            font-size: 9px; 
+            padding: 6px 0 6px 12px; 
+            font-size: 8.5px; 
             font-weight: 600; 
             color: #334155; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
           }
-          .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
+          .contact-table { width: 100% !important; border: none !important; margin: 0 !important; border-collapse: collapse !important; table-layout: auto !important; }
           .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
           .contact-label { width: 45px; font-weight: 700; color: #64748b; }
-          .contact-sep { width: 10px; text-align: center; }
+          .contact-sep { width: 8px; text-align: center; }
 
           /* ─────────────────────────────── */
 
@@ -3183,11 +3183,11 @@ async function printManagementFromRecord(id) {
               .header-left img { height: 65px; width: auto; }
               .college-info { line-height: 1.1; }
               .estd { font-size: 9px; font-weight: 700; color: #64748b; letter-spacing: 1.5px; margin-top: 5px; text-transform: uppercase; }
-              .header-right { flex: 1; padding: 8px 0 8px 15px; font-size: 9px; font-weight: 600; color: #334155; display: flex; flex-direction: column; justify-content: center; }
-              .contact-table { width: 100% !important; border: none !important; margin: 0 !important; }
+              .header-right { flex: 1; padding: 6px 0 6px 12px; font-size: 8.5px; font-weight: 600; color: #334155; display: flex; flex-direction: column; justify-content: center; }
+              .contact-table { width: 100% !important; border: none !important; margin: 0 !important; border-collapse: collapse !important; table-layout: auto !important; }
               .contact-table td { border: none !important; padding: 1px 0 !important; height: auto !important; font-size: 8.5px !important; }
               .contact-label { width: 45px; font-weight: 700; color: #64748b; }
-              .contact-sep { width: 10px; text-align: center; }
+              .contact-sep { width: 8px; text-align: center; }
 
               .form-title { text-align: center; background: #fff; padding: 4px; font-size: 14px; font-weight: 810; border: 2px solid #000; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.8px; }
               .meta-info { display: flex; justify-content: space-between; margin-bottom: 12px; font-weight: 700; align-items: center; width: 100%; }
@@ -3223,17 +3223,6 @@ async function printManagementFromRecord(id) {
             <div class="official-header">
               <div class="header-left-wrap"><div class="header-left">
                 <img src="${window.location.origin}/Black Background.png" alt="SVCE Logo">
-                <div class="college-info">
-                  <div style="display:flex; align-items:center; gap:12px;">
-                    <div style="font-size: 38px; font-weight: 900; color: #0f172a; line-height: 1;">SVCE</div>
-                    <div style="width:2.5px; height:35px; background:#475569;"></div>
-                    <div style="line-height: 1.1;">
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">SRI VENKATESHWARA</div>
-                      <div style="font-size: 13.5px; font-weight: 800; color: #1e293b; white-space: nowrap;">COLLEGE OF ENGINEERING</div>
-                    </div>
-                  </div>
-                  <div class="estd">ESTD. 2001. AUTONOMOUS INSTITUTE</div>
-                </div>
               </div></div>
               <div class="header-right">
                 <table class="contact-table">
