@@ -474,7 +474,7 @@
                 </div>
             </div>
             
-            <div class="form-group course-preference">
+            <div class="form-group course-preference" id="ug-preference-section">
                 <label><i class="fas fa-list-ol"></i> Course Preference Order: <span style="color:#ef4444;">*</span> <span class="required-note">(Choose at least 1, up to 8 rank-ordered preferences)</span></label>
                 <div class="preference-instruction">
                     <p><i class="fas fa-info-circle"></i> Select your course preferences in order of priority.</p>
@@ -486,6 +486,18 @@
                         <!-- JS injected dropdowns 1-8 -->
                     </div>
                 </div>
+            </div>
+
+            <!-- PG Course Selection (hidden by default) -->
+            <div class="form-group" id="pg-course-section" style="display:none;">
+                <label><i class="fas fa-graduation-cap"></i> Select PG Course: <span style="color:#ef4444;">*</span></label>
+                <select id="pgCourseSelect" name="pgCourseSelect" class="form-select" style="max-width:500px;">
+                    <option value="" disabled selected>-- Select PG Course --</option>
+                    <option value="MTech">MTech</option>
+                    <option value="MBA">MBA</option>
+                    <option value="MCA">MCA</option>
+                </select>
+            </div>
 
                 <!-- Hostel & Transport Options -->
                 <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(59, 130, 246, 0.05); padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
@@ -766,6 +778,18 @@
                 // -- Entrance exams --
                 document.getElementById('ug-entrance-section').style.display = isPG ? 'none' : 'block';
                 document.getElementById('pg-entrance-section').style.display = isPG ? 'block' : 'none';
+
+                // -- Course selection: UG preferences vs PG dropdown --
+                document.getElementById('ug-preference-section').style.display = isPG ? 'none' : 'block';
+                document.getElementById('pg-course-section').style.display = isPG ? 'block' : 'none';
+                if (!isPG) {
+                    document.getElementById('pgCourseSelect').value = '';
+                } else {
+                    coursePreferencesOrder = [];
+                    if (typeof window.initializeCoursePreferences === 'function') {
+                        window.initializeCoursePreferences();
+                    }
+                }
 
                 // Reset result status
                 document.getElementById('resultStatus').value = '';
@@ -1107,11 +1131,22 @@
                     return;
                 }
 
-                // Validate at least 1 course preference selected
-                if (!coursePreferencesOrder || coursePreferencesOrder.length === 0) {
-                    alert('Error: Please select at least 1 Course Preference.');
-                    document.getElementById('preferenceDropdownsContainer').scrollIntoView({ behavior: 'smooth' });
-                    return;
+                // Validate course selection (UG preferences or PG course)
+                const isPGMode = document.getElementById('programmeSelect').value === 'PG';
+                if (isPGMode) {
+                    const pgCourse = document.getElementById('pgCourseSelect').value;
+                    if (!pgCourse) {
+                        alert('Error: Please select a PG Course (MTech / MBA / MCA).');
+                        document.getElementById('pgCourseSelect').scrollIntoView({ behavior: 'smooth' });
+                        document.getElementById('pgCourseSelect').focus();
+                        return;
+                    }
+                } else {
+                    if (!coursePreferencesOrder || coursePreferencesOrder.length === 0) {
+                        alert('Error: Please select at least 1 Course Preference.');
+                        document.getElementById('preferenceDropdownsContainer').scrollIntoView({ behavior: 'smooth' });
+                        return;
+                    }
                 }
                 
                 const submitBtn = document.getElementById('submitBtn');
@@ -1179,10 +1214,17 @@
                         jee_rank: document.getElementById('jeeRank').value || null,
                         comedk_rank: document.getElementById('comedk').value || null,
                         cet_rank: document.getElementById('cetRank').value || null,
-                        course_preferences: coursePreferencesOrder.map(courseName => {
-                            const match = courseData.find(c => c.name === courseName);
-                            return { course: courseName, fee: match ? match.fee : null };
-                        }),
+                        course_preferences: (() => {
+                            const prog = document.getElementById('programmeSelect').value;
+                            if (prog === 'PG') {
+                                const pgCourse = document.getElementById('pgCourseSelect').value;
+                                return pgCourse ? [{ course: pgCourse, fee: null }] : [];
+                            }
+                            return coursePreferencesOrder.map(courseName => {
+                                const match = courseData.find(c => c.name === courseName);
+                                return { course: courseName, fee: match ? match.fee : null };
+                            });
+                        })(),
                         hostel_required: document.getElementById('hostelRequired').checked,
                         transport_required: document.getElementById('transportRequired').checked,
                         hostel_type: document.getElementById('hostelRequired').checked ? document.getElementById('hostelType').value : null,
