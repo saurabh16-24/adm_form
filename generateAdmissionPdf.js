@@ -221,9 +221,20 @@ function generateAdmissionPdf(data) {
       doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(8.5).text(vTxt, M + w1 + 8, y + 3, { width: w2 - 10 });
       y += h;
     }
-    eduRow('Board / University', data.twelfth_board);
-    eduRow('Year / Result Status', (data.twelfth_year_passing || '') + ' / ' + (data.twelfth_result_status || '—'));
-    eduRow('Percentage / CGPA', (data.twelfth_percentage || '—') + '%');
+    const isPG = (data.enq_programme === 'PG' || data.programme === 'PG');
+    const qualifyingLabel = isPG ? 'UG Degree' : '12th Standard';
+    const displayInstitution = (isPG ? (data.ug_institution || data.enq_institution || data.twelfth_institution || data.institution_name) : data.twelfth_institution) || '—';
+    const displayBoard = (isPG ? (data.ug_board || data.enq_board || data.twelfth_board || data.education_board) : data.twelfth_board) || '—';
+    const displayPercentage = (isPG ? (data.pg_degree_percentage || data.enq_pg_percentage || data.twelfth_percentage) : data.twelfth_percentage) || '—';
+
+    eduRow('Qualifying Exam', qualifyingLabel);
+    eduRow('Institution', displayInstitution);
+    eduRow('Board / University', displayBoard);
+    eduRow('Year / Result Status', (data.twelfth_year_passing || data.year_of_passing || '') + ' / ' + (data.twelfth_result_status || data.result_status || '—'));
+    eduRow('Percentage / CGPA', (displayPercentage || '—') + (displayPercentage !== '—' ? '%' : ''));
+    if (!isPG) {
+        eduRow('PCM %', (data.enq_pcm_percentage || data.twelfth_percentage || '—') + '%');
+    }
     eduRow('Entrance Exams', data.entrance_exams);
     eduRow('UTR/Transaction Ref No', data.payment_utr_no);
 

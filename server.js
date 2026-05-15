@@ -2544,6 +2544,10 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
   try {
     const query = `
       SELECT a.*, 
+             e.programme as enq_programme,
+             e.institution_name as enq_institution,
+             e.education_board as enq_board,
+             e.pg_degree_percentage as enq_pg_percentage,
              e.course_preferences, e.admin_remarks,
              e.physics_marks, e.chemistry_marks, e.mathematics_marks, e.cs_marks, e.bio_marks, e.ece_marks,
              e.pcm_percentage as enq_pcm_percentage
@@ -2575,6 +2579,12 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     
     const pmXLabel = subjects.length > 0 ? `PM+${subjects[0].abbr} %` : 'PCM %';
     const pmXValue = r.enq_pcm_percentage || r.twelfth_percentage || '—';
+
+    const isPG = (r.enq_programme === 'PG');
+    const qualifyingLabel = isPG ? 'UG Degree' : '12th Standard';
+    const displayInstitution = (isPG ? (r.ug_institution || r.enq_institution || r.twelfth_institution) : r.twelfth_institution) || '—';
+    const displayBoard = (isPG ? (r.ug_board || r.enq_board || r.twelfth_board) : r.twelfth_board) || '—';
+    const displayPercentage = (isPG ? (r.pg_degree_percentage || r.enq_pg_percentage || r.twelfth_percentage) : r.twelfth_percentage) || '—';
 
 
     let prefsArray = [];
@@ -2769,12 +2779,12 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
         <table>
           <tr class="section-header"><th colspan="2">Educational Details</th></tr>
           <tr><td colspan="2" class="label" style="width:100%; background:#f8fafc; font-weight:700;">Qualifying Marksheet Name: <span style="font-weight:800; color:#000;">${r.candidate_name_marksheet}</span></td></tr>
-          <tr class="grid-head"><th>Details</th><th>12th Standard</th></tr>
-          <tr><td class="label">Institution</td><td class="value">${r.twelfth_institution}</td></tr>
-          <tr><td class="label">Board / University</td><td class="value">${r.twelfth_board}</td></tr>
-          <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing} / ${r.twelfth_result_status || '—'}</td></tr>
-          <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${r.twelfth_percentage || '—'}%</td></tr>
-          <tr><td class="label">${pmXLabel}</td><td class="value">${pmXValue}${pmXValue !== '—' ? '%' : ''}</td></tr>
+          <tr class="grid-head"><th>Details</th><th>${qualifyingLabel}</th></tr>
+          <tr><td class="label">Institution</td><td class="value">${displayInstitution}</td></tr>
+          <tr><td class="label">Board / University</td><td class="value">${displayBoard}</td></tr>
+          <tr><td class="label">Year / Result Status</td><td class="value">${r.twelfth_year_passing || r.year_of_passing || '—'} / ${r.twelfth_result_status || r.result_status || '—'}</td></tr>
+          <tr><td class="label">Obtained Percentage / CGPA</td><td class="value">${displayPercentage}${displayPercentage !== '—' ? '%' : ''}</td></tr>
+          ${!isPG ? `<tr><td class="label">${pmXLabel}</td><td class="value">${pmXValue}${pmXValue !== '—' ? '%' : ''}</td></tr>` : ''}
           <tr><td class="label">Entrance Examination(s)</td><td class="value">${r.entrance_exams || 'None / Not Applicable'}</td></tr>
           <tr><td class="label">UTR / Transaction Ref No</td><td class="value" style="font-weight: 800; color: #1e40af;">${r.payment_utr_no || '—'}</td></tr>
         </table>
