@@ -436,7 +436,7 @@
           <!-- 12th Marksheet -->
           <div class="doc-upload-card" id="twelfthCard">
             <input type="file" id="twelfthFile" class="upload-input" accept="image/jpeg,image/png,image/webp,application/pdf">
-            <div class="doc-card-title"><i class="fas fa-graduation-cap" style="margin-right:4px;"></i>12th Marksheet</div>
+            <div class="doc-card-title"><i class="fas fa-graduation-cap" style="margin-right:4px;"></i><span id="marksheetTitleText">12th Marksheet</span></div>
             <i class="fas fa-file-alt doc-card-icon" id="twelfthIcon"></i>
             <div class="doc-card-actions">
               <button type="button" class="upload-btn camera" onclick="document.getElementById('twelfthFile').click()">
@@ -1162,6 +1162,9 @@
             document.getElementById('ug-edu-section').style.display = 'none';
             document.getElementById('pg-edu-section').style.display = 'block';
             
+            const titleEl = document.getElementById('marksheetTitleText');
+            if(titleEl) titleEl.innerText = 'UG Degree Card';
+
             // PG Educational Details
             setVal('pg_degree_percentage', e.pg_degree_percentage || '');
             setVal('pg_recent_percentage', e.pg_recent_percentage || '');
@@ -1172,6 +1175,9 @@
           } else {
             document.getElementById('ug-edu-section').style.display = 'block';
             document.getElementById('pg-edu-section').style.display = 'none';
+            
+            const titleEl = document.getElementById('marksheetTitleText');
+            if(titleEl) titleEl.innerText = '12th Marksheet';
           }
 
           // Educational Details
