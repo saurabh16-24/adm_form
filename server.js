@@ -2194,6 +2194,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
 
     // Server-side course fee lookup (matches enquiry form fee schedule)
     const COURSE_FEES = {
+      // UG Courses
       'BE Computer Science and Engineering': 375000,
       'BE Computer Science and Engineering (Artificial Intelligence)': 375000,
       'BE Computer Science and Engineering (Data Science)': 350000,
@@ -2201,7 +2202,11 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
       'BE Information Science and Engineering': 325000,
       'BE Electronics and Communication Engineering': 275000,
       'BE Civil Engineering': 125000,
-      'BE Mechanical Engineering': 125000
+      'BE Mechanical Engineering': 125000,
+      // PG Courses
+      'MBA': 200000,
+      'MCA': 125000,
+      'MTech': 125000
     };
     const HOSTEL_FEES = {
       'Hostel with shared washroom (With Food)': 110000,
