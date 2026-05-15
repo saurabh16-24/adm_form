@@ -669,7 +669,13 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS course_preferences JSONB",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_request_log JSONB",
       "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS edit_enable_log JSONB",
-      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS is_resubmitted BOOLEAN DEFAULT FALSE"
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS is_resubmitted BOOLEAN DEFAULT FALSE",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS pg_degree_percentage VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS pg_recent_percentage VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS pgcet_rank VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS gate_score VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS cat_score VARCHAR(50)",
+      "ALTER TABLE admissions ADD COLUMN IF NOT EXISTS other_pg_exam VARCHAR(100)"
     ];
     for (const sql of alterCols) await pool.query(sql);
 
@@ -893,7 +899,13 @@ app.post('/api/admissions/submit', (req, res) => {
         const ddd = String(dt.getDate()).padStart(2, '0');
         const mmm = String(dt.getMonth() + 1).padStart(2, '0');
         const yyy = dt.getFullYear();
-        v.application_number = `BE/ADM/${ddd}${mmm}${yyy}/${adm_seq}`;
+        let prefix = 'BE';
+        const cp = (v.course_preference || '').toUpperCase();
+        if (cp.includes('MTECH')) prefix = 'MT';
+        else if (cp.includes('MBA')) prefix = 'MBA';
+        else if (cp.includes('MCA')) prefix = 'MCA';
+        
+        v.application_number = `${prefix}/ADM/${ddd}${mmm}${yyy}/${adm_seq}`;
         // make adm_seq available for INSERT below
         v._adm_seq = adm_seq;
       } catch(e) { adm_client.release(); throw e; }
@@ -936,8 +948,9 @@ app.post('/api/admissions/submit', (req, res) => {
             payment_utr_no = COALESCE($42, payment_utr_no),
             signature_path = COALESCE($43, signature_path),
             course_preferences = $44,
+            pg_degree_percentage = $45, pg_recent_percentage = $46, pgcet_rank = $47, gate_score = $48, cat_score = $49, other_pg_exam = $50,
             edit_enabled = FALSE, edit_requested = FALSE, is_resubmitted = TRUE
-          WHERE id = $45
+          WHERE id = $51
         `;
         const values = [
           v.title, v.student_name, v.mobile_no, v.email, v.date_of_birth || null, v.gender, v.aadhaar_no || null,
@@ -949,6 +962,7 @@ app.post('/api/admissions/submit', (req, res) => {
           v.entrance_exams, v.student_signature || null,
           photoPath, twelfth_path, receipt_path, v.payment_utr_no || null, signature_path,
           JSON.stringify(v.course_preferences ? (typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences) : []),
+          v.pg_degree_percentage || null, v.pg_recent_percentage || null, v.pgcet_rank || null, v.gate_score || null, v.cat_score || null, v.other_pg_exam || null,
           existingAdm.id
         ];
         await pool.query(updateQuery, values);
@@ -969,11 +983,12 @@ app.post('/api/admissions/submit', (req, res) => {
             entrance_exams, declaration_accepted, student_signature,
             passport_photo_path, twelfth_marksheet_path,
             payment_receipt_path, payment_utr_no, signature_path,
-            course_preferences
+            course_preferences,
+            pg_degree_percentage, pg_recent_percentage, pgcet_rank, gate_score, cat_score, other_pg_exam
           ) VALUES (
             $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,
             $24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,
-            $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55, $56
+            $44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55, $56, $57, $58, $59, $60, $61, $62
           ) RETURNING id;
         `;
         const values = [
@@ -989,7 +1004,8 @@ app.post('/api/admissions/submit', (req, res) => {
           v.entrance_exams, v.declaration_accepted === 'true' || v.declaration_accepted === true, v.student_signature || null,
           photoPath, twelfth_path,
           receipt_path, v.payment_utr_no || null, signature_path,
-          JSON.stringify(v.course_preferences ? (typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences) : [])
+          JSON.stringify(v.course_preferences ? (typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences) : []),
+          v.pg_degree_percentage || null, v.pg_recent_percentage || null, v.pgcet_rank || null, v.gate_score || null, v.cat_score || null, v.other_pg_exam || null
         ];
         result = await pool.query(query, values);
       }

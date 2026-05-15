@@ -253,7 +253,8 @@
       </div>
       <div class="section-body">
 
-        <div class="edu-table-wrap">
+        <div id="ug-edu-section">
+          <div class="edu-table-wrap">
           <table class="edu-table">
             <thead>
               <tr>
@@ -327,6 +328,59 @@
           <p class="entrance-note">Select all that apply (comma-separated or choose from list)</p>
           <input type="text" id="entranceExams" name="entranceExams"
             placeholder="e.g. Comed-K, JEE, CET, DCET">
+          </div>
+        </div>
+
+        <div id="pg-edu-section" style="display:none;">
+          <div class="edu-table-wrap">
+            <table class="edu-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>PG Academic Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Degree Percentage</td>
+                  <td><input type="text" id="pg_degree_percentage" name="pg_degree_percentage" placeholder="e.g. 75"></td>
+                </tr>
+                <tr>
+                  <td>Recent CGPA / Percentage</td>
+                  <td><input type="text" id="pg_recent_percentage" name="pg_recent_percentage" placeholder="e.g. 8.5"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="edu-table-wrap" style="margin-top:16px;">
+            <table class="edu-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>PG Entrance Exams</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>PGCET Rank</td>
+                  <td><input type="text" id="pgcet_rank" name="pgcet_rank" placeholder="e.g. 1500"></td>
+                </tr>
+                <tr>
+                  <td>GATE Score</td>
+                  <td><input type="text" id="gate_score" name="gate_score" placeholder="e.g. 600"></td>
+                </tr>
+                <tr>
+                  <td>CAT Score</td>
+                  <td><input type="text" id="cat_score" name="cat_score" placeholder="e.g. 95"></td>
+                </tr>
+                <tr>
+                  <td>Other PG Exam</td>
+                  <td><input type="text" id="other_pg_exam" name="other_pg_exam" placeholder="Exam & rank/score"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
@@ -1103,6 +1157,23 @@
             }
           } catch (err) { console.error('Prefs rendering error:', err); }
 
+          window.currentProgramme = e.programme || 'UG';
+          if (window.currentProgramme === 'PG') {
+            document.getElementById('ug-edu-section').style.display = 'none';
+            document.getElementById('pg-edu-section').style.display = 'block';
+            
+            // PG Educational Details
+            setVal('pg_degree_percentage', e.pg_degree_percentage || '');
+            setVal('pg_recent_percentage', e.pg_recent_percentage || '');
+            setVal('pgcet_rank', e.pgcet_rank || '');
+            setVal('gate_score', e.gate_score || '');
+            setVal('cat_score', e.cat_score || '');
+            setVal('other_pg_exam', e.other_pg_exam || '');
+          } else {
+            document.getElementById('ug-edu-section').style.display = 'block';
+            document.getElementById('pg-edu-section').style.display = 'none';
+          }
+
           // Educational Details
           setVal('twelfth_institution', e.institution_name || '');
           setOpt('twelfth_board', e.education_board || '');
@@ -1481,6 +1552,12 @@
         twelfth_marking_scheme: sel('twelfth_scheme')?.value || '',
         twelfth_percentage: sel('twelfth_percentage')?.value || '',
         entrance_exams: sel('entranceExams')?.value || '',
+        pg_degree_percentage: sel('pg_degree_percentage')?.value || '',
+        pg_recent_percentage: sel('pg_recent_percentage')?.value || '',
+        pgcet_rank: sel('pgcet_rank')?.value || '',
+        gate_score: sel('gate_score')?.value || '',
+        cat_score: sel('cat_score')?.value || '',
+        other_pg_exam: sel('other_pg_exam')?.value || '',
         declaration_accepted: true,
         student_signature: signatureData || '',
         payment_utr_no: sel('paymentUtr')?.value || ''
