@@ -1584,7 +1584,7 @@
         const result = await res.json();
         if (!result.success) throw new Error(result.error || 'Submission failed');
 
-        sel('modalAppNo').textContent = appNum;
+        sel('modalAppNo').textContent = result.application_number;
         sel('successModal').classList.add('open');
         sel('admissionForm').style.display = 'none';
         sel('admissionForm').reset();
