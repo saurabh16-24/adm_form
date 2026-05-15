@@ -39,7 +39,7 @@ const transporter = nodemailer.createTransport({
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Branded QR generator (server-side logo compositing) ──────────────────────
-const LOGO_PATH = path.join(__dirname, 'Black Background.png');
+const LOGO_PATH = path.join(__dirname, 'image copy 2.png');
 async function generateBrandedQR(url, size = 300) {
   // 1. Generate QR PNG buffer with navy dots, error-correction H
   const qrBuffer = await QRCode.toBuffer(url, {
