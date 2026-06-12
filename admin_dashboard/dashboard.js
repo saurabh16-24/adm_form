@@ -2682,7 +2682,7 @@ async function openManagementFormEditor(id) {
     window.updateActualFeeByBranch = () => {
       const branchSel = document.getElementById('ed-branch');
       const bVal = branchSel.value;
-      const feeMap = ${isPG} ? {
+      const feeMap = isPG ? {
         "MTECH": 125000,
         "MBA": 200000,
         "MCA": 125000
