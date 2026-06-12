@@ -2504,9 +2504,16 @@ async function openManagementFormEditor(id) {
     // Helper to format values
     const val = (v) => (v === null || v === undefined || v === '') ? '' : v;
     
+    // Detect PG programme
+    const isPG = (r.programme === 'PG');
+
     // Calculate default annual fee based on preferred course
     let defaultFee = 0;
-    const initialFeeMap = {
+    const initialFeeMap = isPG ? {
+      "MTECH": 125000,
+      "MBA": 200000,
+      "MCA": 125000
+    } : {
       "BE Computer Science and Engineering": 375000,
       "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
       "BE Computer Science and Engineering (Data Science)": 350000,
@@ -2545,7 +2552,7 @@ async function openManagementFormEditor(id) {
       </style>
 
       <div class="editor-form">
-        <div class="section-header">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+        <div class="section-header">${isPG ? 'PG MANAGEMENT PROVISIONAL ADMISSION FORM' : 'ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM'}</div>
 
         
         <div class="meta-row">
@@ -2565,19 +2572,24 @@ async function openManagementFormEditor(id) {
             <td class="label">Parent Mobile</td><td><input type="text" id="ed-parent-mobile" value="${r.father_mobile || r.mother_mobile}"></td>
           </tr>
           <tr>
-            <td class="label">Branch Selected</td><td>
+            <td class="label">${isPG ? 'Course Selected' : 'Branch Selected'}</td><td>
               <select id="ed-branch" style="width:100%; border:none; padding:4px; font-weight:700; font-size:11px; background:transparent; outline:none; text-overflow: ellipsis;" onchange="updateActualFeeByBranch()">
-                <option value="">-- Select Branch --</option>
-                ${[
-                  "BE Computer Science and Engineering",
-                  "BE Computer Science and Engineering (Artificial Intelligence)",
-                  "BE Computer Science and Engineering (Data Science)",
-                  "BE Computer Science and Engineering (Cyber Security)",
-                  "BE Information Science and Engineering",
-                  "BE Electronics and Communication Engineering",
-                  "BE Mechanical Engineering",
-                  "BE Civil Engineering"
-                ].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
+                ${isPG ? `
+                  <option value="">-- Select Course --</option>
+                  ${["MTECH", "MBA", "MCA"].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
+                ` : `
+                  <option value="">-- Select Branch --</option>
+                  ${[
+                    "BE Computer Science and Engineering",
+                    "BE Computer Science and Engineering (Artificial Intelligence)",
+                    "BE Computer Science and Engineering (Data Science)",
+                    "BE Computer Science and Engineering (Cyber Security)",
+                    "BE Information Science and Engineering",
+                    "BE Electronics and Communication Engineering",
+                    "BE Mechanical Engineering",
+                    "BE Civil Engineering"
+                  ].map(c => `<option value="${c}" ${r.course_preference === c ? 'selected' : ''}>${c}</option>`).join('')}
+                `}
               </select>
             </td>
             <td class="label">State</td><td><input type="text" id="ed-state" value="${r.perm_state || 'Karnataka'}"></td>
@@ -2587,7 +2599,7 @@ async function openManagementFormEditor(id) {
             <td class="label">Actual Fee (₹)</td><td><input type="number" id="ed-actual-fee" value="${defaultFee}" oninput="updateEdNet()"></td>
           </tr>
           <tr>
-            <td class="label">PUC/+2 Board</td><td><input type="text" id="ed-board" value="${r.education_board || r.twelfth_board}"></td>
+            <td class="label">${isPG ? 'University' : 'PUC/+2 Board'}</td><td><input type="text" id="ed-board" value="${isPG ? (r.ug_board || r.education_board || r.twelfth_board) : (r.education_board || r.twelfth_board)}"></td>
             <td class="label">Scholarship (₹)</td><td><input type="number" id="ed-scholarship" value="0" oninput="updateEdNet()"></td>
           </tr>
           <tr>
@@ -2601,22 +2613,40 @@ async function openManagementFormEditor(id) {
         <table class="entrance-table">
           <thead>
             <tr>
-              <th>Physics + Math + ... %</th>
-              <th>Overall %</th>
-              <th>CET Rank</th>
-              <th>COMEDK Rank</th>
-              <th>JEE Rank</th>
-              <th>CET No</th>
+              ${isPG ? `
+                <th>Degree %</th>
+                <th>Recent %</th>
+                <th>PGCET Rank</th>
+                <th>GATE Score</th>
+                <th>CAT Score</th>
+                <th>Other PG Exam</th>
+              ` : `
+                <th>Physics + Math + ... %</th>
+                <th>Overall %</th>
+                <th>CET Rank</th>
+                <th>COMEDK Rank</th>
+                <th>JEE Rank</th>
+                <th>CET No</th>
+              `}
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td><input type="text" id="ed-pcm" value="${val(r.pcm_percentage || '')}"></td>
-              <td><input type="text" id="ed-total" value="${val(r.twelfth_percentage || r.total_percentage || '')}"></td>
-              <td><input type="text" id="ed-cet" value="${val(r.cet_rank || '')}"></td>
-              <td><input type="text" id="ed-comedk" value="${val(r.comedk_rank || '')}"></td>
-              <td><input type="text" id="ed-jee" value="${val(r.jee_rank || '')}"></td>
-              <td><input type="text" id="ed-cet-no" value=""></td>
+              ${isPG ? `
+                <td><input type="text" id="ed-pcm" value="${val(r.pg_degree_percentage || '')}"></td>
+                <td><input type="text" id="ed-total" value="${val(r.pg_recent_percentage || '')}"></td>
+                <td><input type="text" id="ed-cet" value="${val(r.pgcet_rank || '')}"></td>
+                <td><input type="text" id="ed-comedk" value="${val(r.gate_score || '')}"></td>
+                <td><input type="text" id="ed-jee" value="${val(r.cat_score || '')}"></td>
+                <td><input type="text" id="ed-cet-no" value="${val(r.other_pg_exam || '')}"></td>
+              ` : `
+                <td><input type="text" id="ed-pcm" value="${val(r.pcm_percentage || '')}"></td>
+                <td><input type="text" id="ed-total" value="${val(r.twelfth_percentage || r.total_percentage || '')}"></td>
+                <td><input type="text" id="ed-cet" value="${val(r.cet_rank || '')}"></td>
+                <td><input type="text" id="ed-comedk" value="${val(r.comedk_rank || '')}"></td>
+                <td><input type="text" id="ed-jee" value="${val(r.jee_rank || '')}"></td>
+                <td><input type="text" id="ed-cet-no" value=""></td>
+              `}
             </tr>
           </tbody>
         </table>
@@ -2633,7 +2663,7 @@ async function openManagementFormEditor(id) {
 
         <div class="action-footer">
           <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-          <button class="btn-save-print" onclick="saveAndPrintManagementForm(${r.id})">
+          <button class="btn-save-print" onclick="saveAndPrintManagementForm(${r.id}, ${isPG})">
             <span class="material-icons-round">print</span>
             SAVE RECORD & GENERATE PRINT
           </button>
@@ -2652,7 +2682,11 @@ async function openManagementFormEditor(id) {
     window.updateActualFeeByBranch = () => {
       const branchSel = document.getElementById('ed-branch');
       const bVal = branchSel.value;
-      const feeMap = {
+      const feeMap = ${isPG} ? {
+        "MTECH": 125000,
+        "MBA": 200000,
+        "MCA": 125000
+      } : {
         "BE Computer Science and Engineering": 375000,
         "BE Computer Science and Engineering (Artificial Intelligence)": 375000,
         "BE Computer Science and Engineering (Data Science)": 350000,
@@ -2672,7 +2706,7 @@ async function openManagementFormEditor(id) {
   } catch (err) { alert('Failed to open management editor'); console.error(err); }
 }
 
-async function finalPrintManagementForm() {
+async function finalPrintManagementForm(isPG) {
   try {
     const get = (id) => document.getElementById(id)?.value || '';
 
@@ -2774,7 +2808,7 @@ async function finalPrintManagementForm() {
           </div>
         </div>
 
-        <div class="form-title">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+        <div class="form-title">${isPG ? 'PG MANAGEMENT PROVISIONAL ADMISSION FORM' : 'ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM'}</div>
 
 
         <div class="meta-info">
@@ -2794,7 +2828,7 @@ async function finalPrintManagementForm() {
             <td class="label">Father /Mother/Guardian Mobile No.</td><td class="value">${get('ed-parent-mobile')}</td>
           </tr>
           <tr>
-            <td class="label">Branch Selected</td><td class="value">${get('ed-branch')}</td>
+            <td class="label">${isPG ? 'Course Selected' : 'Branch Selected'}</td><td class="value">${get('ed-branch')}</td>
             <td class="label">State</td><td class="value">${get('ed-state')}</td>
           </tr>
           <tr>
@@ -2802,7 +2836,7 @@ async function finalPrintManagementForm() {
             <td class="label">Actual Annual Fee</td><td class="value">₹ ${parseFloat(get('ed-actual-fee')).toLocaleString()}</td>
           </tr>
           <tr>
-            <td class="label">PUC/+2 Exam Board</td><td class="value">${get('ed-board')}</td>
+            <td class="label">${isPG ? 'University' : 'PUC/+2 Exam Board'}</td><td class="value">${get('ed-board')}</td>
             <td class="label">Scholarship Attained</td><td class="value">₹ ${parseFloat(get('ed-scholarship')).toLocaleString()}</td>
           </tr>
           <tr>
@@ -2816,12 +2850,21 @@ async function finalPrintManagementForm() {
         <table class="entrance-table">
           <thead>
             <tr>
-              <th style="width:20%">Physics + Math +<br>Chem/CS/ECE %</th>
-              <th style="width:20%">Overall PUC/+2<br>/Inter %</th>
-              <th style="width:15%">CET Rank</th>
-              <th style="width:15%">COMEDK Rank</th>
-              <th style="width:15%">JEE Rank</th>
-              <th style="width:15%">CET No</th>
+              ${isPG ? `
+                <th style="width:17%">Degree %</th>
+                <th style="width:17%">Recent %</th>
+                <th style="width:17%">PGCET Rank</th>
+                <th style="width:17%">GATE Score</th>
+                <th style="width:16%">CAT Score</th>
+                <th style="width:16%">Other PG Exam</th>
+              ` : `
+                <th style="width:20%">Physics + Math +<br>Chem/CS/ECE %</th>
+                <th style="width:20%">Overall PUC/+2<br>/Inter %</th>
+                <th style="width:15%">CET Rank</th>
+                <th style="width:15%">COMEDK Rank</th>
+                <th style="width:15%">JEE Rank</th>
+                <th style="width:15%">CET No</th>
+              `}
             </tr>
           </thead>
           <tbody>
@@ -3074,7 +3117,7 @@ function renderManagement(rows) {
   </tr>`).join('');
 }
 
-async function saveAndPrintManagementForm(admissionId) {
+async function saveAndPrintManagementForm(admissionId, isPG) {
   const get = (id) => document.getElementById(id).value;
   try {
     const payload = {
@@ -3113,7 +3156,7 @@ async function saveAndPrintManagementForm(admissionId) {
     if (res.success) {
       showToast('Record saved to Dashboard');
       // Now print
-      finalPrintManagementForm();
+      finalPrintManagementForm(isPG);
       closeModal();
       if (allManagement.length > 0) loadManagementStatus(); // refresh if tab active
     }
@@ -3166,6 +3209,9 @@ async function printManagementFromRecord(id) {
         const y2 = yr[1] || '';
 
         const val = (v) => v || '—';
+
+        // Detect PG from the linked enquiry
+        const isPG = (r.programme === 'PG');
 
         const html = `
           <!DOCTYPE html>
@@ -3234,7 +3280,7 @@ async function printManagementFromRecord(id) {
               </div>
             </div>
 
-            <div class="form-title">ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM</div>
+            <div class="form-title">${isPG ? 'PG MANAGEMENT PROVISIONAL ADMISSION FORM' : 'ENGINEERING MANAGEMENT PROVISIONAL ADMISSION FORM'}</div>
 
 
             <div class="meta-info">
@@ -3247,16 +3293,22 @@ async function printManagementFromRecord(id) {
             <table>
               <tr><td class="label">Student Name</td><td class="value">${val(m.student_name)}</td><td class="label">Phone No.</td><td class="value">${val(m.mobile_no)}</td></tr>
               <tr><td class="label">Parent/Guardian</td><td class="value">${val(m.parent_name)}</td><td class="label">Parent Mobile</td><td class="value">${val(m.parent_mobile)}</td></tr>
-              <tr><td class="label">Branch Selected</td><td class="val">${val(m.branch)}</td><td class="label">State</td><td class="val">${val(m.state)}</td></tr>
+              <tr><td class="label">${isPG ? 'Course Selected' : 'Branch Selected'}</td><td class="val">${val(m.branch)}</td><td class="label">State</td><td class="val">${val(m.state)}</td></tr>
               <tr><td class="label">Email</td><td class="val">${val(m.email)}</td><td class="label">Actual Annual Fee</td><td class="val">₹ ${parseFloat(m.actual_fee || 0).toLocaleString()}</td></tr>
-              <tr><td class="label">PUC/+2 Board</td><td class="val">${val(r.education_board || r.twelfth_board)}</td><td class="label">Scholarship</td><td class="val">₹ ${parseFloat(m.scholarship || 0).toLocaleString()}</td></tr>
+              <tr><td class="label">${isPG ? 'University' : 'PUC/+2 Board'}</td><td class="val">${isPG ? val(r.ug_board || r.education_board || r.twelfth_board) : val(r.education_board || r.twelfth_board)}</td><td class="label">Scholarship</td><td class="val">₹ ${parseFloat(m.scholarship || 0).toLocaleString()}</td></tr>
               <tr><td class="label">Booking Fee</td><td class="val">₹ ${parseFloat(m.booking_fee || 0).toLocaleString()}</td><td class="label">Net Payable</td><td class="val" style="background:#f8fafc">₹ ${parseFloat(m.net_payable || 0).toLocaleString()}</td></tr>
             </table>
 
             <div style="font-weight: 800; margin-bottom: 6px; font-size:11px;">Reference Name: <span style="text-decoration: underline;">${val(m.reference_name)}</span></div>
 
             <table class="entrance-table">
-              <thead><tr><th>Physics + Math +<br>Chem/CS/ECE %</th><th>Overall %</th><th>CET Rank</th><th>COMEDK Rank</th><th>JEE Rank</th><th>CET No</th></tr></thead>
+              <thead><tr>
+                ${isPG ? `
+                  <th>Degree %</th><th>Recent %</th><th>PGCET Rank</th><th>GATE Score</th><th>CAT Score</th><th>Other PG Exam</th>
+                ` : `
+                  <th>Physics + Math +<br>Chem/CS/ECE %</th><th>Overall %</th><th>CET Rank</th><th>COMEDK Rank</th><th>JEE Rank</th><th>CET No</th>
+                `}
+              </tr></thead>
               <tbody><tr>
                 <td>${val(m.pcm_percentage)}${m.pcm_percentage?'%':''}</td>
                 <td>${val(m.overall_percentage)}${m.overall_percentage?'%':''}</td>
