@@ -60,6 +60,70 @@
             z-index: 1;
             pointer-events: none;
         }
+        
+        /* SugarMitra Advertisement Banner Image */
+        .sugarmitra-banner-image {
+            margin: 16px 0 20px 0;
+            display: block;
+            width: 100%;
+        }
+        
+        .sugarmitra-banner-image a {
+            text-decoration: none;
+            display: block;
+        }
+        
+        .sugarmitra-banner-image img,
+        .sugarmitra-banner-image picture {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: block;
+        }
+        
+        .sugarmitra-banner-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: block;
+        }
+        
+        .sugarmitra-banner-image a:hover img {
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+            transform: translateY(-3px);
+        }
+        
+        @media (max-width: 1024px) {
+            .sugarmitra-banner-image {
+                margin: 14px 0 16px 0;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sugarmitra-banner-image {
+                margin: 12px 0 14px 0;
+            }
+            
+            .sugarmitra-banner-image img {
+                border-radius: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .sugarmitra-banner-image {
+                margin: 10px 0 12px 0;
+            }
+            
+            .sugarmitra-banner-image img {
+                border-radius: 10px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -106,6 +170,21 @@
                 <span id="enquiry-date" class="date-display"></span>
               </div>
             </div>
+
+            <!-- SugarMitra Advertisement Banner -->
+            <div class="sugarmitra-banner-image">
+              <a href="https://svcecsesugarmitra.svcengg.com/" target="_blank" rel="noopener noreferrer">
+                <picture>
+                  <!-- Mobile version: shown on screens 768px and below -->
+                  <source media="(max-width: 768px)" srcset="sugarmitra-banner-mobile.png">
+                  <!-- Desktop version: shown on screens 769px and above -->
+                  <source media="(min-width: 769px)" srcset="sugarmitra-banner.png">
+                  <!-- Fallback -->
+                  <img src="sugarmitra-banner.png" alt="An App, SugarMitra, by SVCE - Managing Diabetes, Empowering Lives">
+                </picture>
+              </a>
+            </div>
+
             <div class="title">
               <h3>ADMISSION ENQUIRY FORM</h3>
               <div id="academic-year-info" style="font-weight: 700; color: #3b82f6; font-size: 0.95rem; margin-top: 4px;">Academic Year: <span id="acadYearDisplay"></span></div>
