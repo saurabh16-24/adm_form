@@ -671,229 +671,491 @@ function initGlobalYearDropdown() {
 
 
 
-// ═══════════════ ADMITTED STATS LOGIC ═══════════════
-const ADMITTED_COURSES = [
-  { id: 'ECE', name: 'ECE', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Electronics and Communication Engineering' },
-  { id: 'CSE', name: 'CSE', cet_int: 108, comed_int: 72, mgt_int: 60, branch: 'BE Computer Science and Engineering' },
-  { id: 'ISE', name: 'IS&E', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Information Science and Engineering' },
-  { id: 'ME', name: 'ME', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Mechanical Engineering' },
-  { id: 'CE', name: 'CE', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Civil Engineering' },
-  { id: 'CSCA', name: 'CS-CA', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Artificial Intelligence)' },
-  { id: 'CSCY', name: 'CS-CY', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Computer Science and Engineering (Cyber Security)' },
-  { id: 'CSDS', name: 'CS-DS', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Data Science)' }
+// ═══════════════ DYNAMIC ADMITTED STATS ENGINE ═══════════════
+
+// Column group definitions (for grouped headers)
+const DEFAULT_COLUMN_GROUPS = [
+  { id: 'cet', label: 'CET', headerStyle: 'background: #e0e7ff; color: #3730a3;', subHeaderStyle: 'background: #eef2ff;' },
+  { id: 'comedk', label: 'Comed K', headerStyle: 'background: #dcfce7; color: #166534;', subHeaderStyle: 'background: #f0fdf4;' },
+  { id: 'management', label: 'Management', headerStyle: 'background: #ffedd5; color: #9a3412;', subHeaderStyle: 'background: #fff7ed;' },
+  { id: 'actual', label: 'Actual Admissions', headerStyle: 'background: #3b82f6; color: white;', subHeaderStyle: 'background: #2563eb; color: white;' },
 ];
 
+// Column definitions: each column has id, label, group, type (editable/formula), formula expression
+const DEFAULT_COLUMNS = [
+  { id: 'cet_int', label: 'Intake', group: 'cet', type: 'editable' },
+  { id: 'cet_fill', label: 'Filled', group: 'cet', type: 'editable' },
+  { id: 'cet_snq', label: 'SNQ', group: 'cet', type: 'editable' },
+  { id: 'cet_tot', label: 'Total', group: 'cet', type: 'formula', formula: 'cet_fill + cet_snq' },
+  { id: 'comed_int', label: 'Intake', group: 'comedk', type: 'editable' },
+  { id: 'comed_fill', label: 'Filled', group: 'comedk', type: 'editable' },
+  { id: 'mgt_int', label: 'Intake', group: 'management', type: 'editable' },
+  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'editable' },
+  { id: 'act_int', label: 'Intake', group: 'actual', type: 'formula', formula: 'cet_int + comed_int + mgt_int' },
+  { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill' },
+  { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill' },
+  { id: 'tot_snq', label: 'Total with SNQ', group: null, type: 'formula', formula: 'act_fill + cet_snq', headerStyle: 'background: #fef9c3; color: #854d0e;' },
+  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #fef3c7; color: #92400e;' },
+  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #bbf7d0; color: #166534;' },
+  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #fee2e2; color: #991b1b;' },
+];
+
+// Default course rows (fallback when no saved config exists)
+const DEFAULT_COURSES = [
+  { id: 'ECE', name: 'ECE', branch: 'BE Electronics and Communication Engineering', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+  { id: 'CSE', name: 'CSE', branch: 'BE Computer Science and Engineering', values: { cet_int: 108, comed_int: 72, mgt_int: 60 } },
+  { id: 'ISE', name: 'IS&E', branch: 'BE Information Science and Engineering', values: { cet_int: 27, comed_int: 18, mgt_int: 15 } },
+  { id: 'ME', name: 'ME', branch: 'BE Mechanical Engineering', values: { cet_int: 13, comed_int: 9, mgt_int: 8 } },
+  { id: 'CE', name: 'CE', branch: 'BE Civil Engineering', values: { cet_int: 13, comed_int: 9, mgt_int: 8 } },
+  { id: 'CSCA', name: 'CS-CA', branch: 'BE Computer Science and Engineering (Artificial Intelligence)', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+  { id: 'CSCY', name: 'CS-CY', branch: 'BE Computer Science and Engineering (Cyber Security)', values: { cet_int: 27, comed_int: 18, mgt_int: 15 } },
+  { id: 'CSDS', name: 'CS-DS', branch: 'BE Computer Science and Engineering (Data Science)', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+];
+
+// Live state – populated by renderAdmittedStats
+let _statsConfig = {
+  groups: [],
+  columns: [],
+  rows: [],
+};
+
+// ── Formula evaluator ──────────────────────────────────
+function __pct__(numerator, denominator) {
+  return denominator > 0 ? ((numerator / denominator) * 100).toFixed(2) : '0.00';
+}
+
+function evalFormula(formula, rowValues) {
+  try {
+    // Build a safe evaluation context with all column values available
+    const keys = Object.keys(rowValues);
+    const vals = keys.map(k => parseFloat(rowValues[k]) || 0);
+    const fn = new Function('__pct__', ...keys, `return (${formula});`);
+    return fn(__pct__, ...vals);
+  } catch (e) {
+    console.warn('Formula eval error:', formula, e);
+    return 0;
+  }
+}
+
+function computeRowValues(row, columns) {
+  // Compute all formula columns from editable values
+  const values = { ...row.values };
+  // Multi-pass to resolve dependent formulas (e.g., overall depends on tot_snq)
+  for (let pass = 0; pass < 3; pass++) {
+    columns.forEach(col => {
+      if (col.type === 'formula' && col.formula) {
+        values[col.id] = evalFormula(col.formula, values);
+      }
+    });
+  }
+  return values;
+}
+
+// ── Render dynamic table ───────────────────────────────
 async function renderAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  const tbody = document.getElementById('admitted-stats-body');
-  const tfoot = document.getElementById('admitted-stats-footer');
-  if (!tbody) return;
+  const tableEl = document.getElementById('admitted-stats-table');
+  if (!tableEl) return;
 
-  // Fetch management counts
-  let mgtData = [];
+  // Fetch management counts for auto-filling mgt_fill
+  let mgtCounts = {};
   try {
     const res = await apiFetch('/api/admin/management-forms');
-    mgtData = res.rows || [];
-    // Filter by academic year (check both full and short formats)
+    let mgtData = res.rows || [];
     const shortYear = selectedYear.split('-')[0].slice(-2) + '-' + selectedYear.split('-')[1];
     mgtData = mgtData.filter(m => m.academic_year === selectedYear || m.academic_year === shortYear);
+    mgtData.forEach(m => { mgtCounts[m.branch] = (mgtCounts[m.branch] || 0) + 1; });
   } catch (e) { console.error('Failed to fetch management forms for stats', e); }
 
-  const mgtCounts = {};
-  mgtData.forEach(m => {
-    const b = m.branch;
-    mgtCounts[b] = (mgtCounts[b] || 0) + 1;
+  // Try loading dynamic config from new API
+  let config = null;
+  try {
+    config = await apiFetch(`/api/admin/stats/config?year=${selectedYear}`);
+  } catch (e) { console.warn('Dynamic stats config not available, using defaults', e); }
+
+  if (config && config.columns && config.rows) {
+    // Loaded saved dynamic config
+    _statsConfig.groups = config.groups || JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
+    _statsConfig.columns = config.columns;
+    _statsConfig.rows = config.rows;
+  } else {
+    // Fallback: build from defaults + old manual stats
+    _statsConfig.groups = JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
+    _statsConfig.columns = JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+
+    let savedData = {};
+    try { savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`); }
+    catch (e) { /* ignore */ }
+
+    _statsConfig.rows = DEFAULT_COURSES.map(c => {
+      const manual = savedData[c.id] || {};
+      const mgt_fill = mgtCounts[c.branch] || 0;
+      return {
+        id: c.id,
+        name: c.name,
+        branch: c.branch || '',
+        values: {
+          cet_int: c.values.cet_int || 0,
+          cet_fill: parseInt(manual.cet_fill) || 0,
+          cet_snq: parseInt(manual.cet_snq) || 0,
+          comed_int: c.values.comed_int || 0,
+          comed_fill: parseInt(manual.comed_fill) || 0,
+          mgt_int: c.values.mgt_int || 0,
+          mgt_fill: mgt_fill,
+          aicte: parseInt(manual.aicte) || 0,
+        }
+      };
+    });
+  }
+
+  // Pre-fill mgt_fill from auto-fetch if not already overridden
+  _statsConfig.rows.forEach(row => {
+    if (row.branch && mgtCounts[row.branch] !== undefined) {
+      // Only auto-fill if the user hasn't manually set a value in saved config
+      if (!config || !config.rows) {
+        row.values.mgt_fill = mgtCounts[row.branch] || 0;
+      }
+    }
   });
 
-  // Load saved manual data from backend
-  let savedData = {};
-  try {
-    savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`);
-  } catch(e) { console.error('Failed to fetch manual stats', e); }
+  _renderStatsTable();
+}
 
-  let totals = {
-    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
-    comed_int: 0, comed_fill: 0,
-    mgt_int: 0, mgt_fill: 0,
-    act_int: 0, act_fill: 0, act_vac: 0,
-    tot_snq: 0, aicte: 0, overall: 0
-  };
+function _renderStatsTable() {
+  const tableEl = document.getElementById('admitted-stats-table');
+  if (!tableEl) return;
 
-  tbody.innerHTML = ADMITTED_COURSES.map((c, i) => {
-    const manual = savedData[c.id] || { cet_fill: 0, cet_snq: 0, comed_fill: 0, aicte: 0 };
-    
-    const mgt_fill = mgtCounts[c.branch] || 0;
-    const cet_fill_val = parseInt(manual.cet_fill) || 0;
-    const cet_snq_val = parseInt(manual.cet_snq) || 0;
-    const comed_fill_val = parseInt(manual.comed_fill) || 0;
-    const aicte_val = parseInt(manual.aicte) || 0;
+  const { groups, columns, rows } = _statsConfig;
 
-    const cet_tot = cet_fill_val + cet_snq_val;
-    const act_int = c.cet_int + c.comed_int + c.mgt_int;
-    const act_fill = cet_fill_val + comed_fill_val + mgt_fill;
-    const act_vac = act_int - act_fill;
-    const tot_snq = act_fill + cet_snq_val;
-    const overall = tot_snq + aicte_val;
-    const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
+  // ── Build thead ──
+  // Row 1: group headers + ungrouped column headers (with rowspan=2)
+  // Row 2: sub-headers for grouped columns
+  const groupedCols = {};
+  const ungroupedCols = [];
+  columns.forEach(col => {
+    if (col.group) {
+      if (!groupedCols[col.group]) groupedCols[col.group] = [];
+      groupedCols[col.group].push(col);
+    } else {
+      ungroupedCols.push(col);
+    }
+  });
 
-    // Update totals
-    totals.cet_int += c.cet_int;
-    totals.cet_fill += cet_fill_val;
-    totals.cet_snq += cet_snq_val;
-    totals.cet_tot += cet_tot;
-    totals.comed_int += c.comed_int;
-    totals.comed_fill += comed_fill_val;
-    totals.mgt_int += c.mgt_int;
-    totals.mgt_fill += mgt_fill;
-    totals.act_int += act_int;
-    totals.act_fill += act_fill;
-    totals.act_vac += act_vac;
-    totals.tot_snq += tot_snq;
-    totals.aicte += aicte_val;
-    totals.overall += overall;
+  // Build ordered list: groups in order, then ungrouped at their positions
+  let headerRow1 = '<th rowspan="2" style="width:40px;">Sl.No</th><th rowspan="2">Courses</th>';
+  let headerRow2 = '';
 
-    return `
-      <tr data-id="${c.id}">
-        <td>${i + 1}</td>
-        <td class="course-name">${c.name}</td>
-        <td class="auto-cell">${c.cet_int}</td>
-        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_fill" value="${cet_fill_val}"></td>
-        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_snq" value="${cet_snq_val}"></td>
-        <td class="auto-cell" data-calc="cet_tot">${cet_tot}</td>
-        <td class="auto-cell">${c.comed_int}</td>
-        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="comed_fill" value="${comed_fill_val}"></td>
-        <td class="auto-cell">${c.mgt_int}</td>
-        <td class="auto-cell" data-calc="mgt_fill">${mgt_fill}</td>
-        <td class="auto-cell" data-calc="act_int">${act_int}</td>
-        <td class="auto-cell" data-calc="act_fill">${act_fill}</td>
-        <td class="auto-cell" data-calc="act_vac">${act_vac}</td>
-        <td class="auto-cell" data-calc="tot_snq">${tot_snq}</td>
-        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="aicte" value="${aicte_val}"></td>
-        <td class="auto-cell" data-calc="overall">${overall}</td>
-        <td class="auto-cell" data-calc="actual_pct">${actual_pct}%</td>
-      </tr>
-    `;
+  // We need to maintain original column order. Walk through columns and output group header only once per group.
+  const groupsSeen = new Set();
+  let i = 0;
+  while (i < columns.length) {
+    const col = columns[i];
+    if (col.group) {
+      if (!groupsSeen.has(col.group)) {
+        groupsSeen.add(col.group);
+        const grp = groups.find(g => g.id === col.group);
+        const grpCols = columns.filter(c => c.group === col.group);
+        const grpLabel = grp ? grp.label : col.group;
+        const grpStyle = grp ? grp.headerStyle : '';
+        const subStyle = grp ? grp.subHeaderStyle : '';
+        headerRow1 += `<th colspan="${grpCols.length}" style="${grpStyle}">${grpLabel}</th>`;
+        grpCols.forEach(gc => {
+          headerRow2 += `<th style="${subStyle}" data-col-id="${gc.id}">${gc.label}</th>`;
+        });
+      }
+    } else {
+      const style = col.headerStyle || '';
+      headerRow1 += `<th rowspan="2" style="${style}" data-col-id="${col.id}">${col.label}</th>`;
+    }
+    i++;
+  }
+
+  // Add action column header for delete row button
+  headerRow1 += '<th rowspan="2" style="width:36px;background:#f1f5f9;"></th>';
+
+  let thead = tableEl.querySelector('thead');
+  if (!thead) { thead = document.createElement('thead'); tableEl.prepend(thead); }
+  thead.innerHTML = `<tr>${headerRow1}</tr><tr>${headerRow2}</tr>`;
+
+  // ── Build tbody ──
+  const tbody = document.getElementById('admitted-stats-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map((row, idx) => {
+    const computed = computeRowValues(row, columns);
+
+    let cells = `<td>${idx + 1}</td>`;
+    // Editable course name cell
+    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" oninput="_onStatsNameChange(this)"></td>`;
+
+    columns.forEach(col => {
+      if (col.type === 'editable') {
+        const val = parseFloat(row.values[col.id]) || 0;
+        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" value="${val}" oninput="_onStatsCellChange(this)"></td>`;
+      } else {
+        // Formula / auto cell
+        let displayVal = computed[col.id];
+        if (col.isPercent) displayVal = displayVal + '%';
+        cells += `<td class="auto-cell" data-row-id="${row.id}" data-calc="${col.id}">${displayVal}</td>`;
+      }
+    });
+
+    // Delete button
+    cells += `<td style="padding:2px;text-align:center;"><button onclick="_deleteStatsRow('${row.id}')" title="Remove row" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:18px;line-height:1;padding:2px 6px;border-radius:4px;transition:background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">&times;</button></td>`;
+
+    return `<tr data-id="${row.id}">${cells}</tr>`;
   }).join('');
 
-  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
-  tfoot.innerHTML = `
-    <tr>
-      <td colspan="2">TOTAL</td>
-      <td>${totals.cet_int}</td>
-      <td id="tot-cet-fill">${totals.cet_fill}</td>
-      <td id="tot-cet-snq">${totals.cet_snq}</td>
-      <td id="tot-cet-tot">${totals.cet_tot}</td>
-      <td>${totals.comed_int}</td>
-      <td id="tot-comed-fill">${totals.comed_fill}</td>
-      <td>${totals.mgt_int}</td>
-      <td id="tot-mgt-fill">${totals.mgt_fill}</td>
-      <td id="tot-act-int">${totals.act_int}</td>
-      <td id="tot-act-fill">${totals.act_fill}</td>
-      <td id="tot-act-vac">${totals.act_vac}</td>
-      <td id="tot-tot-snq">${totals.tot_snq}</td>
-      <td id="tot-aicte">${totals.aicte}</td>
-      <td id="tot-overall">${totals.overall}</td>
-      <td id="tot-actual-pct">${final_pct}%</td>
-    </tr>
-  `;
+  // ── Build tfoot ──
+  _recalcStatsTotals();
 }
 
-function updateStatsRow(el) {
-  const row = el.closest('tr');
-  const courseId = row.dataset.id;
-  const config = ADMITTED_COURSES.find(c => c.id === courseId);
-  
-  const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`).value) || 0;
-  
-  const cet_fill = getVal('cet_fill');
-  const cet_snq = getVal('cet_snq');
-  const comed_fill = getVal('comed_fill');
-  const aicte = getVal('aicte');
-  const mgt_fill = parseInt(row.querySelector('[data-calc="mgt_fill"]').textContent) || 0;
-  
-  const cet_tot = cet_fill + cet_snq;
-  const act_int = config.cet_int + config.comed_int + config.mgt_int;
-  const act_fill = cet_fill + comed_fill + mgt_fill;
-  const act_vac = act_int - act_fill;
-  const tot_snq = act_fill + cet_snq;
-  const overall = tot_snq + aicte;
-  const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
-
-  row.querySelector('[data-calc="cet_tot"]').textContent = cet_tot;
-  row.querySelector('[data-calc="act_fill"]').textContent = act_fill;
-  row.querySelector('[data-calc="act_vac"]').textContent = act_vac;
-  row.querySelector('[data-calc="tot_snq"]').textContent = tot_snq;
-  row.querySelector('[data-calc="overall"]').textContent = overall;
-  row.querySelector('[data-calc="actual_pct"]').textContent = actual_pct + '%';
-  
-  updateStatsTotals();
+function _escHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
 }
 
-function updateStatsTotals() {
-  let totals = {
-    cet_fill: 0, cet_snq: 0, cet_tot: 0,
-    comed_fill: 0, mgt_fill: 0,
-    act_int: 0, act_fill: 0, act_vac: 0,
-    tot_snq: 0, aicte: 0, overall: 0
-  };
+function _onStatsNameChange(el) {
+  const rowId = el.dataset.rowId;
+  const row = _statsConfig.rows.find(r => r.id === rowId);
+  if (row) row.name = el.value;
+}
 
-  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.value || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
-    
-    totals.cet_fill += getVal('cet_fill');
-    totals.cet_snq += getVal('cet_snq');
-    totals.cet_tot += getVal('cet_tot');
-    totals.comed_fill += getVal('comed_fill');
-    totals.mgt_fill += getVal('mgt_fill');
-    totals.act_int += getVal('act_int');
-    totals.act_fill += getVal('act_fill');
-    totals.act_vac += getVal('act_vac');
-    totals.tot_snq += getVal('tot_snq');
-    totals.aicte += getVal('aicte');
-    totals.overall += getVal('overall');
+function _onStatsCellChange(el) {
+  const rowId = el.dataset.rowId;
+  const field = el.dataset.field;
+  const row = _statsConfig.rows.find(r => r.id === rowId);
+  if (!row) return;
+
+  row.values[field] = parseFloat(el.value) || 0;
+
+  // Recalculate formula cells in this row
+  const computed = computeRowValues(row, _statsConfig.columns);
+  const tr = el.closest('tr');
+  _statsConfig.columns.forEach(col => {
+    if (col.type === 'formula') {
+      const cell = tr.querySelector(`[data-calc="${col.id}"]`);
+      if (cell) {
+        let v = computed[col.id];
+        if (col.isPercent) v = v + '%';
+        cell.textContent = v;
+      }
+    }
   });
 
-  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
+  // Update row values with computed results
+  Object.assign(row.values, computed);
 
-  document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
-  document.getElementById('tot-cet-snq').textContent = totals.cet_snq;
-  document.getElementById('tot-cet-tot').textContent = totals.cet_tot;
-  document.getElementById('tot-comed-fill').textContent = totals.comed_fill;
-  document.getElementById('tot-mgt-fill').textContent = totals.mgt_fill;
-  document.getElementById('tot-act-int').textContent = totals.act_int;
-  document.getElementById('tot-act-fill').textContent = totals.act_fill;
-  document.getElementById('tot-act-vac').textContent = totals.act_vac;
-  document.getElementById('tot-tot-snq').textContent = totals.tot_snq;
-  document.getElementById('tot-aicte').textContent = totals.aicte;
-  document.getElementById('tot-overall').textContent = totals.overall;
-  document.getElementById('tot-actual-pct').textContent = final_pct + '%';
+  _recalcStatsTotals();
 }
 
+function _recalcStatsTotals() {
+  const { columns, rows } = _statsConfig;
+  const tfoot = document.getElementById('admitted-stats-footer');
+  if (!tfoot) return;
+
+  // Sum all numeric columns
+  const totals = {};
+  columns.forEach(col => { totals[col.id] = 0; });
+
+  rows.forEach(row => {
+    const computed = computeRowValues(row, columns);
+    columns.forEach(col => {
+      totals[col.id] += parseFloat(computed[col.id]) || 0;
+    });
+  });
+
+  // Recompute formula totals from summed editable totals
+  // For percentage, recalculate from totals rather than summing row percentages
+  const pctCol = columns.find(c => c.isPercent);
+  if (pctCol) {
+    totals[pctCol.id] = __pct__(totals['act_fill'] || 0, totals['act_int'] || 0);
+  }
+
+  let footerCells = '<td colspan="2" style="font-weight:800;">TOTAL</td>';
+  columns.forEach(col => {
+    let v = col.isPercent ? totals[col.id] : Math.round(totals[col.id]);
+    if (col.isPercent) v = v + '%';
+    footerCells += `<td id="tot-${col.id.replace(/_/g,'-')}" style="font-weight:700;">${v}</td>`;
+  });
+  footerCells += '<td></td>'; // empty for delete column
+
+  tfoot.innerHTML = `<tr class="total-row">${footerCells}</tr>`;
+}
+
+// ── Add Row ────────────────────────────────────────────
+function addStatsRow() {
+  const modal = document.getElementById('add-row-modal');
+  if (modal) {
+    document.getElementById('new-row-name').value = '';
+    document.getElementById('new-row-branch').value = '';
+    modal.style.display = 'flex';
+    document.getElementById('new-row-name').focus();
+  }
+}
+
+function confirmAddRow() {
+  const name = document.getElementById('new-row-name').value.trim();
+  if (!name) { alert('Please enter a course name'); return; }
+
+  const id = name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase() + '_' + Date.now().toString(36);
+  const branch = document.getElementById('new-row-branch').value.trim();
+
+  const newRow = { id, name, branch, values: {} };
+  // Initialize all editable columns with 0
+  _statsConfig.columns.forEach(col => {
+    if (col.type === 'editable') newRow.values[col.id] = 0;
+  });
+
+  _statsConfig.rows.push(newRow);
+  _renderStatsTable();
+  closeStatsModal();
+  showToast(`Row "${name}" added. Click Save to persist.`);
+}
+
+function _deleteStatsRow(rowId) {
+  const row = _statsConfig.rows.find(r => r.id === rowId);
+  if (!row) return;
+  if (!confirm(`Delete row "${row.name}"? This won't be permanent until you click Save.`)) return;
+  _statsConfig.rows = _statsConfig.rows.filter(r => r.id !== rowId);
+  _renderStatsTable();
+  showToast(`Row "${row.name}" removed. Click Save to persist.`);
+}
+
+// ── Add Column ─────────────────────────────────────────
+function addStatsColumn() {
+  const modal = document.getElementById('add-col-modal');
+  if (modal) {
+    document.getElementById('new-col-name').value = '';
+    document.getElementById('new-col-type').value = 'editable';
+    document.getElementById('new-col-formula').value = '';
+    _toggleColFormulaField();
+    // Populate group dropdown
+    const grpSel = document.getElementById('new-col-group');
+    grpSel.innerHTML = '<option value="">(No group – standalone)</option>';
+    _statsConfig.groups.forEach(g => {
+      grpSel.innerHTML += `<option value="${g.id}">${g.label}</option>`;
+    });
+    grpSel.innerHTML += '<option value="__new__">+ Create new group…</option>';
+    modal.style.display = 'flex';
+    document.getElementById('new-col-name').focus();
+  }
+}
+
+function _toggleColFormulaField() {
+  const type = document.getElementById('new-col-type').value;
+  const wrap = document.getElementById('col-formula-wrap');
+  if (wrap) wrap.style.display = type === 'formula' ? 'block' : 'none';
+}
+
+function confirmAddColumn() {
+  const label = document.getElementById('new-col-name').value.trim();
+  if (!label) { alert('Please enter a column name'); return; }
+
+  const type = document.getElementById('new-col-type').value;
+  const formula = type === 'formula' ? document.getElementById('new-col-formula').value.trim() : null;
+  const groupVal = document.getElementById('new-col-group').value;
+
+  if (type === 'formula' && !formula) { alert('Please enter a formula for the calculated column'); return; }
+
+  let group = groupVal || null;
+  // Handle new group creation
+  if (groupVal === '__new__') {
+    const newGrpName = prompt('Enter new group name:');
+    if (!newGrpName) return;
+    const grpId = newGrpName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    _statsConfig.groups.push({
+      id: grpId,
+      label: newGrpName,
+      headerStyle: 'background: #e8e8e8; color: #333;',
+      subHeaderStyle: 'background: #f5f5f5;'
+    });
+    group = grpId;
+  }
+
+  const colId = label.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '_' + Date.now().toString(36);
+  const newCol = { id: colId, label, group, type };
+  if (formula) newCol.formula = formula;
+  if (!group) newCol.headerStyle = 'background: #f1f5f9; color: #334155;';
+
+  // Insert column: if grouped, add after last column in that group; else append
+  if (group) {
+    const lastIdx = _statsConfig.columns.map((c, i) => c.group === group ? i : -1).filter(i => i >= 0);
+    const insertAt = lastIdx.length > 0 ? lastIdx[lastIdx.length - 1] + 1 : _statsConfig.columns.length;
+    _statsConfig.columns.splice(insertAt, 0, newCol);
+  } else {
+    _statsConfig.columns.push(newCol);
+  }
+
+  // Initialize editable column values in all rows
+  if (type === 'editable') {
+    _statsConfig.rows.forEach(row => { row.values[colId] = 0; });
+  }
+
+  _renderStatsTable();
+  closeStatsModal();
+  showToast(`Column "${label}" added. Click Save to persist.`);
+}
+
+// ── Remove Column ──────────────────────────────────────
+function removeStatsColumn(colId) {
+  const col = _statsConfig.columns.find(c => c.id === colId);
+  if (!col) return;
+  if (!confirm(`Remove column "${col.label}"? This won't be permanent until you click Save.`)) return;
+  _statsConfig.columns = _statsConfig.columns.filter(c => c.id !== colId);
+  // Clean up row values
+  _statsConfig.rows.forEach(row => { delete row.values[colId]; });
+  _renderStatsTable();
+  showToast(`Column "${col.label}" removed. Click Save to persist.`);
+}
+
+function closeStatsModal() {
+  const addRow = document.getElementById('add-row-modal');
+  const addCol = document.getElementById('add-col-modal');
+  if (addRow) addRow.style.display = 'none';
+  if (addCol) addCol.style.display = 'none';
+}
+
+// ── Save (new dynamic config API + legacy fallback) ────
 async function saveAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  const data = {};
-  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const id = row.dataset.id;
-    data[id] = {
-      cet_fill: parseInt(row.querySelector('[data-field="cet_fill"]').value) || 0,
-      cet_snq: parseInt(row.querySelector('[data-field="cet_snq"]').value) || 0,
-      comed_fill: parseInt(row.querySelector('[data-field="comed_fill"]').value) || 0,
-      aicte: parseInt(row.querySelector('[data-field="aicte"]').value) || 0
-    };
-  });
-  
+  const configPayload = {
+    groups: _statsConfig.groups,
+    columns: _statsConfig.columns,
+    rows: _statsConfig.rows,
+  };
+
   try {
-    await apiFetch('/api/admin/stats/manual', {
+    await apiFetch('/api/admin/stats/config', {
       method: 'POST',
-      body: JSON.stringify({ year: selectedYear, data })
+      body: JSON.stringify({ year: selectedYear, config: configPayload })
     });
+
+    // Also save legacy manual stats for backward compatibility
+    const legacyData = {};
+    _statsConfig.rows.forEach(row => {
+      legacyData[row.id] = {
+        cet_fill: parseInt(row.values.cet_fill) || 0,
+        cet_snq: parseInt(row.values.cet_snq) || 0,
+        comed_fill: parseInt(row.values.comed_fill) || 0,
+        aicte: parseInt(row.values.aicte) || 0,
+      };
+    });
+    try {
+      await apiFetch('/api/admin/stats/manual', {
+        method: 'POST',
+        body: JSON.stringify({ year: selectedYear, data: legacyData })
+      });
+    } catch (e) { /* legacy save is best-effort */ }
+
     showToast(`Statistics for ${selectedYear} saved successfully`);
   } catch (e) {
-    console.error('Failed to save manual stats', e);
+    console.error('Failed to save stats config', e);
     alert('Failed to save statistics');
   }
 }

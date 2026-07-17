@@ -783,6 +783,15 @@ app.get('/api/enquiry/:id', async (req, res) => {
       );
     `);
 
+    // Create table for Dynamic Admitted Stats Config (columns + rows + values per year)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admitted_stats_config (
+        id SERIAL PRIMARY KEY,
+        academic_year VARCHAR(20) NOT NULL UNIQUE,
+        config JSONB NOT NULL DEFAULT '{}'
+      );
+    `);
+
     // raw_enquiries table created in main initDB()
 
     // Also ensure enquiries has sequence_number + structured address columns
@@ -1243,6 +1252,40 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     await pool.query('ROLLBACK');
     console.error('Stats update error:', err);
     res.status(500).json({ error: err.message }); 
+  }
+});
+
+// ══════════ DYNAMIC ADMITTED STATS CONFIG ══════════
+app.get('/api/admin/stats/config', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year;
+    if (!year) return res.json(null);
+    const { rows } = await pool.query('SELECT config FROM admitted_stats_config WHERE academic_year = $1', [year]);
+    res.json(rows.length > 0 ? rows[0].config : null);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/admin/stats/config', adminAuth, async (req, res) => {
+  try {
+    const { year, config } = req.body;
+    if (!year || !config) return res.status(400).json({ error: 'Missing year or config' });
+    
+    await pool.query(`
+      INSERT INTO admitted_stats_config (academic_year, config)
+      VALUES ($1, $2)
+      ON CONFLICT (academic_year) DO UPDATE SET config = EXCLUDED.config
+    `, [year, JSON.stringify(config)]);
+    
+    // Log activity
+    await pool.query(`
+      INSERT INTO admin_activity_log (admin_name, action, target_type, target_name, details)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [req.userName, 'update', 'admitted_stats_config', `Session ${year}`, 'Updated dynamic admitted stats table configuration']);
+    
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Stats config update error:', err);
+    res.status(500).json({ error: err.message });
   }
 });
 
