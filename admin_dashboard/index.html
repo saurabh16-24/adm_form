@@ -185,17 +185,10 @@
               <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Admitted Students Statistics</h3>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-              <button class="btn" onclick="addStatsRow()" style="background: #f0fdf4; border: 1px solid #86efac; color: #166534; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; border-radius: 8px;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
-                <span class="material-icons-round" style="font-size: 16px;">add_circle</span> Add Row
-              </button>
-              <button class="btn" onclick="addStatsColumn()" style="background: #eef2ff; border: 1px solid #a5b4fc; color: #3730a3; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; border-radius: 8px;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
-                <span class="material-icons-round" style="font-size: 16px;">view_column</span> Add Column
-              </button>
-              <div style="width:1px;height:24px;background:#e2e8f0;"></div>
               <button class="btn" onclick="renderAdmittedStats()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600;">
                 <span class="material-icons-round" style="font-size: 16px;">refresh</span> Refresh
               </button>
-              <button class="btn btn-primary" onclick="saveAdmittedStats()" style="padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; background: #1e40af;">
+              <button class="btn btn-primary" id="save-stats-btn" onclick="saveAdmittedStats()" style="padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; background: #1e40af;">
                 <span class="material-icons-round" style="font-size: 16px;">save</span> Save Changes
               </button>
               <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
@@ -246,51 +239,11 @@
           </div>
           <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
             <span class="material-icons-round" style="font-size: 14px;">info</span>
-            <span>All fields are editable. Formula columns (Total, Actual Admissions, %, etc.) auto-calculate. Use "Add Row" / "Add Column" to extend the table. Click "Save Changes" to persist.</span>
+            <span>All fields are editable. Formula columns (Total, Actual Admissions, %, etc.) auto-calculate. Click "Save Changes" to persist.</span>
           </div>
         </div>
 
-        <!-- Add Row Modal -->
-        <div id="add-row-modal" class="stats-modal-overlay" onclick="if(event.target===this)closeStatsModal()">
-          <div class="stats-modal">
-            <h4><span class="material-icons-round" style="color:#10b981;font-size:22px;">add_circle</span> Add New Course Row</h4>
-            <label for="new-row-name">Course Name *</label>
-            <input type="text" id="new-row-name" placeholder="e.g. AI&ML" onkeydown="if(event.key==='Enter')confirmAddRow()">
-            <label for="new-row-branch">Branch (for auto-fetch management data)</label>
-            <input type="text" id="new-row-branch" placeholder="e.g. BE Artificial Intelligence and Machine Learning">
-            <div class="modal-actions">
-              <button onclick="closeStatsModal()" style="background: #f1f5f9; color: #64748b;">Cancel</button>
-              <button onclick="confirmAddRow()" style="background: #1e40af; color: white;">Add Row</button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Add Column Modal -->
-        <div id="add-col-modal" class="stats-modal-overlay" onclick="if(event.target===this)closeStatsModal()">
-          <div class="stats-modal">
-            <h4><span class="material-icons-round" style="color:#6366f1;font-size:22px;">view_column</span> Add New Column</h4>
-            <label for="new-col-name">Column Name *</label>
-            <input type="text" id="new-col-name" placeholder="e.g. Lateral Entry" onkeydown="if(event.key==='Enter')confirmAddColumn()">
-            <label for="new-col-group">Column Group</label>
-            <select id="new-col-group">
-              <option value="">(No group – standalone)</option>
-            </select>
-            <label for="new-col-type">Column Type</label>
-            <select id="new-col-type" onchange="_toggleColFormulaField()">
-              <option value="editable">Editable (manual entry)</option>
-              <option value="formula">Calculated (formula)</option>
-            </select>
-            <div id="col-formula-wrap" style="display:none;">
-              <label for="new-col-formula">Formula</label>
-              <input type="text" id="new-col-formula" placeholder="e.g. cet_int + comed_int">
-              <div style="font-size:0.7rem;color:#94a3b8;margin-top:4px;">Use column IDs: cet_int, cet_fill, cet_snq, comed_int, comed_fill, mgt_int, mgt_fill, aicte, etc.</div>
-            </div>
-            <div class="modal-actions">
-              <button onclick="closeStatsModal()" style="background: #f1f5f9; color: #64748b;">Cancel</button>
-              <button onclick="confirmAddColumn()" style="background: #1e40af; color: white;">Add Column</button>
-            </div>
-          </div>
-        </div>
 
         <!-- Charts Section -->
         <div class="card" style="margin-bottom: 24px; padding: 16px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">

@@ -827,6 +827,7 @@ function _renderStatsTable() {
   const tableEl = document.getElementById('admitted-stats-table');
   if (!tableEl) return;
 
+  const isAdmin = sessionStorage.getItem('admin_role') === 'admin';
   const { groups, columns, rows } = _statsConfig;
 
   // ── Build thead ──
@@ -872,9 +873,6 @@ function _renderStatsTable() {
     i++;
   }
 
-  // Add action column header for delete row button
-  headerRow1 += '<th rowspan="2" style="width:36px;background:#f1f5f9;"></th>';
-
   let thead = tableEl.querySelector('thead');
   if (!thead) { thead = document.createElement('thead'); tableEl.prepend(thead); }
   thead.innerHTML = `<tr>${headerRow1}</tr><tr>${headerRow2}</tr>`;
@@ -888,12 +886,12 @@ function _renderStatsTable() {
 
     let cells = `<td>${idx + 1}</td>`;
     // Editable course name cell
-    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" oninput="_onStatsNameChange(this)"></td>`;
+    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" oninput="_onStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
 
     columns.forEach(col => {
       if (col.type === 'editable') {
         const val = parseFloat(row.values[col.id]) || 0;
-        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" value="${val}" oninput="_onStatsCellChange(this)"></td>`;
+        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" value="${val}" oninput="_onStatsCellChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
       } else {
         // Formula / auto cell
         let displayVal = computed[col.id];
@@ -902,14 +900,15 @@ function _renderStatsTable() {
       }
     });
 
-    // Delete button
-    cells += `<td style="padding:2px;text-align:center;"><button onclick="_deleteStatsRow('${row.id}')" title="Remove row" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:18px;line-height:1;padding:2px 6px;border-radius:4px;transition:background 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">&times;</button></td>`;
-
     return `<tr data-id="${row.id}">${cells}</tr>`;
   }).join('');
 
   // ── Build tfoot ──
   _recalcStatsTotals();
+
+  // Hide Save button if not admin
+  const saveBtn = document.getElementById('save-stats-btn');
+  if (saveBtn) saveBtn.style.display = isAdmin ? 'flex' : 'none';
 }
 
 function _escHtml(str) {
@@ -981,142 +980,8 @@ function _recalcStatsTotals() {
     if (col.isPercent) v = v + '%';
     footerCells += `<td id="tot-${col.id.replace(/_/g,'-')}" style="font-weight:700;">${v}</td>`;
   });
-  footerCells += '<td></td>'; // empty for delete column
 
   tfoot.innerHTML = `<tr class="total-row">${footerCells}</tr>`;
-}
-
-// ── Add Row ────────────────────────────────────────────
-function addStatsRow() {
-  const modal = document.getElementById('add-row-modal');
-  if (modal) {
-    document.getElementById('new-row-name').value = '';
-    document.getElementById('new-row-branch').value = '';
-    modal.style.display = 'flex';
-    document.getElementById('new-row-name').focus();
-  }
-}
-
-function confirmAddRow() {
-  const name = document.getElementById('new-row-name').value.trim();
-  if (!name) { alert('Please enter a course name'); return; }
-
-  const id = name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase() + '_' + Date.now().toString(36);
-  const branch = document.getElementById('new-row-branch').value.trim();
-
-  const newRow = { id, name, branch, values: {} };
-  // Initialize all editable columns with 0
-  _statsConfig.columns.forEach(col => {
-    if (col.type === 'editable') newRow.values[col.id] = 0;
-  });
-
-  _statsConfig.rows.push(newRow);
-  _renderStatsTable();
-  closeStatsModal();
-  showToast(`Row "${name}" added. Click Save to persist.`);
-}
-
-function _deleteStatsRow(rowId) {
-  const row = _statsConfig.rows.find(r => r.id === rowId);
-  if (!row) return;
-  if (!confirm(`Delete row "${row.name}"? This won't be permanent until you click Save.`)) return;
-  _statsConfig.rows = _statsConfig.rows.filter(r => r.id !== rowId);
-  _renderStatsTable();
-  showToast(`Row "${row.name}" removed. Click Save to persist.`);
-}
-
-// ── Add Column ─────────────────────────────────────────
-function addStatsColumn() {
-  const modal = document.getElementById('add-col-modal');
-  if (modal) {
-    document.getElementById('new-col-name').value = '';
-    document.getElementById('new-col-type').value = 'editable';
-    document.getElementById('new-col-formula').value = '';
-    _toggleColFormulaField();
-    // Populate group dropdown
-    const grpSel = document.getElementById('new-col-group');
-    grpSel.innerHTML = '<option value="">(No group – standalone)</option>';
-    _statsConfig.groups.forEach(g => {
-      grpSel.innerHTML += `<option value="${g.id}">${g.label}</option>`;
-    });
-    grpSel.innerHTML += '<option value="__new__">+ Create new group…</option>';
-    modal.style.display = 'flex';
-    document.getElementById('new-col-name').focus();
-  }
-}
-
-function _toggleColFormulaField() {
-  const type = document.getElementById('new-col-type').value;
-  const wrap = document.getElementById('col-formula-wrap');
-  if (wrap) wrap.style.display = type === 'formula' ? 'block' : 'none';
-}
-
-function confirmAddColumn() {
-  const label = document.getElementById('new-col-name').value.trim();
-  if (!label) { alert('Please enter a column name'); return; }
-
-  const type = document.getElementById('new-col-type').value;
-  const formula = type === 'formula' ? document.getElementById('new-col-formula').value.trim() : null;
-  const groupVal = document.getElementById('new-col-group').value;
-
-  if (type === 'formula' && !formula) { alert('Please enter a formula for the calculated column'); return; }
-
-  let group = groupVal || null;
-  // Handle new group creation
-  if (groupVal === '__new__') {
-    const newGrpName = prompt('Enter new group name:');
-    if (!newGrpName) return;
-    const grpId = newGrpName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    _statsConfig.groups.push({
-      id: grpId,
-      label: newGrpName,
-      headerStyle: 'background: #e8e8e8; color: #333;',
-      subHeaderStyle: 'background: #f5f5f5;'
-    });
-    group = grpId;
-  }
-
-  const colId = label.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() + '_' + Date.now().toString(36);
-  const newCol = { id: colId, label, group, type };
-  if (formula) newCol.formula = formula;
-  if (!group) newCol.headerStyle = 'background: #f1f5f9; color: #334155;';
-
-  // Insert column: if grouped, add after last column in that group; else append
-  if (group) {
-    const lastIdx = _statsConfig.columns.map((c, i) => c.group === group ? i : -1).filter(i => i >= 0);
-    const insertAt = lastIdx.length > 0 ? lastIdx[lastIdx.length - 1] + 1 : _statsConfig.columns.length;
-    _statsConfig.columns.splice(insertAt, 0, newCol);
-  } else {
-    _statsConfig.columns.push(newCol);
-  }
-
-  // Initialize editable column values in all rows
-  if (type === 'editable') {
-    _statsConfig.rows.forEach(row => { row.values[colId] = 0; });
-  }
-
-  _renderStatsTable();
-  closeStatsModal();
-  showToast(`Column "${label}" added. Click Save to persist.`);
-}
-
-// ── Remove Column ──────────────────────────────────────
-function removeStatsColumn(colId) {
-  const col = _statsConfig.columns.find(c => c.id === colId);
-  if (!col) return;
-  if (!confirm(`Remove column "${col.label}"? This won't be permanent until you click Save.`)) return;
-  _statsConfig.columns = _statsConfig.columns.filter(c => c.id !== colId);
-  // Clean up row values
-  _statsConfig.rows.forEach(row => { delete row.values[colId]; });
-  _renderStatsTable();
-  showToast(`Column "${col.label}" removed. Click Save to persist.`);
-}
-
-function closeStatsModal() {
-  const addRow = document.getElementById('add-row-modal');
-  const addCol = document.getElementById('add-col-modal');
-  if (addRow) addRow.style.display = 'none';
-  if (addCol) addCol.style.display = 'none';
 }
 
 // ── Save (new dynamic config API + legacy fallback) ────
