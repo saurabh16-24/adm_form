@@ -775,9 +775,12 @@ app.get('/api/enquiry/:id', async (req, res) => {
         id SERIAL PRIMARY KEY,
         academic_year VARCHAR(20) NOT NULL,
         course_id VARCHAR(50) NOT NULL,
+        cet_int INTEGER DEFAULT 0,
         cet_fill INTEGER DEFAULT 0,
         cet_snq INTEGER DEFAULT 0,
+        comed_int INTEGER DEFAULT 0,
         comed_fill INTEGER DEFAULT 0,
+        mgt_int INTEGER DEFAULT 0,
         aicte INTEGER DEFAULT 0,
         UNIQUE(academic_year, course_id)
       );
@@ -813,6 +816,14 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS other_12 NUMERIC(5,2)"
     ];
     for (const sql of enquiryAlterCols) await pool.query(sql);
+
+    // Add missing columns to course_manual_stats if they don't exist
+    const statsAlterCols = [
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS cet_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS comed_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS mgt_int INTEGER DEFAULT 0"
+    ];
+    for (const sql of statsAlterCols) await pool.query(sql);
 
     console.log('Admissions table ready.');
   } catch (err) {
@@ -1207,10 +1218,20 @@ app.get('/api/admin/stats/manual', adminAuth, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM course_manual_stats WHERE academic_year = $1', [year]);
     const data = {};
     rows.forEach(r => {
-      data[r.course_id] = { cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_fill: r.comed_fill, aicte: r.aicte };
+      data[r.course_id] = { 
+        cet_int: r.cet_int, 
+        cet_fill: r.cet_fill, 
+        cet_snq: r.cet_snq, 
+        comed_int: r.comed_int,
+        comed_fill: r.comed_fill, 
+        mgt_int: r.mgt_int,
+        aicte: r.aicte 
+      };
     });
     res.json(data);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
@@ -1218,17 +1239,24 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     const { year, data } = req.body;
     if (!year || !data) return res.status(400).json({ error: 'Missing year or data' });
     
+    console.log('Saving stats for year:', year);
+    console.log('Data to save:', data);
+    
     await pool.query('BEGIN');
     for (const [course_id, stats] of Object.entries(data)) {
+      console.log(`Saving ${course_id}:`, stats);
       await pool.query(`
-        INSERT INTO course_manual_stats (academic_year, course_id, cet_fill, cet_snq, comed_fill, aicte)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO course_manual_stats (academic_year, course_id, cet_int, cet_fill, cet_snq, comed_int, comed_fill, mgt_int, aicte)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (academic_year, course_id) DO UPDATE SET
+          cet_int = EXCLUDED.cet_int,
           cet_fill = EXCLUDED.cet_fill,
           cet_snq = EXCLUDED.cet_snq,
+          comed_int = EXCLUDED.comed_int,
           comed_fill = EXCLUDED.comed_fill,
+          mgt_int = EXCLUDED.mgt_int,
           aicte = EXCLUDED.aicte
-      `, [year, course_id, stats.cet_fill, stats.cet_snq, stats.comed_fill, stats.aicte]);
+      `, [year, course_id, stats.cet_int, stats.cet_fill, stats.cet_snq, stats.comed_int, stats.comed_fill, stats.mgt_int, stats.aicte]);
     }
     
     // Log activity
@@ -1238,6 +1266,7 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     `, [req.userName, 'update', 'admitted_stats', `Session ${year}`, 'Updated manual admission counts in statistics table']);
     
     await pool.query('COMMIT');
+    console.log('Stats saved successfully');
     res.json({ success: true });
   } catch (err) { 
     await pool.query('ROLLBACK');
