@@ -615,7 +615,6 @@ async function loadOverview() {
     if (selectedCourse) url += `course=${encodeURIComponent(selectedCourse)}&`;
 
     const stats = await apiFetch(url);
-    console.log('Overview Stats:', stats);
     
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
@@ -650,7 +649,7 @@ async function loadOverview() {
     renderRecentTable('recent-admissions-body', stats.recent_admissions || [], 'admission');
     
     // Admitted Stats
-    renderAdmittedStats();
+    await renderAdmittedStats();
     
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
@@ -690,7 +689,7 @@ const DEFAULT_COLUMNS = [
   { id: 'comed_int', label: 'Intake', group: 'comedk', type: 'editable' },
   { id: 'comed_fill', label: 'Filled', group: 'comedk', type: 'editable' },
   { id: 'mgt_int', label: 'Intake', group: 'management', type: 'editable' },
-  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'editable' },
+  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'formula', formula: '__mgt_fill__(courseId)' },
   { id: 'act_int', label: 'Intake', group: 'actual', type: 'formula', formula: 'cet_int + comed_int + mgt_int' },
   { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill' },
   { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill' },
@@ -724,13 +723,37 @@ function __pct__(numerator, denominator) {
   return denominator > 0 ? ((numerator / denominator) * 100).toFixed(2) : '0.00';
 }
 
-function evalFormula(formula, rowValues) {
+// Global management filled counts (fetched from admissions table)
+let _mgtFilledCounts = {};
+
+// Fetch management admissions from the database
+async function fetchManagementAdmissions(year) {
+  console.log('[DEBUG] fetchManagementAdmissions called with year:', year);
+  try {
+    console.log('[DEBUG] Making API call to /api/admin/admissions/management?year=' + year);
+    const res = await apiFetch(`/api/admin/admissions/management?year=${year}`);
+    console.log('[DEBUG] API response:', res);
+    _mgtFilledCounts = res.counts || {};
+    console.log('[DEBUG] Set _mgtFilledCounts to:', _mgtFilledCounts);
+  } catch (e) {
+    console.error('[DEBUG] Error fetching management admissions:', e);
+    _mgtFilledCounts = {};
+  }
+}
+
+function __mgt_fill__(courseId) {
+  const result = _mgtFilledCounts[courseId] || 0;
+  console.log('__mgt_fill__(' + courseId + ') =', result, '(from', _mgtFilledCounts, ')');
+  return result;
+}
+
+function evalFormula(formula, rowValues, courseId) {
   try {
     // Build a safe evaluation context with all column values available
     const keys = Object.keys(rowValues);
     const vals = keys.map(k => parseFloat(rowValues[k]) || 0);
-    const fn = new Function('__pct__', ...keys, `return (${formula});`);
-    return fn(__pct__, ...vals);
+    const fn = new Function('__pct__', '__mgt_fill__', 'courseId', ...keys, `return (${formula});`);
+    return fn(__pct__, __mgt_fill__, courseId, ...vals);
   } catch (e) {
     console.warn('Formula eval error:', formula, e);
     return 0;
@@ -744,7 +767,7 @@ function computeRowValues(row, columns) {
   for (let pass = 0; pass < 3; pass++) {
     columns.forEach(col => {
       if (col.type === 'formula' && col.formula) {
-        values[col.id] = evalFormula(col.formula, values);
+        values[col.id] = evalFormula(col.formula, values, row.id);
       }
     });
   }
@@ -759,15 +782,8 @@ async function renderAdmittedStats() {
   const tableEl = document.getElementById('admitted-stats-table');
   if (!tableEl) return;
 
-  // Fetch management counts for auto-filling mgt_fill
-  let mgtCounts = {};
-  try {
-    const res = await apiFetch('/api/admin/management-forms');
-    let mgtData = res.rows || [];
-    const shortYear = selectedYear.split('-')[0].slice(-2) + '-' + selectedYear.split('-')[1];
-    mgtData = mgtData.filter(m => m.academic_year === selectedYear || m.academic_year === shortYear);
-    mgtData.forEach(m => { mgtCounts[m.branch] = (mgtCounts[m.branch] || 0) + 1; });
-  } catch (e) { console.error('Failed to fetch management forms for stats', e); }
+  // Fetch management admissions from admissions table
+  await fetchManagementAdmissions(selectedYear);
 
   // Try loading dynamic config from new API
   let config = null;
@@ -779,7 +795,22 @@ async function renderAdmittedStats() {
     // Loaded saved dynamic config
     _statsConfig.groups = config.groups || JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
     _statsConfig.columns = config.columns;
-    _statsConfig.rows = config.rows;
+    
+    // Ensure mgt_fill is always formula type (not editable)
+    _statsConfig.columns = _statsConfig.columns.map(col => {
+      if (col.id === 'mgt_fill') {
+        return { ...col, type: 'formula', formula: '__mgt_fill__(courseId)' };
+      }
+      return col;
+    });
+    
+    _statsConfig.rows = config.rows.map(row => ({
+      ...row,
+      values: {
+        ...row.values,
+        mgt_fill: 0  // Always recalculate from admissions table, never load from saved data
+      }
+    }));
   } else {
     // Fallback: build from defaults + old manual stats
     _statsConfig.groups = JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
@@ -791,7 +822,6 @@ async function renderAdmittedStats() {
 
     _statsConfig.rows = DEFAULT_COURSES.map(c => {
       const manual = savedData[c.id] || {};
-      const mgt_fill = mgtCounts[c.branch] || 0;
       return {
         id: c.id,
         name: c.name,
@@ -803,21 +833,17 @@ async function renderAdmittedStats() {
           comed_int: c.values.comed_int || 0,
           comed_fill: parseInt(manual.comed_fill) || 0,
           mgt_int: c.values.mgt_int || 0,
-          mgt_fill: mgt_fill,
+          mgt_fill: 0,  // Will be calculated from formula using __mgt_fill__(branch)
           aicte: parseInt(manual.aicte) || 0,
         }
       };
     });
   }
 
-  // Pre-fill mgt_fill from auto-fetch if not already overridden
+  // Pre-compute all formula columns
   _statsConfig.rows.forEach(row => {
-    if (row.branch && mgtCounts[row.branch] !== undefined) {
-      // Only auto-fill if the user hasn't manually set a value in saved config
-      if (!config || !config.rows) {
-        row.values.mgt_fill = mgtCounts[row.branch] || 0;
-      }
-    }
+    const values = computeRowValues(row, _statsConfig.columns);
+    row.values = values;
   });
 
   _renderStatsTable();
@@ -1026,20 +1052,17 @@ async function saveAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  const data = {};
-  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const id = row.dataset.id;
-    data[id] = {
-      cet_int: parseInt(row.querySelector('[data-field="cet_int"]').value) || 0,
-      cet_fill: parseInt(row.querySelector('[data-field="cet_fill"]').value) || 0,
-      cet_snq: parseInt(row.querySelector('[data-field="cet_snq"]').value) || 0,
-      comed_int: parseInt(row.querySelector('[data-field="comed_int"]').value) || 0,
-      comed_fill: parseInt(row.querySelector('[data-field="comed_fill"]').value) || 0,
-      mgt_int: parseInt(row.querySelector('[data-field="mgt_int"]').value) || 0,
-      aicte: parseInt(row.querySelector('[data-field="aicte"]').value) || 0
-    };
-  });
-  
+  const configPayload = {
+    groups: _statsConfig.groups,
+    columns: _statsConfig.columns,
+    rows: _statsConfig.rows.map(row => ({
+      ...row,
+      values: Object.fromEntries(
+        Object.entries(row.values).filter(([key]) => key !== 'mgt_fill')
+      )
+    })),
+  };
+
   try {
     const result = await apiFetch('/api/admin/stats/manual', {
       method: 'POST',
@@ -1050,9 +1073,12 @@ async function saveAdmittedStats() {
     const legacyData = {};
     _statsConfig.rows.forEach(row => {
       legacyData[row.id] = {
+        cet_int: parseInt(row.values.cet_int) || 0,
         cet_fill: parseInt(row.values.cet_fill) || 0,
         cet_snq: parseInt(row.values.cet_snq) || 0,
+        comed_int: parseInt(row.values.comed_int) || 0,
         comed_fill: parseInt(row.values.comed_fill) || 0,
+        mgt_int: parseInt(row.values.mgt_int) || 0,
         aicte: parseInt(row.values.aicte) || 0,
       };
     });
