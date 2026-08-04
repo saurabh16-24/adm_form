@@ -775,9 +775,12 @@ app.get('/api/enquiry/:id', async (req, res) => {
         id SERIAL PRIMARY KEY,
         academic_year VARCHAR(20) NOT NULL,
         course_id VARCHAR(50) NOT NULL,
+        cet_int INTEGER DEFAULT 0,
         cet_fill INTEGER DEFAULT 0,
         cet_snq INTEGER DEFAULT 0,
+        comed_int INTEGER DEFAULT 0,
         comed_fill INTEGER DEFAULT 0,
+        mgt_int INTEGER DEFAULT 0,
         aicte INTEGER DEFAULT 0,
         UNIQUE(academic_year, course_id)
       );
@@ -822,6 +825,14 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE enquiries ADD COLUMN IF NOT EXISTS other_12 NUMERIC(5,2)"
     ];
     for (const sql of enquiryAlterCols) await pool.query(sql);
+
+    // Add missing columns to course_manual_stats if they don't exist
+    const statsAlterCols = [
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS cet_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS comed_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS mgt_int INTEGER DEFAULT 0"
+    ];
+    for (const sql of statsAlterCols) await pool.query(sql);
 
     console.log('Admissions table ready.');
   } catch (err) {
@@ -1219,7 +1230,9 @@ app.get('/api/admin/stats/manual', adminAuth, async (req, res) => {
       data[r.course_id] = { cet_int: r.cet_int, cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_int: r.comed_int, comed_fill: r.comed_fill, mgt_int: r.mgt_int, aicte: r.aicte };
     });
     res.json(data);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {

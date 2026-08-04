@@ -849,132 +849,169 @@ async function renderAdmittedStats() {
   _renderStatsTable();
 }
 
-function _renderStatsTable() {
-  const tableEl = document.getElementById('admitted-stats-table');
-  if (!tableEl) return;
+  tbody.innerHTML = ADMITTED_COURSES.map((c, i) => {
+    const manual = savedData[c.id] || { cet_int: c.cet_int, cet_fill: 0, cet_snq: 0, comed_int: c.comed_int, comed_fill: 0, mgt_int: c.mgt_int, aicte: 0 };
+    
+    const mgt_fill = mgtCounts[c.branch] || 0;
+    const cet_int_val = parseInt(manual.cet_int) || c.cet_int;
+    const cet_fill_val = parseInt(manual.cet_fill) || 0;
+    const cet_snq_val = parseInt(manual.cet_snq) || 0;
+    const comed_int_val = parseInt(manual.comed_int) || c.comed_int;
+    const comed_fill_val = parseInt(manual.comed_fill) || 0;
+    const mgt_int_val = parseInt(manual.mgt_int) || c.mgt_int;
+    const aicte_val = parseInt(manual.aicte) || 0;
 
-  const isAdmin = sessionStorage.getItem('admin_role') === 'admin';
-  const { groups, columns, rows } = _statsConfig;
+    const cet_tot = cet_fill_val + cet_snq_val;
+    const act_int = cet_int_val + comed_int_val + mgt_int_val;
+    const act_fill = cet_fill_val + comed_fill_val + mgt_fill;
+    const act_vac = act_int - act_fill;
+    const tot_snq = act_fill + cet_snq_val;
+    const overall = tot_snq + aicte_val;
+    const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
 
-  // ── Build thead ──
-  // Row 1: group headers + ungrouped column headers (with rowspan=2)
-  // Row 2: sub-headers for grouped columns
-  const groupedCols = {};
-  const ungroupedCols = [];
-  columns.forEach(col => {
-    if (col.group) {
-      if (!groupedCols[col.group]) groupedCols[col.group] = [];
-      groupedCols[col.group].push(col);
-    } else {
-      ungroupedCols.push(col);
-    }
-  });
+    // Update totals
+    totals.cet_int += cet_int_val;
+    totals.cet_fill += cet_fill_val;
+    totals.cet_snq += cet_snq_val;
+    totals.cet_tot += cet_tot;
+    totals.comed_int += comed_int_val;
+    totals.comed_fill += comed_fill_val;
+    totals.mgt_int += mgt_int_val;
+    totals.mgt_fill += mgt_fill;
+    totals.act_int += act_int;
+    totals.act_fill += act_fill;
+    totals.act_vac += act_vac;
+    totals.tot_snq += tot_snq;
+    totals.aicte += aicte_val;
+    totals.overall += overall;
 
-  // Build ordered list: groups in order, then ungrouped at their positions
-  let headerRow1 = '<th rowspan="2" style="width:40px;">Sl.No</th><th rowspan="2">Courses</th>';
-  let headerRow2 = '';
-
-  // We need to maintain original column order. Walk through columns and output group header only once per group.
-  const groupsSeen = new Set();
-  let i = 0;
-  while (i < columns.length) {
-    const col = columns[i];
-    if (col.group) {
-      if (!groupsSeen.has(col.group)) {
-        groupsSeen.add(col.group);
-        const grp = groups.find(g => g.id === col.group);
-        const grpCols = columns.filter(c => c.group === col.group);
-        const grpLabel = grp ? grp.label : col.group;
-        const grpStyle = grp ? grp.headerStyle : '';
-        const subStyle = grp ? grp.subHeaderStyle : '';
-        headerRow1 += `<th colspan="${grpCols.length}" style="${grpStyle}">${grpLabel}</th>`;
-        grpCols.forEach(gc => {
-          headerRow2 += `<th style="${subStyle}" data-col-id="${gc.id}">${gc.label}</th>`;
-        });
-      }
-    } else {
-      const style = col.headerStyle || '';
-      headerRow1 += `<th rowspan="2" style="${style}" data-col-id="${col.id}">${col.label}</th>`;
-    }
-    i++;
-  }
-
-  let thead = tableEl.querySelector('thead');
-  if (!thead) { thead = document.createElement('thead'); tableEl.prepend(thead); }
-  thead.innerHTML = `<tr>${headerRow1}</tr><tr>${headerRow2}</tr>`;
-
-  // ── Build tbody ──
-  const tbody = document.getElementById('admitted-stats-body');
-  if (!tbody) return;
-
-  tbody.innerHTML = rows.map((row, idx) => {
-    const computed = computeRowValues(row, columns);
-
-    let cells = `<td>${idx + 1}</td>`;
-    // Editable course name cell
-    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" oninput="_onStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
-
-    columns.forEach(col => {
-      if (col.type === 'editable') {
-        const val = parseFloat(row.values[col.id]) || 0;
-        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" value="${val}" oninput="_onStatsCellChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
-      } else {
-        // Formula / auto cell
-        let displayVal = computed[col.id];
-        if (col.isPercent) displayVal = displayVal + '%';
-        cells += `<td class="auto-cell" data-row-id="${row.id}" data-calc="${col.id}">${displayVal}</td>`;
-      }
-    });
-
-    return `<tr data-id="${row.id}">${cells}</tr>`;
+    return `
+      <tr data-id="${c.id}">
+        <td>${i + 1}</td>
+        <td class="course-name">${c.name}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_int" value="${cet_int_val}"></td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_fill" value="${cet_fill_val}"></td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="cet_snq" value="${cet_snq_val}"></td>
+        <td class="auto-cell" data-calc="cet_tot">${cet_tot}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="comed_int" value="${comed_int_val}"></td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="comed_fill" value="${comed_fill_val}"></td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="mgt_int" value="${mgt_int_val}"></td>
+        <td class="auto-cell" data-calc="mgt_fill">${mgt_fill}</td>
+        <td class="auto-cell" data-calc="act_int">${act_int}</td>
+        <td class="auto-cell" data-calc="act_fill">${act_fill}</td>
+        <td class="auto-cell" data-calc="act_vac">${act_vac}</td>
+        <td class="auto-cell" data-calc="tot_snq">${tot_snq}</td>
+        <td class="editable-cell"><input type="number" min="0" class="stats-input" oninput="updateStatsRow(this)" data-field="aicte" value="${aicte_val}"></td>
+        <td class="auto-cell" data-calc="overall">${overall}</td>
+        <td class="auto-cell" data-calc="actual_pct">${actual_pct}%</td>
+      </tr>
+    `;
   }).join('');
 
-  // ── Build tfoot ──
-  _recalcStatsTotals();
-
-  // Hide Save button if not admin
-  const saveBtn = document.getElementById('save-stats-btn');
-  if (saveBtn) saveBtn.style.display = isAdmin ? 'flex' : 'none';
+  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
+  tfoot.innerHTML = `
+    <tr>
+      <td colspan="2">TOTAL</td>
+      <td id="tot-cet-int">${totals.cet_int}</td>
+      <td id="tot-cet-fill">${totals.cet_fill}</td>
+      <td id="tot-cet-snq">${totals.cet_snq}</td>
+      <td id="tot-cet-tot">${totals.cet_tot}</td>
+      <td id="tot-comed-int">${totals.comed_int}</td>
+      <td id="tot-comed-fill">${totals.comed_fill}</td>
+      <td id="tot-mgt-int">${totals.mgt_int}</td>
+      <td id="tot-mgt-fill">${totals.mgt_fill}</td>
+      <td id="tot-act-int">${totals.act_int}</td>
+      <td id="tot-act-fill">${totals.act_fill}</td>
+      <td id="tot-act-vac">${totals.act_vac}</td>
+      <td id="tot-tot-snq">${totals.tot_snq}</td>
+      <td id="tot-aicte">${totals.aicte}</td>
+      <td id="tot-overall">${totals.overall}</td>
+      <td id="tot-actual-pct">${final_pct}%</td>
+    </tr>
+  `;
 }
 
-function _escHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
+function updateStatsRow(el) {
+  const row = el.closest('tr');
+  const courseId = row.dataset.id;
+  const config = ADMITTED_COURSES.find(c => c.id === courseId);
+  
+  const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`)?.value) || 0;
+  
+  const cet_int = getVal('cet_int');
+  const cet_fill = getVal('cet_fill');
+  const cet_snq = getVal('cet_snq');
+  const comed_int = getVal('comed_int');
+  const comed_fill = getVal('comed_fill');
+  const mgt_int = getVal('mgt_int');
+  const aicte = getVal('aicte');
+  const mgt_fill = parseInt(row.querySelector('[data-calc="mgt_fill"]').textContent) || 0;
+  
+  const cet_tot = cet_fill + cet_snq;
+  const act_int = cet_int + comed_int + mgt_int;
+  const act_fill = cet_fill + comed_fill + mgt_fill;
+  const act_vac = act_int - act_fill;
+  const tot_snq = act_fill + cet_snq;
+  const overall = tot_snq + aicte;
+  const actual_pct = act_int > 0 ? ((act_fill / act_int) * 100).toFixed(2) : '0.00';
+
+  row.querySelector('[data-calc="cet_tot"]').textContent = cet_tot;
+  row.querySelector('[data-calc="act_int"]').textContent = act_int;
+  row.querySelector('[data-calc="act_fill"]').textContent = act_fill;
+  row.querySelector('[data-calc="act_vac"]').textContent = act_vac;
+  row.querySelector('[data-calc="tot_snq"]').textContent = tot_snq;
+  row.querySelector('[data-calc="overall"]').textContent = overall;
+  row.querySelector('[data-calc="actual_pct"]').textContent = actual_pct + '%';
+  
+  updateStatsTotals();
 }
 
-function _onStatsNameChange(el) {
-  const rowId = el.dataset.rowId;
-  const row = _statsConfig.rows.find(r => r.id === rowId);
-  if (row) row.name = el.value;
-}
+function updateStatsTotals() {
+  let totals = {
+    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
+    comed_int: 0, comed_fill: 0,
+    mgt_int: 0, mgt_fill: 0,
+    act_int: 0, act_fill: 0, act_vac: 0,
+    tot_snq: 0, aicte: 0, overall: 0
+  };
 
-function _onStatsCellChange(el) {
-  const rowId = el.dataset.rowId;
-  const field = el.dataset.field;
-  const row = _statsConfig.rows.find(r => r.id === rowId);
-  if (!row) return;
-
-  row.values[field] = parseFloat(el.value) || 0;
-
-  // Recalculate formula cells in this row
-  const computed = computeRowValues(row, _statsConfig.columns);
-  const tr = el.closest('tr');
-  _statsConfig.columns.forEach(col => {
-    if (col.type === 'formula') {
-      const cell = tr.querySelector(`[data-calc="${col.id}"]`);
-      if (cell) {
-        let v = computed[col.id];
-        if (col.isPercent) v = v + '%';
-        cell.textContent = v;
-      }
-    }
+  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
+    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.value || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
+    
+    totals.cet_int += getVal('cet_int');
+    totals.cet_fill += getVal('cet_fill');
+    totals.cet_snq += getVal('cet_snq');
+    totals.cet_tot += getVal('cet_tot');
+    totals.comed_int += getVal('comed_int');
+    totals.comed_fill += getVal('comed_fill');
+    totals.mgt_int += getVal('mgt_int');
+    totals.mgt_fill += getVal('mgt_fill');
+    totals.act_int += getVal('act_int');
+    totals.act_fill += getVal('act_fill');
+    totals.act_vac += getVal('act_vac');
+    totals.tot_snq += getVal('tot_snq');
+    totals.aicte += getVal('aicte');
+    totals.overall += getVal('overall');
   });
 
   // Update row values with computed results
   Object.assign(row.values, computed);
 
-  _recalcStatsTotals();
+  document.getElementById('tot-cet-int').textContent = totals.cet_int;
+  document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
+  document.getElementById('tot-cet-snq').textContent = totals.cet_snq;
+  document.getElementById('tot-cet-tot').textContent = totals.cet_tot;
+  document.getElementById('tot-comed-int').textContent = totals.comed_int;
+  document.getElementById('tot-comed-fill').textContent = totals.comed_fill;
+  document.getElementById('tot-mgt-int').textContent = totals.mgt_int;
+  document.getElementById('tot-mgt-fill').textContent = totals.mgt_fill;
+  document.getElementById('tot-act-int').textContent = totals.act_int;
+  document.getElementById('tot-act-fill').textContent = totals.act_fill;
+  document.getElementById('tot-act-vac').textContent = totals.act_vac;
+  document.getElementById('tot-tot-snq').textContent = totals.tot_snq;
+  document.getElementById('tot-aicte').textContent = totals.aicte;
+  document.getElementById('tot-overall').textContent = totals.overall;
+  document.getElementById('tot-actual-pct').textContent = final_pct + '%';
 }
 
 function _recalcStatsTotals() {
@@ -1027,7 +1064,7 @@ async function saveAdmittedStats() {
   };
 
   try {
-    await apiFetch('/api/admin/stats/config', {
+    const result = await apiFetch('/api/admin/stats/manual', {
       method: 'POST',
       body: JSON.stringify({ year: selectedYear, config: configPayload })
     });
@@ -1054,8 +1091,8 @@ async function saveAdmittedStats() {
 
     showToast(`Statistics for ${selectedYear} saved successfully`);
   } catch (e) {
-    console.error('Failed to save stats config', e);
-    alert('Failed to save statistics');
+    console.error('Failed to save manual stats', e);
+    alert('Failed to save statistics: ' + e.message);
   }
 }
 
