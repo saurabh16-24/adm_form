@@ -849,17 +849,50 @@ async function renderAdmittedStats() {
   _renderStatsTable();
 }
 
-  tbody.innerHTML = ADMITTED_COURSES.map((c, i) => {
-    const manual = savedData[c.id] || { cet_int: c.cet_int, cet_fill: 0, cet_snq: 0, comed_int: c.comed_int, comed_fill: 0, mgt_int: c.mgt_int, aicte: 0 };
+function _renderStatsTable() {
+  const tableEl = document.getElementById('admitted-stats-table');
+  if (!tableEl) return;
+  
+  const thead = tableEl.querySelector('thead');
+  const tbody = document.getElementById('admitted-stats-body');
+  const tfoot = document.getElementById('admitted-stats-footer');
+  if (!tbody || !tfoot) return;
+
+  // Render table headers
+  if (thead) {
+    const headerRow = `
+      <tr>
+        <th>#</th>
+        <th>Course</th>
+        ${_statsConfig.columns.map(col => {
+          const headerStyle = col.headerStyle || 'background: #f1f5f9;';
+          return `<th style="${headerStyle}">${col.label}</th>`;
+        }).join('')}
+      </tr>
+    `;
+    thead.innerHTML = headerRow;
+  }
+
+  const totals = {
+    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
+    comed_int: 0, comed_fill: 0,
+    mgt_int: 0, mgt_fill: 0,
+    act_int: 0, act_fill: 0, act_vac: 0, tot_snq: 0,
+    aicte: 0, overall: 0
+  };
+
+  // Render body rows
+  tbody.innerHTML = _statsConfig.rows.map((c, i) => {
+    const val = (field) => c.values[field] || 0;
     
-    const mgt_fill = mgtCounts[c.branch] || 0;
-    const cet_int_val = parseInt(manual.cet_int) || c.cet_int;
-    const cet_fill_val = parseInt(manual.cet_fill) || 0;
-    const cet_snq_val = parseInt(manual.cet_snq) || 0;
-    const comed_int_val = parseInt(manual.comed_int) || c.comed_int;
-    const comed_fill_val = parseInt(manual.comed_fill) || 0;
-    const mgt_int_val = parseInt(manual.mgt_int) || c.mgt_int;
-    const aicte_val = parseInt(manual.aicte) || 0;
+    const cet_int_val = val('cet_int');
+    const cet_fill_val = val('cet_fill');
+    const cet_snq_val = val('cet_snq');
+    const comed_int_val = val('comed_int');
+    const comed_fill_val = val('comed_fill');
+    const mgt_int_val = val('mgt_int');
+    const mgt_fill = val('mgt_fill');
+    const aicte_val = val('aicte');
 
     const cet_tot = cet_fill_val + cet_snq_val;
     const act_int = cet_int_val + comed_int_val + mgt_int_val;
@@ -908,6 +941,7 @@ async function renderAdmittedStats() {
     `;
   }).join('');
 
+  // Render footer
   const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
   tfoot.innerHTML = `
     <tr>
@@ -929,12 +963,15 @@ async function renderAdmittedStats() {
       <td id="tot-actual-pct">${final_pct}%</td>
     </tr>
   `;
+  
+  _recalcStatsTotals();
 }
 
 function updateStatsRow(el) {
   const row = el.closest('tr');
   const courseId = row.dataset.id;
-  const config = ADMITTED_COURSES.find(c => c.id === courseId);
+  const course = _statsConfig.rows.find(c => c.id === courseId);
+  if (!course) return;
   
   const getVal = (field) => parseInt(row.querySelector(`[data-field="${field}"]`)?.value) || 0;
   
@@ -947,6 +984,16 @@ function updateStatsRow(el) {
   const aicte = getVal('aicte');
   const mgt_fill = parseInt(row.querySelector('[data-calc="mgt_fill"]').textContent) || 0;
   
+  // Update course values in config
+  course.values.cet_int = cet_int;
+  course.values.cet_fill = cet_fill;
+  course.values.cet_snq = cet_snq;
+  course.values.comed_int = comed_int;
+  course.values.comed_fill = comed_fill;
+  course.values.mgt_int = mgt_int;
+  course.values.aicte = aicte;
+  
+  // Calculate derived values
   const cet_tot = cet_fill + cet_snq;
   const act_int = cet_int + comed_int + mgt_int;
   const act_fill = cet_fill + comed_fill + mgt_fill;
@@ -963,55 +1010,7 @@ function updateStatsRow(el) {
   row.querySelector('[data-calc="overall"]').textContent = overall;
   row.querySelector('[data-calc="actual_pct"]').textContent = actual_pct + '%';
   
-  updateStatsTotals();
-}
-
-function updateStatsTotals() {
-  let totals = {
-    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
-    comed_int: 0, comed_fill: 0,
-    mgt_int: 0, mgt_fill: 0,
-    act_int: 0, act_fill: 0, act_vac: 0,
-    tot_snq: 0, aicte: 0, overall: 0
-  };
-
-  document.querySelectorAll('#admitted-stats-body tr').forEach(row => {
-    const getVal = (f) => parseInt(row.querySelector(`[data-field="${f}"]`)?.value || row.querySelector(`[data-calc="${f}"]`)?.textContent) || 0;
-    
-    totals.cet_int += getVal('cet_int');
-    totals.cet_fill += getVal('cet_fill');
-    totals.cet_snq += getVal('cet_snq');
-    totals.cet_tot += getVal('cet_tot');
-    totals.comed_int += getVal('comed_int');
-    totals.comed_fill += getVal('comed_fill');
-    totals.mgt_int += getVal('mgt_int');
-    totals.mgt_fill += getVal('mgt_fill');
-    totals.act_int += getVal('act_int');
-    totals.act_fill += getVal('act_fill');
-    totals.act_vac += getVal('act_vac');
-    totals.tot_snq += getVal('tot_snq');
-    totals.aicte += getVal('aicte');
-    totals.overall += getVal('overall');
-  });
-
-  // Update row values with computed results
-  Object.assign(row.values, computed);
-
-  document.getElementById('tot-cet-int').textContent = totals.cet_int;
-  document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
-  document.getElementById('tot-cet-snq').textContent = totals.cet_snq;
-  document.getElementById('tot-cet-tot').textContent = totals.cet_tot;
-  document.getElementById('tot-comed-int').textContent = totals.comed_int;
-  document.getElementById('tot-comed-fill').textContent = totals.comed_fill;
-  document.getElementById('tot-mgt-int').textContent = totals.mgt_int;
-  document.getElementById('tot-mgt-fill').textContent = totals.mgt_fill;
-  document.getElementById('tot-act-int').textContent = totals.act_int;
-  document.getElementById('tot-act-fill').textContent = totals.act_fill;
-  document.getElementById('tot-act-vac').textContent = totals.act_vac;
-  document.getElementById('tot-tot-snq').textContent = totals.tot_snq;
-  document.getElementById('tot-aicte').textContent = totals.aicte;
-  document.getElementById('tot-overall').textContent = totals.overall;
-  document.getElementById('tot-actual-pct').textContent = final_pct + '%';
+  _recalcStatsTotals();
 }
 
 function _recalcStatsTotals() {

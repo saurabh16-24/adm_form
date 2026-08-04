@@ -507,7 +507,40 @@ body {
 
 .card-header h3 .material-icons-round { font-size: 20px; color: var(--accent-blue); }
 
-.table-wrap { overflow-x: auto; }
+.table-wrap {
+  overflow-x: auto;
+  position: relative;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.stats-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-secondary);
+}
+
+.stats-table thead th {
+  background: var(--bg-secondary);
+  padding: 12px 6px;
+  text-align: center;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  border: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 11;
+}
 
 .data-table {
   width: 100%;
