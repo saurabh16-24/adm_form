@@ -1216,7 +1216,7 @@ app.get('/api/admin/stats/manual', adminAuth, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM course_manual_stats WHERE academic_year = $1', [year]);
     const data = {};
     rows.forEach(r => {
-      data[r.course_id] = { cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_fill: r.comed_fill, aicte: r.aicte };
+      data[r.course_id] = { cet_int: r.cet_int, cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_int: r.comed_int, comed_fill: r.comed_fill, mgt_int: r.mgt_int, aicte: r.aicte };
     });
     res.json(data);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -1230,14 +1230,17 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     await pool.query('BEGIN');
     for (const [course_id, stats] of Object.entries(data)) {
       await pool.query(`
-        INSERT INTO course_manual_stats (academic_year, course_id, cet_fill, cet_snq, comed_fill, aicte)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO course_manual_stats (academic_year, course_id, cet_int, cet_fill, cet_snq, comed_int, comed_fill, mgt_int, aicte)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (academic_year, course_id) DO UPDATE SET
+          cet_int = EXCLUDED.cet_int,
           cet_fill = EXCLUDED.cet_fill,
           cet_snq = EXCLUDED.cet_snq,
+          comed_int = EXCLUDED.comed_int,
           comed_fill = EXCLUDED.comed_fill,
+          mgt_int = EXCLUDED.mgt_int,
           aicte = EXCLUDED.aicte
-      `, [year, course_id, stats.cet_fill, stats.cet_snq, stats.comed_fill, stats.aicte]);
+      `, [year, course_id, stats.cet_int, stats.cet_fill, stats.cet_snq, stats.comed_int, stats.comed_fill, stats.mgt_int, stats.aicte]);
     }
     
     // Log activity
@@ -2136,6 +2139,107 @@ app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
     if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ row: result.rows[0] });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET Diagnostic: Raw branch data from management_forms
+app.get('/api/admin/management-branches', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year || '2026-27';
+    
+    // Get all data regardless of year to see what exists
+    const allYears = await pool.query(
+      'SELECT DISTINCT academic_year FROM management_forms WHERE academic_year IS NOT NULL ORDER BY academic_year DESC'
+    );
+    console.log('[Diagnostic] Available academic years:', allYears.rows.map(r => r.academic_year));
+    
+    // Get counts for the requested year
+    const result = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE academic_year = $1 AND branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC',
+      [year]
+    );
+    
+    console.log('[Diagnostic] Raw branch data for year', year, ':', result.rows);
+    
+    // Also try getting ALL data regardless of year
+    const allData = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC'
+    );
+    
+    console.log('[Diagnostic] ALL branch data (regardless of year):', allData.rows);
+    
+    res.json({ 
+      requestedYear: year,
+      availableYears: allYears.rows.map(r => r.academic_year),
+      dataForYear: result.rows,
+      allData: allData.rows,
+      totalCount: allData.rows.reduce((sum, r) => sum + parseInt(r.count), 0)
+    });
+  } catch (err) { 
+    console.error('[Diagnostic] Error:', err);
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+// GET Management Admissions Count by Course ID
+app.get('/api/admin/admissions/management', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year || '2026-27';
+    
+    // Get all branches regardless of year to debug
+    const allBranches = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC'
+    );
+    
+    // Map of course IDs to exact branch names from management_forms table
+    // ORDER MATTERS: More specific patterns must come before general ones
+    const courseMapping = [
+      { id: 'CSCA', patterns: ['Artificial Intelligence', 'CS-CA', 'CSCA', '(Artificial Intelligence)'] },
+      { id: 'CSCY', patterns: ['Cyber Security', 'CS-CY', 'CSCY', '(Cyber Security)'] },
+      { id: 'CSDS', patterns: ['Data Science', 'CS-DS', 'CSDS', '(Data Science)'] },
+      { id: 'CSE', patterns: ['Computer Science and Engineering'] },
+      { id: 'ECE', patterns: ['Electronics and Communication', 'Electronics & Communication'] },
+      { id: 'ISE', patterns: ['Information Science and Engineering'] },
+      { id: 'ME', patterns: ['Mechanical Engineering'] },
+      { id: 'CE', patterns: ['Civil Engineering'] }
+    ];
+    
+    const counts = {};
+    courseMapping.forEach(course => { counts[course.id] = 0; });
+    
+    // Match branches to course IDs
+    allBranches.rows.forEach(row => {
+      const branchValue = (row.branch || '').trim();
+      let matched = false;
+      
+      // Try each course mapping in order (specialized first, general last)
+      for (const course of courseMapping) {
+        // Try exact match first
+        if (course.patterns.some(pattern => branchValue === pattern)) {
+          counts[course.id] += parseInt(row.count) || 0;
+          matched = true;
+          console.log(`[Management API] Exact match: "${branchValue}" -> ${course.id} (count: ${row.count})`);
+          break;
+        }
+        // Then try includes (case-insensitive)
+        if (course.patterns.some(pattern => branchValue.toLowerCase().includes(pattern.toLowerCase()))) {
+          counts[course.id] += parseInt(row.count) || 0;
+          matched = true;
+          console.log(`[Management API] Includes match: "${branchValue}" -> ${course.id} (count: ${row.count})`);
+          break;
+        }
+      }
+      
+      if (!matched) {
+        console.log(`[Management API] NO MATCH: "${branchValue}" (count: ${row.count})`);
+      }
+    });
+    
+    console.log('[Management API] Final counts:', counts);
+    res.json({ counts });
+  } catch (err) { 
+    console.error('[Management API] Error:', err);
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 // GET Audit Log for Admission/Management
