@@ -671,55 +671,157 @@ function initGlobalYearDropdown() {
 
 
 
-// ═══════════════ ADMITTED STATS LOGIC ═══════════════
-const ADMITTED_COURSES = [
-  { id: 'ECE', name: 'ECE', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Electronics and Communication Engineering' },
-  { id: 'CSE', name: 'CSE', cet_int: 108, comed_int: 72, mgt_int: 60, branch: 'BE Computer Science and Engineering' },
-  { id: 'ISE', name: 'IS&E', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Information Science and Engineering' },
-  { id: 'ME', name: 'ME', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Mechanical Engineering' },
-  { id: 'CE', name: 'CE', cet_int: 13, comed_int: 9, mgt_int: 8, branch: 'BE Civil Engineering' },
-  { id: 'CSCA', name: 'CS-CA', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Artificial Intelligence)' },
-  { id: 'CSCY', name: 'CS-CY', cet_int: 27, comed_int: 18, mgt_int: 15, branch: 'BE Computer Science and Engineering (Cyber Security)' },
-  { id: 'CSDS', name: 'CS-DS', cet_int: 54, comed_int: 36, mgt_int: 30, branch: 'BE Computer Science and Engineering (Data Science)' }
+// ═══════════════ DYNAMIC ADMITTED STATS ENGINE ═══════════════
+
+// Column group definitions (for grouped headers)
+const DEFAULT_COLUMN_GROUPS = [
+  { id: 'cet', label: 'CET', headerStyle: 'background: #e0e7ff; color: #3730a3;', subHeaderStyle: 'background: #eef2ff;' },
+  { id: 'comedk', label: 'Comed K', headerStyle: 'background: #dcfce7; color: #166534;', subHeaderStyle: 'background: #f0fdf4;' },
+  { id: 'management', label: 'Management', headerStyle: 'background: #ffedd5; color: #9a3412;', subHeaderStyle: 'background: #fff7ed;' },
+  { id: 'actual', label: 'Actual Admissions', headerStyle: 'background: #3b82f6; color: white;', subHeaderStyle: 'background: #2563eb; color: white;' },
 ];
 
+// Column definitions: each column has id, label, group, type (editable/formula), formula expression
+const DEFAULT_COLUMNS = [
+  { id: 'cet_int', label: 'Intake', group: 'cet', type: 'editable' },
+  { id: 'cet_fill', label: 'Filled', group: 'cet', type: 'editable' },
+  { id: 'cet_snq', label: 'SNQ', group: 'cet', type: 'editable' },
+  { id: 'cet_tot', label: 'Total', group: 'cet', type: 'formula', formula: 'cet_fill + cet_snq' },
+  { id: 'comed_int', label: 'Intake', group: 'comedk', type: 'editable' },
+  { id: 'comed_fill', label: 'Filled', group: 'comedk', type: 'editable' },
+  { id: 'mgt_int', label: 'Intake', group: 'management', type: 'editable' },
+  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'editable' },
+  { id: 'act_int', label: 'Intake', group: 'actual', type: 'formula', formula: 'cet_int + comed_int + mgt_int' },
+  { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill' },
+  { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill' },
+  { id: 'tot_snq', label: 'Total with SNQ', group: null, type: 'formula', formula: 'act_fill + cet_snq', headerStyle: 'background: #fef9c3; color: #854d0e;' },
+  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #fef3c7; color: #92400e;' },
+  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #bbf7d0; color: #166534;' },
+  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #fee2e2; color: #991b1b;' },
+];
+
+// Default course rows (fallback when no saved config exists)
+const DEFAULT_COURSES = [
+  { id: 'ECE', name: 'ECE', branch: 'BE Electronics and Communication Engineering', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+  { id: 'CSE', name: 'CSE', branch: 'BE Computer Science and Engineering', values: { cet_int: 108, comed_int: 72, mgt_int: 60 } },
+  { id: 'ISE', name: 'IS&E', branch: 'BE Information Science and Engineering', values: { cet_int: 27, comed_int: 18, mgt_int: 15 } },
+  { id: 'ME', name: 'ME', branch: 'BE Mechanical Engineering', values: { cet_int: 13, comed_int: 9, mgt_int: 8 } },
+  { id: 'CE', name: 'CE', branch: 'BE Civil Engineering', values: { cet_int: 13, comed_int: 9, mgt_int: 8 } },
+  { id: 'CSCA', name: 'CS-CA', branch: 'BE Computer Science and Engineering (Artificial Intelligence)', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+  { id: 'CSCY', name: 'CS-CY', branch: 'BE Computer Science and Engineering (Cyber Security)', values: { cet_int: 27, comed_int: 18, mgt_int: 15 } },
+  { id: 'CSDS', name: 'CS-DS', branch: 'BE Computer Science and Engineering (Data Science)', values: { cet_int: 54, comed_int: 36, mgt_int: 30 } },
+];
+
+// Live state – populated by renderAdmittedStats
+let _statsConfig = {
+  groups: [],
+  columns: [],
+  rows: [],
+};
+
+// ── Formula evaluator ──────────────────────────────────
+function __pct__(numerator, denominator) {
+  return denominator > 0 ? ((numerator / denominator) * 100).toFixed(2) : '0.00';
+}
+
+function evalFormula(formula, rowValues) {
+  try {
+    // Build a safe evaluation context with all column values available
+    const keys = Object.keys(rowValues);
+    const vals = keys.map(k => parseFloat(rowValues[k]) || 0);
+    const fn = new Function('__pct__', ...keys, `return (${formula});`);
+    return fn(__pct__, ...vals);
+  } catch (e) {
+    console.warn('Formula eval error:', formula, e);
+    return 0;
+  }
+}
+
+function computeRowValues(row, columns) {
+  // Compute all formula columns from editable values
+  const values = { ...row.values };
+  // Multi-pass to resolve dependent formulas (e.g., overall depends on tot_snq)
+  for (let pass = 0; pass < 3; pass++) {
+    columns.forEach(col => {
+      if (col.type === 'formula' && col.formula) {
+        values[col.id] = evalFormula(col.formula, values);
+      }
+    });
+  }
+  return values;
+}
+
+// ── Render dynamic table ───────────────────────────────
 async function renderAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  const tbody = document.getElementById('admitted-stats-body');
-  const tfoot = document.getElementById('admitted-stats-footer');
-  if (!tbody) return;
+  const tableEl = document.getElementById('admitted-stats-table');
+  if (!tableEl) return;
 
-  // Fetch management counts
-  let mgtData = [];
+  // Fetch management counts for auto-filling mgt_fill
+  let mgtCounts = {};
   try {
     const res = await apiFetch('/api/admin/management-forms');
-    mgtData = res.rows || [];
-    // Filter by academic year (check both full and short formats)
+    let mgtData = res.rows || [];
     const shortYear = selectedYear.split('-')[0].slice(-2) + '-' + selectedYear.split('-')[1];
     mgtData = mgtData.filter(m => m.academic_year === selectedYear || m.academic_year === shortYear);
+    mgtData.forEach(m => { mgtCounts[m.branch] = (mgtCounts[m.branch] || 0) + 1; });
   } catch (e) { console.error('Failed to fetch management forms for stats', e); }
 
-  const mgtCounts = {};
-  mgtData.forEach(m => {
-    const b = m.branch;
-    mgtCounts[b] = (mgtCounts[b] || 0) + 1;
+  // Try loading dynamic config from new API
+  let config = null;
+  try {
+    config = await apiFetch(`/api/admin/stats/config?year=${selectedYear}`);
+  } catch (e) { console.warn('Dynamic stats config not available, using defaults', e); }
+
+  if (config && config.columns && config.rows) {
+    // Loaded saved dynamic config
+    _statsConfig.groups = config.groups || JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
+    _statsConfig.columns = config.columns;
+    _statsConfig.rows = config.rows;
+  } else {
+    // Fallback: build from defaults + old manual stats
+    _statsConfig.groups = JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
+    _statsConfig.columns = JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
+
+    let savedData = {};
+    try { savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`); }
+    catch (e) { /* ignore */ }
+
+    _statsConfig.rows = DEFAULT_COURSES.map(c => {
+      const manual = savedData[c.id] || {};
+      const mgt_fill = mgtCounts[c.branch] || 0;
+      return {
+        id: c.id,
+        name: c.name,
+        branch: c.branch || '',
+        values: {
+          cet_int: c.values.cet_int || 0,
+          cet_fill: parseInt(manual.cet_fill) || 0,
+          cet_snq: parseInt(manual.cet_snq) || 0,
+          comed_int: c.values.comed_int || 0,
+          comed_fill: parseInt(manual.comed_fill) || 0,
+          mgt_int: c.values.mgt_int || 0,
+          mgt_fill: mgt_fill,
+          aicte: parseInt(manual.aicte) || 0,
+        }
+      };
+    });
+  }
+
+  // Pre-fill mgt_fill from auto-fetch if not already overridden
+  _statsConfig.rows.forEach(row => {
+    if (row.branch && mgtCounts[row.branch] !== undefined) {
+      // Only auto-fill if the user hasn't manually set a value in saved config
+      if (!config || !config.rows) {
+        row.values.mgt_fill = mgtCounts[row.branch] || 0;
+      }
+    }
   });
 
-  // Load saved manual data from backend
-  let savedData = {};
-  try {
-    savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`);
-  } catch(e) { console.error('Failed to fetch manual stats', e); }
-
-  let totals = {
-    cet_int: 0, cet_fill: 0, cet_snq: 0, cet_tot: 0,
-    comed_int: 0, comed_fill: 0,
-    mgt_int: 0, mgt_fill: 0,
-    act_int: 0, act_fill: 0, act_vac: 0,
-    tot_snq: 0, aicte: 0, overall: 0
-  };
+  _renderStatsTable();
+}
 
   tbody.innerHTML = ADMITTED_COURSES.map((c, i) => {
     const manual = savedData[c.id] || { cet_int: c.cet_int, cet_fill: 0, cet_snq: 0, comed_int: c.comed_int, comed_fill: 0, mgt_int: c.mgt_int, aicte: 0 };
@@ -866,7 +968,8 @@ function updateStatsTotals() {
     totals.overall += getVal('overall');
   });
 
-  const final_pct = totals.act_int > 0 ? ((totals.act_fill / totals.act_int) * 100).toFixed(2) : '0.00';
+  // Update row values with computed results
+  Object.assign(row.values, computed);
 
   document.getElementById('tot-cet-int').textContent = totals.cet_int;
   document.getElementById('tot-cet-fill').textContent = totals.cet_fill;
@@ -885,6 +988,40 @@ function updateStatsTotals() {
   document.getElementById('tot-actual-pct').textContent = final_pct + '%';
 }
 
+function _recalcStatsTotals() {
+  const { columns, rows } = _statsConfig;
+  const tfoot = document.getElementById('admitted-stats-footer');
+  if (!tfoot) return;
+
+  // Sum all numeric columns
+  const totals = {};
+  columns.forEach(col => { totals[col.id] = 0; });
+
+  rows.forEach(row => {
+    const computed = computeRowValues(row, columns);
+    columns.forEach(col => {
+      totals[col.id] += parseFloat(computed[col.id]) || 0;
+    });
+  });
+
+  // Recompute formula totals from summed editable totals
+  // For percentage, recalculate from totals rather than summing row percentages
+  const pctCol = columns.find(c => c.isPercent);
+  if (pctCol) {
+    totals[pctCol.id] = __pct__(totals['act_fill'] || 0, totals['act_int'] || 0);
+  }
+
+  let footerCells = '<td colspan="2" style="font-weight:800;">TOTAL</td>';
+  columns.forEach(col => {
+    let v = col.isPercent ? totals[col.id] : Math.round(totals[col.id]);
+    if (col.isPercent) v = v + '%';
+    footerCells += `<td id="tot-${col.id.replace(/_/g,'-')}" style="font-weight:700;">${v}</td>`;
+  });
+
+  tfoot.innerHTML = `<tr class="total-row">${footerCells}</tr>`;
+}
+
+// ── Save (new dynamic config API + legacy fallback) ────
 async function saveAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
@@ -906,8 +1043,26 @@ async function saveAdmittedStats() {
   try {
     const result = await apiFetch('/api/admin/stats/manual', {
       method: 'POST',
-      body: JSON.stringify({ year: selectedYear, data })
+      body: JSON.stringify({ year: selectedYear, config: configPayload })
     });
+
+    // Also save legacy manual stats for backward compatibility
+    const legacyData = {};
+    _statsConfig.rows.forEach(row => {
+      legacyData[row.id] = {
+        cet_fill: parseInt(row.values.cet_fill) || 0,
+        cet_snq: parseInt(row.values.cet_snq) || 0,
+        comed_fill: parseInt(row.values.comed_fill) || 0,
+        aicte: parseInt(row.values.aicte) || 0,
+      };
+    });
+    try {
+      await apiFetch('/api/admin/stats/manual', {
+        method: 'POST',
+        body: JSON.stringify({ year: selectedYear, data: legacyData })
+      });
+    } catch (e) { /* legacy save is best-effort */ }
+
     showToast(`Statistics for ${selectedYear} saved successfully`);
   } catch (e) {
     console.error('Failed to save manual stats', e);
