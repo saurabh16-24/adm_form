@@ -1239,12 +1239,8 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     const { year, data } = req.body;
     if (!year || !data) return res.status(400).json({ error: 'Missing year or data' });
     
-    console.log('Saving stats for year:', year);
-    console.log('Data to save:', data);
-    
     await pool.query('BEGIN');
     for (const [course_id, stats] of Object.entries(data)) {
-      console.log(`Saving ${course_id}:`, stats);
       await pool.query(`
         INSERT INTO course_manual_stats (academic_year, course_id, cet_int, cet_fill, cet_snq, comed_int, comed_fill, mgt_int, aicte)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -1266,11 +1262,9 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     `, [req.userName, 'update', 'admitted_stats', `Session ${year}`, 'Updated manual admission counts in statistics table']);
     
     await pool.query('COMMIT');
-    console.log('Stats saved successfully');
     res.json({ success: true });
   } catch (err) { 
     await pool.query('ROLLBACK');
-    console.error('Stats update error:', err);
     res.status(500).json({ error: err.message }); 
   }
 });
