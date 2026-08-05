@@ -682,21 +682,21 @@ const DEFAULT_COLUMN_GROUPS = [
 
 // Column definitions: each column has id, label, group, type (editable/formula), formula expression
 const DEFAULT_COLUMNS = [
-  { id: 'cet_int', label: 'Intake', group: 'cet', type: 'editable' },
-  { id: 'cet_fill', label: 'Filled', group: 'cet', type: 'editable' },
-  { id: 'cet_snq', label: 'SNQ', group: 'cet', type: 'editable' },
-  { id: 'cet_tot', label: 'Total', group: 'cet', type: 'formula', formula: 'cet_fill + cet_snq' },
-  { id: 'comed_int', label: 'Intake', group: 'comedk', type: 'editable' },
-  { id: 'comed_fill', label: 'Filled', group: 'comedk', type: 'editable' },
-  { id: 'mgt_int', label: 'Intake', group: 'management', type: 'editable' },
-  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'formula', formula: '__mgt_fill__(courseId)' },
-  { id: 'act_int', label: 'Intake', group: 'actual', type: 'formula', formula: 'cet_int + comed_int + mgt_int' },
-  { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill' },
-  { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill' },
-  { id: 'tot_snq', label: 'Total with SNQ', group: null, type: 'formula', formula: 'act_fill + cet_snq', headerStyle: 'background: #fef9c3; color: #854d0e;' },
-  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #fef3c7; color: #92400e;' },
-  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #bbf7d0; color: #166534;' },
-  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #fee2e2; color: #991b1b;' },
+  { id: 'cet_int', label: 'Intake', group: 'cet', type: 'editable', headerStyle: 'background: #06b6d4; color: white;' },
+  { id: 'cet_fill', label: 'Filled', group: 'cet', type: 'editable', headerStyle: 'background: #06b6d4; color: white;' },
+  { id: 'cet_snq', label: 'SNQ', group: 'cet', type: 'editable', headerStyle: 'background: #06b6d4; color: white;' },
+  { id: 'cet_tot', label: 'Total', group: 'cet', type: 'formula', formula: 'cet_fill + cet_snq', headerStyle: 'background: #06b6d4; color: white;' },
+  { id: 'comed_int', label: 'Intake', group: 'comedk', type: 'editable', headerStyle: 'background: #10b981; color: white;' },
+  { id: 'comed_fill', label: 'Filled', group: 'comedk', type: 'editable', headerStyle: 'background: #10b981; color: white;' },
+  { id: 'mgt_int', label: 'Intake', group: 'management', type: 'editable', headerStyle: 'background: #f97316; color: white;' },
+  { id: 'mgt_fill', label: 'Filled', group: 'management', type: 'formula', formula: '__mgt_fill__(courseId)', headerStyle: 'background: #f97316; color: white;' },
+  { id: 'act_int', label: 'Intake', group: 'actual', type: 'formula', formula: 'cet_int + comed_int + mgt_int', headerStyle: 'background: #3b82f6; color: white;' },
+  { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill', headerStyle: 'background: #3b82f6; color: white;' },
+  { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill', headerStyle: 'background: #3b82f6; color: white;' },
+  { id: 'tot_snq', label: 'Total with SNQ', group: null, type: 'formula', formula: 'act_fill + cet_snq', headerStyle: 'background: #8b5cf6; color: white;' },
+  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #ec4899; color: white;' },
+  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #ec4899; color: white;' },
+  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #ec4899; color: white;' },
 ];
 
 // Default course rows (fallback when no saved config exists)
@@ -858,19 +858,43 @@ function _renderStatsTable() {
   const tfoot = document.getElementById('admitted-stats-footer');
   if (!tbody || !tfoot) return;
 
-  // Render table headers
+  // Render table headers (2-row grouped header, matching group definitions)
   if (thead) {
-    const headerRow = `
-      <tr>
-        <th>#</th>
-        <th>Course</th>
-        ${_statsConfig.columns.map(col => {
-          const headerStyle = col.headerStyle || 'background: #f1f5f9;';
-          return `<th style="${headerStyle}">${col.label}</th>`;
-        }).join('')}
-      </tr>
-    `;
-    thead.innerHTML = headerRow;
+    const groups = _statsConfig.groups || [];
+    const columns = _statsConfig.columns || [];
+
+    // Row 1: "#" / "Course" (rowspan 2), grouped columns (colspan), standalone columns (rowspan 2)
+    let row1 = '<tr><th rowspan="2">#</th><th rowspan="2">Course</th>';
+    let i = 0;
+    while (i < columns.length) {
+      const col = columns[i];
+      if (col.group) {
+        const groupDef = groups.find(g => g.id === col.group);
+        let span = 0, j = i;
+        while (j < columns.length && columns[j].group === col.group) { span++; j++; }
+        const headerStyle = (groupDef && groupDef.headerStyle) || 'background:#f1f5f9;';
+        row1 += `<th colspan="${span}" style="${headerStyle}">${groupDef ? groupDef.label : col.group}</th>`;
+        i = j;
+      } else {
+        const headerStyle = col.headerStyle || 'background:#f1f5f9;';
+        row1 += `<th rowspan="2" style="${headerStyle}">${col.label}</th>`;
+        i++;
+      }
+    }
+    row1 += '</tr>';
+
+    // Row 2: sub-labels only for grouped columns
+    let row2 = '<tr>';
+    columns.forEach(col => {
+      if (col.group) {
+        const groupDef = groups.find(g => g.id === col.group);
+        const subStyle = (groupDef && groupDef.subHeaderStyle) || col.headerStyle || 'background:#f8fafc;';
+        row2 += `<th style="${subStyle}">${col.label}</th>`;
+      }
+    });
+    row2 += '</tr>';
+
+    thead.innerHTML = row1 + row2;
   }
 
   const totals = {
