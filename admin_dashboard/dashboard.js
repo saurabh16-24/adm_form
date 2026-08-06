@@ -1075,42 +1075,26 @@ async function saveAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  const configPayload = {
-    groups: _statsConfig.groups,
-    columns: _statsConfig.columns,
-    rows: _statsConfig.rows.map(row => ({
-      ...row,
-      values: Object.fromEntries(
-        Object.entries(row.values).filter(([key]) => key !== 'mgt_fill')
-      )
-    })),
-  };
+  // Build legacy data format that the backend expects
+  const legacyData = {};
+  _statsConfig.rows.forEach(row => {
+    legacyData[row.id] = {
+      cet_int: parseInt(row.values.cet_int) || 0,
+      cet_fill: parseInt(row.values.cet_fill) || 0,
+      cet_snq: parseInt(row.values.cet_snq) || 0,
+      comed_int: parseInt(row.values.comed_int) || 0,
+      comed_fill: parseInt(row.values.comed_fill) || 0,
+      mgt_int: parseInt(row.values.mgt_int) || 0,
+      aicte: parseInt(row.values.aicte) || 0,
+    };
+  });
 
   try {
-    const result = await apiFetch('/api/admin/stats/manual', {
+    // Save to backend with correct format
+    await apiFetch('/api/admin/stats/manual', {
       method: 'POST',
-      body: JSON.stringify({ year: selectedYear, config: configPayload })
+      body: JSON.stringify({ year: selectedYear, data: legacyData })
     });
-
-    // Also save legacy manual stats for backward compatibility
-    const legacyData = {};
-    _statsConfig.rows.forEach(row => {
-      legacyData[row.id] = {
-        cet_int: parseInt(row.values.cet_int) || 0,
-        cet_fill: parseInt(row.values.cet_fill) || 0,
-        cet_snq: parseInt(row.values.cet_snq) || 0,
-        comed_int: parseInt(row.values.comed_int) || 0,
-        comed_fill: parseInt(row.values.comed_fill) || 0,
-        mgt_int: parseInt(row.values.mgt_int) || 0,
-        aicte: parseInt(row.values.aicte) || 0,
-      };
-    });
-    try {
-      await apiFetch('/api/admin/stats/manual', {
-        method: 'POST',
-        body: JSON.stringify({ year: selectedYear, data: legacyData })
-      });
-    } catch (e) { /* legacy save is best-effort */ }
 
     showToast(`Statistics for ${selectedYear} saved successfully`);
   } catch (e) {
