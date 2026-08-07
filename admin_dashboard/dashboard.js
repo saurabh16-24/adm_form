@@ -694,9 +694,9 @@ const DEFAULT_COLUMNS = [
   { id: 'act_fill', label: 'Filled', group: 'actual', type: 'formula', formula: 'cet_fill + comed_fill + mgt_fill', headerStyle: 'background: #3b82f6; color: white;' },
   { id: 'act_vac', label: 'Vac', group: 'actual', type: 'formula', formula: 'act_int - act_fill', headerStyle: 'background: #3b82f6; color: white;' },
   { id: 'tot_snq', label: 'Total with SNQ', group: null, type: 'formula', formula: 'act_fill + cet_snq', headerStyle: 'background: #8b5cf6; color: white;' },
-  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #ec4899; color: white;' },
-  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #ec4899; color: white;' },
-  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #ec4899; color: white;' },
+  { id: 'aicte', label: 'AICTE J&K', group: null, type: 'editable', headerStyle: 'background: #fef3c7; color: #854d0e;' },
+  { id: 'overall', label: 'OVERALL TOTAL', group: null, type: 'formula', formula: 'tot_snq + aicte', headerStyle: 'background: #bbf7d0; color: #166534;' },
+  { id: 'actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(act_fill, act_int)', isPercent: true, headerStyle: 'background: #fee2e2; color: #991b1b;' },
 ];
 
 // Default course rows (fallback when no saved config exists)
@@ -728,22 +728,16 @@ let _mgtFilledCounts = {};
 
 // Fetch management admissions from the database
 async function fetchManagementAdmissions(year) {
-  console.log('[DEBUG] fetchManagementAdmissions called with year:', year);
   try {
-    console.log('[DEBUG] Making API call to /api/admin/admissions/management?year=' + year);
     const res = await apiFetch(`/api/admin/admissions/management?year=${year}`);
-    console.log('[DEBUG] API response:', res);
     _mgtFilledCounts = res.counts || {};
-    console.log('[DEBUG] Set _mgtFilledCounts to:', _mgtFilledCounts);
   } catch (e) {
-    console.error('[DEBUG] Error fetching management admissions:', e);
     _mgtFilledCounts = {};
   }
 }
 
 function __mgt_fill__(courseId) {
   const result = _mgtFilledCounts[courseId] || 0;
-  console.log('__mgt_fill__(' + courseId + ') =', result, '(from', _mgtFilledCounts, ')');
   return result;
 }
 
@@ -755,7 +749,6 @@ function evalFormula(formula, rowValues, courseId) {
     const fn = new Function('__pct__', '__mgt_fill__', 'courseId', ...keys, `return (${formula});`);
     return fn(__pct__, __mgt_fill__, courseId, ...vals);
   } catch (e) {
-    console.warn('Formula eval error:', formula, e);
     return 0;
   }
 }
@@ -763,6 +756,7 @@ function evalFormula(formula, rowValues, courseId) {
 function computeRowValues(row, columns) {
   // Compute all formula columns from editable values
   const values = { ...row.values };
+  
   // Multi-pass to resolve dependent formulas (e.g., overall depends on tot_snq)
   for (let pass = 0; pass < 3; pass++) {
     columns.forEach(col => {
@@ -791,56 +785,47 @@ async function renderAdmittedStats() {
     config = await apiFetch(`/api/admin/stats/config?year=${selectedYear}`);
   } catch (e) { console.warn('Dynamic stats config not available, using defaults', e); }
 
-  if (config && config.columns && config.rows) {
-    // Loaded saved dynamic config
-    _statsConfig.groups = config.groups || JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
-    _statsConfig.columns = config.columns;
-    
-    // Ensure mgt_fill is always formula type (not editable)
-    _statsConfig.columns = _statsConfig.columns.map(col => {
-      if (col.id === 'mgt_fill') {
-        return { ...col, type: 'formula', formula: '__mgt_fill__(courseId)' };
-      }
-      return col;
-    });
-    
-    _statsConfig.rows = config.rows.map(row => ({
-      ...row,
-      values: {
-        ...row.values,
-        mgt_fill: 0  // Always recalculate from admissions table, never load from saved data
-      }
-    }));
-  } else {
+  // ALWAYS load from course_manual_stats - it's the source of truth
+  // Skip dynamic config to avoid stale data
+  {
     // Fallback: build from defaults + old manual stats
     _statsConfig.groups = JSON.parse(JSON.stringify(DEFAULT_COLUMN_GROUPS));
     _statsConfig.columns = JSON.parse(JSON.stringify(DEFAULT_COLUMNS));
 
     let savedData = {};
-    try { savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`); }
+    try { 
+      savedData = await apiFetch(`/api/admin/stats/manual?year=${selectedYear}`);
+    }
     catch (e) { /* ignore */ }
 
     _statsConfig.rows = DEFAULT_COURSES.map(c => {
       const manual = savedData[c.id] || {};
-      return {
+      const safeInt = (val, fallback) => {
+        if (val === null || val === undefined || val === '') return fallback;
+        const parsed = parseInt(val, 10);
+        return isNaN(parsed) ? fallback : parsed;
+      };
+      
+      const values = {
+        cet_int: safeInt(manual.cet_int, c.values.cet_int || 0),
+        cet_fill: safeInt(manual.cet_fill, 0),
+        cet_snq: safeInt(manual.cet_snq, 0),
+        comed_int: safeInt(manual.comed_int, c.values.comed_int || 0),
+        comed_fill: safeInt(manual.comed_fill, 0),
+        mgt_int: safeInt(manual.mgt_int, c.values.mgt_int || 0),
+        mgt_fill: 0,  // Will be calculated from formula using __mgt_fill__(courseId)
+        aicte: safeInt(manual.aicte, 0),
+      };
+      
+      const result = {
         id: c.id,
         name: c.name,
         branch: c.branch || '',
-        values: {
-          cet_int: c.values.cet_int || 0,
-          cet_fill: parseInt(manual.cet_fill) || 0,
-          cet_snq: parseInt(manual.cet_snq) || 0,
-          comed_int: c.values.comed_int || 0,
-          comed_fill: parseInt(manual.comed_fill) || 0,
-          mgt_int: c.values.mgt_int || 0,
-          mgt_fill: 0,  // Will be calculated from formula using __mgt_fill__(branch)
-          aicte: parseInt(manual.aicte) || 0,
-        }
+        values: values
       };
+      return result;
     });
   }
-
-  // Pre-compute all formula columns
   _statsConfig.rows.forEach(row => {
     const values = computeRowValues(row, _statsConfig.columns);
     row.values = values;
@@ -887,8 +872,8 @@ function _renderStatsTable() {
     let row2 = '<tr>';
     columns.forEach(col => {
       if (col.group) {
-        const groupDef = groups.find(g => g.id === col.group);
-        const subStyle = (groupDef && groupDef.subHeaderStyle) || col.headerStyle || 'background:#f8fafc;';
+        // Use the column's headerStyle for consistency with row 1
+        const subStyle = col.headerStyle || 'background:#f1f5f9; color: white;';
         row2 += `<th style="${subStyle}">${col.label}</th>`;
       }
     });
@@ -1075,19 +1060,32 @@ async function saveAdmittedStats() {
   const yearSelect = document.getElementById('global-academic-year');
   const selectedYear = yearSelect ? yearSelect.value : '2026-27';
 
-  // Build legacy data format that the backend expects
+  // Read directly from input fields in the table, not from row.values
+  // (because row.values contains computed/formula values)
   const legacyData = {};
-  _statsConfig.rows.forEach(row => {
-    legacyData[row.id] = {
-      cet_int: parseInt(row.values.cet_int) || 0,
-      cet_fill: parseInt(row.values.cet_fill) || 0,
-      cet_snq: parseInt(row.values.cet_snq) || 0,
-      comed_int: parseInt(row.values.comed_int) || 0,
-      comed_fill: parseInt(row.values.comed_fill) || 0,
-      mgt_int: parseInt(row.values.mgt_int) || 0,
-      aicte: parseInt(row.values.aicte) || 0,
-    };
-  });
+  const tbody = document.getElementById('admitted-stats-body');
+  
+  if (tbody) {
+    tbody.querySelectorAll('tr').forEach(row => {
+      const courseId = row.dataset.id;
+      const getInputVal = (field) => {
+        const input = row.querySelector(`[data-field="${field}"]`);
+        const val = input ? input.value : '';
+        const parsed = parseInt(val, 10);
+        return isNaN(parsed) ? 0 : parsed;
+      };
+      
+      legacyData[courseId] = {
+        cet_int: getInputVal('cet_int'),
+        cet_fill: getInputVal('cet_fill'),
+        cet_snq: getInputVal('cet_snq'),
+        comed_int: getInputVal('comed_int'),
+        comed_fill: getInputVal('comed_fill'),
+        mgt_int: getInputVal('mgt_int'),
+        aicte: getInputVal('aicte'),
+      };
+    });
+  }
 
   try {
     // Save to backend with correct format
@@ -1098,7 +1096,6 @@ async function saveAdmittedStats() {
 
     showToast(`Statistics for ${selectedYear} saved successfully`);
   } catch (e) {
-    console.error('Failed to save manual stats', e);
     alert('Failed to save statistics: ' + e.message);
   }
 }
@@ -1523,8 +1520,6 @@ function renderCharts(graphs, stats) {
 
     // course_quality is on stats (top-level), NOT inside stats.graphs
     const courseQuality = stats?.course_quality || lastStats?.course_quality || [];
-    console.log('[Quality Chart] course_quality data:', courseQuality);
-
     // Build chart data arrays
     let qLabels = ['Overall Institutional Average'];
     let pcmData = [pcmVal];
@@ -1553,11 +1548,9 @@ function renderCharts(graphs, stats) {
         });
       } else {
         // Filter selected → show Overall + the specific course for comparison
-        console.log('[Quality Chart] Looking for course:', selectedCourse, 'in', courseQuality.map(q=>q.course));
         const match = courseQuality.find(q => q.course === selectedCourse)
                    || courseQuality.find(q => q.course && q.course.toLowerCase().includes(
                         selectedCourse.toLowerCase().replace(/^be /i, '')));
-        console.log('[Quality Chart] Match found:', match);
         if (match) {
           const shortName = (match.course || '')
             .replace('BE Computer Science and Engineering (Artificial Intelligence)', 'CSE (AI)')
@@ -1906,7 +1899,6 @@ async function updateRemarks(id, field, value) {
       showToast('Changes saved');
     }
   } catch (err) {
-    console.error('Update remarks error:', err);
     showToast('Failed to save changes', 'error');
   }
 }
@@ -2692,7 +2684,6 @@ async function saveAdmissionChanges(id) {
     }
   } catch (err) {
     showToast('Error saving changes', 'error');
-    console.error(err);
   }
 }
 
@@ -3675,7 +3666,6 @@ async function sendBulkMail() {
     }
   } catch (err) {
     showToast('Failed to send mail. Server error.', 'error');
-    console.error('Send bulk mail error:', err);
   } finally {
     btn.innerHTML = ogHtml;
     btn.disabled = false;
@@ -4079,7 +4069,6 @@ async function updateRawRemarks(id, field, value) {
       showToast('Changes saved');
     }
   } catch (err) {
-    console.error('Update raw remarks error:', err);
     showToast('Failed to save changes', 'error');
   }
 }
@@ -4504,7 +4493,6 @@ async function importCSVData() {
     }
   } catch (err) {
     showToast('Failed to import CSV: ' + err.message, 'error');
-    console.error('CSV import error:', err);
   } finally {
     btn.innerHTML = ogHtml;
     btn.disabled = false;
@@ -4562,7 +4550,6 @@ function openQRModal(rawId) {
   container.innerHTML = "";
   const origin = window.location.origin;
   activeQRLink = `${origin}/index.html?raw_id=${rawId}`;
-  console.log('Generated QR Link:', activeQRLink);
   linkText.textContent = activeQRLink;
   
   new QRCode(container, {
@@ -4661,7 +4648,6 @@ async function exportOverviewCSV() {
     link.click();
     showToast('Full CSV Report exported');
   } catch (err) {
-    console.error('Export CSV Error:', err);
     showToast('Export failed', 'error');
   }
 }
@@ -5012,7 +4998,8 @@ async function exportOverviewPDF() {
 
     performHiddenPrint(html);
   } catch (err) {
-    console.error('Export PDF Error:', err);
     showToast('Full PDF Export failed', 'error');
   }
 }
+
+
