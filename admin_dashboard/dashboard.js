@@ -4896,26 +4896,53 @@ async function exportOverviewCSV() {
     csvContent += `Today's Applications,${document.getElementById('stat-today-adm').textContent}\n`;
     csvContent += `Raw Conversion Rate,${document.getElementById('stat-raw-conv').textContent}\n\n`;
 
-    // Section 2: Admitted Students Statistics Table
-    csvContent += `ADMITTED STUDENTS STATISTICS (${academicYear})\n`;
-    const table = document.getElementById('admitted-stats-table');
-    if (table) {
-      csvContent += `Sl.No,Course,CET Int,CET Fill,CET SNQ,CET Tot,ComedK Int,ComedK Fill,Mgt Int,Mgt Fill,Actual Int,Actual Fill,Actual Vac,Total SNQ,AICTE,Overall,Actual %\n`;
-      const rows = document.querySelectorAll('#admitted-stats-body tr');
-      rows.forEach(row => {
-        const cells = Array.from(row.querySelectorAll('td')).map(td => {
-          const input = td.querySelector('input');
-          return input ? input.value : td.textContent.trim().replace(/%/g, '');
+    // Section 2: Admitted Students Statistics Tables
+    const programmeSelect = document.getElementById('global-programme');
+    const selectedProgramme = programmeSelect ? programmeSelect.value : 'ALL';
+
+    if (selectedProgramme === 'ALL' || selectedProgramme === 'UG') {
+      csvContent += `UG ADMITTED STUDENTS STATISTICS (${academicYear})\n`;
+      const table = document.getElementById('admitted-stats-table');
+      if (table) {
+        csvContent += `Sl.No,Course,CET Int,CET Fill,CET SNQ,CET Tot,ComedK Int,ComedK Fill,Mgt Int,Mgt Fill,Actual Int,Actual Fill,Actual Vac,Total SNQ,AICTE,Overall,Actual %\n`;
+        const rows = document.querySelectorAll('#admitted-stats-body tr');
+        rows.forEach(row => {
+          const cells = Array.from(row.querySelectorAll('td')).map(td => {
+            const input = td.querySelector('input');
+            return input ? input.value : td.textContent.trim().replace(/%/g, '');
+          });
+          csvContent += cells.join(',') + '\n';
         });
-        csvContent += cells.join(',') + '\n';
-      });
-      const foot = document.querySelector('#admitted-stats-footer tr');
-      if (foot) {
-        const footCells = Array.from(foot.querySelectorAll('td')).map(td => td.textContent.trim().replace(/%/g, ''));
-        csvContent += `TOTALS,` + footCells.slice(1).join(',') + '\n';
+        const foot = document.querySelector('#admitted-stats-footer tr');
+        if (foot) {
+          const footCells = Array.from(foot.querySelectorAll('td')).map(td => td.textContent.trim().replace(/%/g, ''));
+          csvContent += `TOTALS,` + footCells.slice(1).join(',') + '\n';
+        }
       }
+      csvContent += `\n`;
     }
-    csvContent += `\n`;
+
+    if (selectedProgramme === 'ALL' || selectedProgramme === 'PG') {
+      csvContent += `PG ADMITTED STUDENTS STATISTICS (${academicYear})\n`;
+      const pgTable = document.getElementById('pg-admitted-stats-table');
+      if (pgTable) {
+        csvContent += `Sl.No,Course,CET Int,CET Fill,Mgt Int,Mgt Fill,Total Fill,Actual Vac,Total %\n`;
+        const rows = document.querySelectorAll('#pg-admitted-stats-body tr');
+        rows.forEach(row => {
+          const cells = Array.from(row.querySelectorAll('td')).map(td => {
+            const input = td.querySelector('input');
+            return input ? input.value : td.textContent.trim().replace(/%/g, '');
+          });
+          csvContent += cells.join(',') + '\n';
+        });
+        const foot = document.querySelector('#pg-admitted-stats-footer tr');
+        if (foot) {
+          const footCells = Array.from(foot.querySelectorAll('td')).map(td => td.textContent.trim().replace(/%/g, ''));
+          csvContent += `TOTALS,` + footCells.slice(1).join(',') + '\n';
+        }
+      }
+      csvContent += `\n`;
+    }
 
     // Section 3: Distribution Data (from charts)
     const addDistSection = (title, chartInstance) => {
@@ -5008,7 +5035,19 @@ async function exportOverviewPDF() {
     const appToAdm = metrics.adm > 0 ? ((metrics.mgt / metrics.adm) * 100).toFixed(1) : 0;
     const enqToAdm = metrics.enq > 0 ? ((metrics.mgt / metrics.enq) * 100).toFixed(1) : 0;
 
-    const tableHtml = document.getElementById('admitted-stats-table').outerHTML;
+    const programmeSelect = document.getElementById('global-programme');
+    const selectedProgramme = programmeSelect ? programmeSelect.value : 'ALL';
+
+    let tableHtml = '';
+    if (selectedProgramme === 'ALL' || selectedProgramme === 'UG') {
+        const ugTable = document.getElementById('admitted-stats-table');
+        if (ugTable) tableHtml += '<h3 style="color:#1e40af; margin-bottom: 5px; font-size: 11px; text-transform: uppercase;">UG Admitted Students Statistics</h3>' + ugTable.outerHTML;
+    }
+    if (selectedProgramme === 'ALL' || selectedProgramme === 'PG') {
+        const pgTable = document.getElementById('pg-admitted-stats-table');
+        if (pgTable) tableHtml += '<h3 style="color:#1e40af; margin-bottom: 5px; margin-top: 15px; font-size: 11px; text-transform: uppercase;">PG Admitted Students Statistics</h3>' + pgTable.outerHTML;
+    }
+
     let cleanTableHtml = tableHtml.replace(/<input[^>]*value="([^"]*)"[^>]*>/g, '$1');
 
     // Data Table Helper (Expanded to show ALL data)

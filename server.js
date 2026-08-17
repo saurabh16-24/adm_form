@@ -1420,7 +1420,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     
     // Graph: Management pincodes (Full Dynamic Data)
     const mgtPincodes = await pool.query(
-      `SELECT COALESCE(NULLIF(a.comm_pincode, ''), 'Unspecified') as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} GROUP BY pincode ORDER BY count DESC`,
+      `SELECT COALESCE(NULLIF(a.comm_pincode, ''), 'Unspecified') as pincode, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${mgtWhere} GROUP BY pincode ORDER BY count DESC`,
       mgtParams
     );
     
@@ -1438,7 +1438,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 
     // Graph: Gender distribution (Actual Admissions via Management Forms)
     const admGender = await pool.query(
-      `SELECT a.gender, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND a.gender IS NOT NULL AND a.gender != '' GROUP BY a.gender ORDER BY count DESC`,
+      `SELECT a.gender, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${mgtWhere} AND a.gender IS NOT NULL AND a.gender != '' GROUP BY a.gender ORDER BY count DESC`,
       mgtParams
     );
 
@@ -1487,7 +1487,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     );
     
     const admCourse = await pool.query(
-      `SELECT branch as course, COUNT(*) as count FROM management_forms m WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND branch IS NOT NULL AND branch != '' GROUP BY branch ORDER BY count DESC`,
+      `SELECT m.branch as course, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${mgtWhere} AND m.branch IS NOT NULL AND m.branch != '' GROUP BY m.branch ORDER BY count DESC`,
       mgtParams
     );
 
@@ -1513,7 +1513,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       admParams
     );
     const mgtTimeline = await pool.query(
-      `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as date, COUNT(*) as count FROM management_forms m WHERE 1=1${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''} AND created_at >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD') ORDER BY date ASC`,
+      `SELECT TO_CHAR(m.created_at, 'YYYY-MM-DD') as date, COUNT(*) as count FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id ${mgtWhere} AND m.created_at >= CURRENT_DATE - INTERVAL '30 days' GROUP BY TO_CHAR(m.created_at, 'YYYY-MM-DD') ORDER BY date ASC`,
       mgtParams
     );
 
@@ -1533,8 +1533,8 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
          COUNT(*) as student_count,
          ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.pcm_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_pcm,
          ROUND(AVG(NULLIF(regexp_replace(COALESCE(m.overall_percentage,''), '[^0-9.]', '', 'g'), '')::numeric), 2) as avg_overall
-       FROM management_forms m
-       WHERE 1=1 ${qualityWhere.replace('WHERE 1=1', '')}`,
+       FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id
+       ${qualityWhere}`,
       qualityParams
     );
 
