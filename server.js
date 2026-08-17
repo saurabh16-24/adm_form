@@ -1333,8 +1333,19 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
       
       // Management forms store academic_year as "26-27" (short) or "2026-27" (full)
       const shortYear = startYear.slice(-2) + '-' + year.split('-')[1]; // "26-27"
-      mgtWhere += ` AND (academic_year = $${mgtParams.length + 1} OR academic_year = $${mgtParams.length + 2})`;
+      mgtWhere += ` AND (m.academic_year = $${mgtParams.length + 1} OR m.academic_year = $${mgtParams.length + 2})`;
       mgtParams.push(year, shortYear); // e.g. "2026-27" and "26-27"
+    }
+
+    const programme = req.query.programme;
+    if (programme === 'UG') {
+      enqWhere += ` AND programme = 'UG'`;
+      admWhere += ` AND application_number LIKE 'BE/%'`;
+      mgtWhere += ` AND a.application_number LIKE 'BE/%'`;
+    } else if (programme === 'PG') {
+      enqWhere += ` AND programme = 'PG'`;
+      admWhere += ` AND application_number NOT LIKE 'BE/%'`;
+      mgtWhere += ` AND a.application_number NOT LIKE 'BE/%'`;
     }
 
     const today = getISTDateString();
@@ -1346,12 +1357,22 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     const totalMgtRes = await pool.query(`
       SELECT CASE WHEN a.application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c 
       FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id
-      WHERE 1=1 ${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''}
+      ${mgtWhere}
       GROUP BY prog
     `, mgtParams);
     
-    const todayEnqRes = await pool.query(`SELECT programme, COUNT(*) AS c FROM enquiries WHERE enquiry_date = $1 GROUP BY programme`, [today]);
-    const todayAdmRes = await pool.query(`SELECT CASE WHEN application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c FROM admissions WHERE application_date = $1 GROUP BY prog`, [today]);
+    let todayEnqWhere = ` WHERE enquiry_date = $1`;
+    let todayAdmWhere = ` WHERE application_date = $1`;
+    if (programme === 'UG') {
+      todayEnqWhere += ` AND programme = 'UG'`;
+      todayAdmWhere += ` AND application_number LIKE 'BE/%'`;
+    } else if (programme === 'PG') {
+      todayEnqWhere += ` AND programme = 'PG'`;
+      todayAdmWhere += ` AND application_number NOT LIKE 'BE/%'`;
+    }
+
+    const todayEnqRes = await pool.query(`SELECT programme, COUNT(*) AS c FROM enquiries${todayEnqWhere} GROUP BY programme`, [today]);
+    const todayAdmRes = await pool.query(`SELECT CASE WHEN application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c FROM admissions${todayAdmWhere} GROUP BY prog`, [today]);
 
     const extractCounts = (rows) => {
       let total = 0, ug = 0, pg = 0;

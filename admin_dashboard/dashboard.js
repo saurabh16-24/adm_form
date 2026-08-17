@@ -615,10 +615,21 @@ async function loadOverview() {
     }
     const selectedYear = sessionSelect ? sessionSelect.value : '';
     const selectedCourse = document.getElementById('quality-course-filter')?.value || '';
+    
+    // Check programme filter
+    const programmeSelect = document.getElementById('global-programme');
+    const selectedProgramme = programmeSelect ? programmeSelect.value : 'ALL';
+
+    // Show/Hide tables based on programme
+    const ugSection = document.getElementById('ug-admitted-stats-section');
+    const pgSection = document.getElementById('pg-admitted-stats-section');
+    if (ugSection) ugSection.style.display = (selectedProgramme === 'ALL' || selectedProgramme === 'UG') ? 'block' : 'none';
+    if (pgSection) pgSection.style.display = (selectedProgramme === 'ALL' || selectedProgramme === 'PG') ? 'block' : 'none';
 
     let url = `/api/admin/stats?`;
     if (selectedYear) url += `year=${selectedYear}&`;
     if (selectedCourse) url += `course=${encodeURIComponent(selectedCourse)}&`;
+    if (selectedProgramme && selectedProgramme !== 'ALL') url += `programme=${selectedProgramme}&`;
 
     const stats = await apiFetch(url);
     

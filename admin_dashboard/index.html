@@ -122,6 +122,17 @@
               <!-- Options populated via JS -->
             </select>
           </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-right: auto; margin-left: 20px;">
+            <div style="background: #10b981; color: white; padding: 6px; border-radius: 8px; display: flex;">
+              <span class="material-icons-round" style="font-size: 20px;">school</span>
+            </div>
+            <span style="font-size: 0.95rem; font-weight: 700; color: #1e293b;">Programme:</span>
+            <select id="global-programme" onchange="loadOverview()" style="border: 2px solid #10b981; border-radius: 8px; padding: 8px 16px; font-size: 0.95rem; font-weight: 800; color: #065f46; background: #ecfdf5; cursor: pointer; outline: none; min-width: 120px; transition: all 0.2s;">
+              <option value="ALL">All Programmes</option>
+              <option value="UG">UG Only</option>
+              <option value="PG">PG Only</option>
+            </select>
+          </div>
           <div style="display: flex; gap: 10px;">
             <button class="btn" onclick="exportOverviewPDF()" style="background: white; border: 1px solid var(--accent-purple); color: var(--accent-purple); font-weight: 700; padding: 10px 20px; display: flex; align-items: center; gap: 8px; border-radius: 10px; transition: all 0.2s;">
               <span class="material-icons-round">picture_as_pdf</span> Export PDF
@@ -200,7 +211,7 @@
           </div>
         </div>
         <!-- Admitted Students Statistics Table -->
-        <div class="card" style="margin-bottom: 30px; overflow-x: auto;">
+        <div class="card" id="ug-admitted-stats-section" style="margin-bottom: 30px; overflow-x: auto;">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 12px 20px; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
@@ -268,7 +279,7 @@
         </div>
 
         <!-- PG Admitted Students Statistics Table -->
-        <div class="card" style="margin-bottom: 30px; overflow-x: auto;">
+        <div class="card" id="pg-admitted-stats-section" style="margin-bottom: 30px; overflow-x: auto;">
           <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 12px 20px; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="background: #d97706; color: white; padding: 6px; border-radius: 8px; display: flex;">
