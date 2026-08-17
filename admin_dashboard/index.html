@@ -182,7 +182,7 @@
               <div style="background: #3b82f6; color: white; padding: 6px; border-radius: 8px; display: flex;">
                 <span class="material-icons-round" style="font-size: 20px;">table_chart</span>
               </div>
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">Admitted Students Statistics</h3>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0;">UG Admitted Students Statistics</h3>
             </div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
               <button class="btn" onclick="renderAdmittedStats()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600;">
@@ -240,6 +240,51 @@
           <div style="padding: 12px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
             <span class="material-icons-round" style="font-size: 14px;">info</span>
             <span>All fields are editable. Formula columns (Total, Actual Admissions, %, etc.) auto-calculate. Click "Save Changes" to persist.</span>
+          </div>
+        </div>
+
+        <!-- PG Admitted Students Statistics Table -->
+        <div class="card" style="margin-bottom: 30px; overflow-x: auto;">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 12px 20px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="background: #d97706; color: white; padding: 6px; border-radius: 8px; display: flex;">
+                <span class="material-icons-round" style="font-size: 20px;">school</span>
+              </div>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: #92400e; margin: 0;">PG Admitted Students Statistics</h3>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+              <button class="btn" onclick="renderPGAdmittedStats()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600;">
+                <span class="material-icons-round" style="font-size: 16px;">refresh</span> Refresh
+              </button>
+              <button class="btn btn-primary" id="save-pg-stats-btn" onclick="savePGAdmittedStats()" style="padding: 6px 16px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; font-weight: 600; background: #d97706;">
+                <span class="material-icons-round" style="font-size: 16px;">save</span> Save Changes
+              </button>
+              <div style="position:relative;display:inline-block;" class="export-dropdown-wrap">
+                <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:0.8rem;font-weight:600;color:#64748b;" onmouseover="this.style.background='#eef2ff'" onmouseout="this.style.background='#f8fafc'"><span class="material-icons-round" style="font-size:16px;">download</span>Export</button>
+                <div style="display:none;position:absolute;right:0;top:110%;background:white;border:1px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:50;min-width:140px;overflow:hidden;">
+                  <button onclick="exportPGAdmittedStatsPDF();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#ef4444;">picture_as_pdf</span>PDF</button>
+                  <div style="height:1px;background:#f1f5f9;"></div>
+                  <button onclick="exportPGAdmittedStatsCSV();this.parentElement.style.display='none'" style="display:flex;align-items:center;gap:8px;width:100%;padding:10px 14px;border:none;background:none;cursor:pointer;font-size:0.8rem;font-weight:600;color:#1e293b;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'"><span class="material-icons-round" style="font-size:16px;color:#10b981;">table_chart</span>CSV</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap" style="padding: 0;">
+            <table class="stats-table" id="pg-admitted-stats-table">
+              <thead>
+                <!-- Generated dynamically by JS -->
+              </thead>
+              <tbody id="pg-admitted-stats-body">
+                <!-- Injected via JS -->
+              </tbody>
+              <tfoot id="pg-admitted-stats-footer" class="total-row">
+                <!-- Injected via JS -->
+              </tfoot>
+            </table>
+          </div>
+          <div style="padding: 12px 20px; background: #fffbeb; border-top: 1px solid #fde68a; font-size: 0.75rem; color: #92400e; display: flex; align-items: center; gap: 6px;">
+            <span class="material-icons-round" style="font-size: 14px;">info</span>
+            <span>PG courses: MBA, MCA, M.Tech. Only CET and Management quotas. Click "Save Changes" to persist.</span>
           </div>
         </div>
 

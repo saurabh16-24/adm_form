@@ -314,6 +314,12 @@ function exportAdmittedStatsPDF() {
 function exportAdmittedStatsCSV() {
   exportTableCSV('admitted-stats-table', 'SVCE_Admitted_Statistics');
 }
+function exportPGAdmittedStatsPDF() {
+  exportTablePDF('pg-admitted-stats-table', 'PG Admitted Students Statistics', 'Course-wise intake, seat allocation, and admission status for PG courses (MBA, MCA, M.Tech) across CET and Management quotas.');
+}
+function exportPGAdmittedStatsCSV() {
+  exportTableCSV('pg-admitted-stats-table', 'SVCE_PG_Admitted_Statistics');
+}
 
 function exportConversionRatioPDF() {
   exportChartPDF('ratioChart', 'Conversion Ratio Analysis', 'Comparison of Enquiries vs Applications vs Admissions — measures the admission funnel efficiency.', {
@@ -651,6 +657,7 @@ async function loadOverview() {
     
     // Admitted Stats
     renderAdmittedStats();
+    renderPGAdmittedStats();
     
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
@@ -1025,6 +1032,260 @@ async function saveAdmittedStats() {
   }
 }
 
+
+// ═══════════════ PG ADMITTED STATS ENGINE ═══════════════
+
+const PG_COLUMN_GROUPS = [
+  { id: 'pg_cet', label: 'CET', headerStyle: 'background: #fef3c7; color: #92400e;', subHeaderStyle: 'background: #fffbeb;' },
+  { id: 'pg_management', label: 'Management', headerStyle: 'background: #ffedd5; color: #9a3412;', subHeaderStyle: 'background: #fff7ed;' },
+  { id: 'pg_actual', label: 'Actual Admissions', headerStyle: 'background: #d97706; color: white;', subHeaderStyle: 'background: #b45309; color: white;' },
+];
+
+const PG_COLUMNS = [
+  { id: 'pg_total_int', label: 'Total Intake', group: null, type: 'formula', formula: 'pg_cet_int + pg_mgt_int', headerStyle: 'background: #e0e7ff; color: #3730a3;' },
+  { id: 'pg_cet_int', label: 'Intake', group: 'pg_cet', type: 'editable' },
+  { id: 'pg_cet_fill', label: 'Filled', group: 'pg_cet', type: 'editable' },
+  { id: 'pg_mgt_int', label: 'Intake', group: 'pg_management', type: 'editable' },
+  { id: 'pg_mgt_fill', label: 'Filled', group: 'pg_management', type: 'editable' },
+  { id: 'pg_act_int', label: 'Intake', group: 'pg_actual', type: 'formula', formula: 'pg_cet_int + pg_mgt_int' },
+  { id: 'pg_act_fill', label: 'Filled', group: 'pg_actual', type: 'formula', formula: 'pg_cet_fill + pg_mgt_fill' },
+  { id: 'pg_act_vac', label: 'Vacant', group: 'pg_actual', type: 'formula', formula: 'pg_act_int - pg_act_fill' },
+  { id: 'pg_actual_pct', label: 'ACTUAL %', group: null, type: 'formula', formula: '__pct__(pg_act_fill, pg_act_int)', isPercent: true, headerStyle: 'background: #fee2e2; color: #991b1b;' },
+];
+
+const PG_DEFAULT_COURSES = [
+  { id: 'MBA', name: 'MBA', branch: 'MBA', values: { pg_cet_int: 60, pg_mgt_int: 60 } },
+  { id: 'MCA', name: 'MCA', branch: 'MCA', values: { pg_cet_int: 30, pg_mgt_int: 30 } },
+  { id: 'MTECH', name: 'M.Tech', branch: 'M.Tech', values: { pg_cet_int: 12, pg_mgt_int: 13 } },
+];
+
+let _pgStatsConfig = {
+  groups: [],
+  columns: [],
+  rows: [],
+};
+
+async function renderPGAdmittedStats() {
+  const yearSelect = document.getElementById('global-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
+  const tableEl = document.getElementById('pg-admitted-stats-table');
+  if (!tableEl) return;
+
+  // Try loading dynamic config from API
+  let config = null;
+  try {
+    config = await apiFetch(`/api/admin/stats/pg-config?year=${selectedYear}`);
+  } catch (e) { console.warn('PG stats config not available, using defaults', e); }
+
+  if (config && config.columns && config.rows) {
+    _pgStatsConfig.groups = config.groups || JSON.parse(JSON.stringify(PG_COLUMN_GROUPS));
+    _pgStatsConfig.columns = config.columns;
+    _pgStatsConfig.rows = config.rows;
+  } else {
+    _pgStatsConfig.groups = JSON.parse(JSON.stringify(PG_COLUMN_GROUPS));
+    _pgStatsConfig.columns = JSON.parse(JSON.stringify(PG_COLUMNS));
+
+    let savedData = {};
+    try { savedData = await apiFetch(`/api/admin/stats/pg-manual?year=${selectedYear}`); }
+    catch (e) { /* ignore */ }
+
+    _pgStatsConfig.rows = PG_DEFAULT_COURSES.map(c => {
+      const manual = savedData[c.id] || {};
+      return {
+        id: c.id,
+        name: c.name,
+        branch: c.branch || '',
+        values: {
+          pg_cet_int: c.values.pg_cet_int || 0,
+          pg_cet_fill: parseInt(manual.pg_cet_fill) || 0,
+          pg_mgt_int: c.values.pg_mgt_int || 0,
+          pg_mgt_fill: parseInt(manual.pg_mgt_fill) || 0,
+        }
+      };
+    });
+  }
+
+  _renderPGStatsTable();
+}
+
+function _renderPGStatsTable() {
+  const tableEl = document.getElementById('pg-admitted-stats-table');
+  if (!tableEl) return;
+
+  const isAdmin = sessionStorage.getItem('admin_role') === 'admin';
+  const { groups, columns, rows } = _pgStatsConfig;
+
+  // Build thead
+  const groupedCols = {};
+  const ungroupedCols = [];
+  columns.forEach(col => {
+    if (col.group) {
+      if (!groupedCols[col.group]) groupedCols[col.group] = [];
+      groupedCols[col.group].push(col);
+    } else {
+      ungroupedCols.push(col);
+    }
+  });
+
+  let headerRow1 = '<th rowspan="2" style="width:40px;">Sl.No</th><th rowspan="2">Courses</th>';
+  let headerRow2 = '';
+
+  const groupsSeen = new Set();
+  let i = 0;
+  while (i < columns.length) {
+    const col = columns[i];
+    if (col.group) {
+      if (!groupsSeen.has(col.group)) {
+        groupsSeen.add(col.group);
+        const grp = groups.find(g => g.id === col.group);
+        const grpCols = columns.filter(c => c.group === col.group);
+        const grpLabel = grp ? grp.label : col.group;
+        const grpStyle = grp ? grp.headerStyle : '';
+        const subStyle = grp ? grp.subHeaderStyle : '';
+        headerRow1 += `<th colspan="${grpCols.length}" style="${grpStyle}">${grpLabel}</th>`;
+        grpCols.forEach(gc => {
+          headerRow2 += `<th style="${subStyle}" data-col-id="${gc.id}">${gc.label}</th>`;
+        });
+      }
+    } else {
+      const style = col.headerStyle || '';
+      headerRow1 += `<th rowspan="2" style="${style}" data-col-id="${col.id}">${col.label}</th>`;
+    }
+    i++;
+  }
+
+  let thead = tableEl.querySelector('thead');
+  if (!thead) { thead = document.createElement('thead'); tableEl.prepend(thead); }
+  thead.innerHTML = `<tr>${headerRow1}</tr><tr>${headerRow2}</tr>`;
+
+  // Build tbody
+  const tbody = document.getElementById('pg-admitted-stats-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map((row, idx) => {
+    const computed = computeRowValues(row, columns);
+
+    let cells = `<td>${idx + 1}</td>`;
+    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" data-table="pg" oninput="_onPGStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
+
+    columns.forEach(col => {
+      if (col.type === 'editable') {
+        const val = parseFloat(row.values[col.id]) || 0;
+        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" data-table="pg" value="${val}" oninput="_onPGStatsCellChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
+      } else {
+        let displayVal = computed[col.id];
+        if (col.isPercent) displayVal = displayVal + '%';
+        cells += `<td class="auto-cell" data-row-id="${row.id}" data-calc="${col.id}">${displayVal}</td>`;
+      }
+    });
+
+    return `<tr data-id="${row.id}">${cells}</tr>`;
+  }).join('');
+
+  _recalcPGStatsTotals();
+
+  const saveBtn = document.getElementById('save-pg-stats-btn');
+  if (saveBtn) saveBtn.style.display = isAdmin ? 'flex' : 'none';
+}
+
+function _onPGStatsNameChange(el) {
+  const rowId = el.dataset.rowId;
+  const row = _pgStatsConfig.rows.find(r => r.id === rowId);
+  if (row) row.name = el.value;
+}
+
+function _onPGStatsCellChange(el) {
+  const rowId = el.dataset.rowId;
+  const field = el.dataset.field;
+  const row = _pgStatsConfig.rows.find(r => r.id === rowId);
+  if (!row) return;
+
+  row.values[field] = parseFloat(el.value) || 0;
+
+  const computed = computeRowValues(row, _pgStatsConfig.columns);
+  const tr = el.closest('tr');
+  _pgStatsConfig.columns.forEach(col => {
+    if (col.type === 'formula') {
+      const cell = tr.querySelector(`[data-calc="${col.id}"]`);
+      if (cell) {
+        let v = computed[col.id];
+        if (col.isPercent) v = v + '%';
+        cell.textContent = v;
+      }
+    }
+  });
+
+  Object.assign(row.values, computed);
+  _recalcPGStatsTotals();
+}
+
+function _recalcPGStatsTotals() {
+  const { columns, rows } = _pgStatsConfig;
+  const tfoot = document.getElementById('pg-admitted-stats-footer');
+  if (!tfoot) return;
+
+  const totals = {};
+  columns.forEach(col => { totals[col.id] = 0; });
+
+  rows.forEach(row => {
+    const computed = computeRowValues(row, columns);
+    columns.forEach(col => {
+      totals[col.id] += parseFloat(computed[col.id]) || 0;
+    });
+  });
+
+  const pctCol = columns.find(c => c.isPercent);
+  if (pctCol) {
+    totals[pctCol.id] = __pct__(totals['pg_act_fill'] || 0, totals['pg_act_int'] || 0);
+  }
+
+  let footerCells = '<td colspan="2" style="font-weight:800;">TOTAL</td>';
+  columns.forEach(col => {
+    let v = col.isPercent ? totals[col.id] : Math.round(totals[col.id]);
+    if (col.isPercent) v = v + '%';
+    footerCells += `<td id="pg-tot-${col.id.replace(/_/g,'-')}" style="font-weight:700;">${v}</td>`;
+  });
+
+  tfoot.innerHTML = `<tr class="total-row">${footerCells}</tr>`;
+}
+
+async function savePGAdmittedStats() {
+  const yearSelect = document.getElementById('global-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
+  const configPayload = {
+    groups: _pgStatsConfig.groups,
+    columns: _pgStatsConfig.columns,
+    rows: _pgStatsConfig.rows,
+  };
+
+  try {
+    await apiFetch('/api/admin/stats/pg-config', {
+      method: 'POST',
+      body: JSON.stringify({ year: selectedYear, config: configPayload })
+    });
+
+    const legacyData = {};
+    _pgStatsConfig.rows.forEach(row => {
+      legacyData[row.id] = {
+        pg_cet_fill: parseInt(row.values.pg_cet_fill) || 0,
+        pg_mgt_fill: parseInt(row.values.pg_mgt_fill) || 0,
+      };
+    });
+    try {
+      await apiFetch('/api/admin/stats/pg-manual', {
+        method: 'POST',
+        body: JSON.stringify({ year: selectedYear, data: legacyData })
+      });
+    } catch (e) { /* legacy save is best-effort */ }
+
+    showToast(`PG Statistics for ${selectedYear} saved successfully`);
+  } catch (e) {
+    console.error('Failed to save PG stats config', e);
+    alert('Failed to save PG statistics');
+  }
+}
 
 function renderCharts(graphs, stats) {
   if (!graphs) return;
