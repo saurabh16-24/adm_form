@@ -1341,12 +1341,34 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     
 
     // Counts
-    const totalEnq = await pool.query(`SELECT COUNT(*) AS c FROM enquiries${enqWhere}`, enqParams);
-    const totalAdm = await pool.query(`SELECT COUNT(*) AS c FROM admissions${admWhere}`, admParams);
-    const totalMgt = await pool.query(`SELECT COUNT(*) AS c FROM management_forms${mgtWhere}`, mgtParams);
+    const totalEnqRes = await pool.query(`SELECT programme, COUNT(*) AS c FROM enquiries${enqWhere} GROUP BY programme`, enqParams);
+    const totalAdmRes = await pool.query(`SELECT CASE WHEN application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c FROM admissions${admWhere} GROUP BY prog`, admParams);
+    const totalMgtRes = await pool.query(`
+      SELECT CASE WHEN a.application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c 
+      FROM management_forms m LEFT JOIN admissions a ON m.admission_id = a.id
+      WHERE 1=1 ${year ? ' AND (m.academic_year = $1 OR m.academic_year = $2)' : ''}
+      GROUP BY prog
+    `, mgtParams);
     
-    const todayEnq = await pool.query('SELECT COUNT(*) AS c FROM enquiries WHERE enquiry_date = $1', [today]);
-    const todayAdm = await pool.query('SELECT COUNT(*) AS c FROM admissions WHERE application_date = $1', [today]);
+    const todayEnqRes = await pool.query(`SELECT programme, COUNT(*) AS c FROM enquiries WHERE enquiry_date = $1 GROUP BY programme`, [today]);
+    const todayAdmRes = await pool.query(`SELECT CASE WHEN application_number LIKE 'BE/%' THEN 'UG' ELSE 'PG' END as prog, COUNT(*) AS c FROM admissions WHERE application_date = $1 GROUP BY prog`, [today]);
+
+    const extractCounts = (rows) => {
+      let total = 0, ug = 0, pg = 0;
+      rows.forEach(r => {
+        const val = parseInt(r.c) || 0;
+        total += val;
+        if (r.prog === 'UG' || r.programme === 'UG') ug += val;
+        else if (r.prog === 'PG' || r.programme === 'PG') pg += val;
+      });
+      return { total, ug, pg };
+    };
+
+    const totalEnq = extractCounts(totalEnqRes.rows);
+    const totalAdm = extractCounts(totalAdmRes.rows);
+    const totalMgt = extractCounts(totalMgtRes.rows);
+    const todayEnq = extractCounts(todayEnqRes.rows);
+    const todayAdm = extractCounts(todayAdmRes.rows);
     
     // Recent records (always show latest, not filtered)
     const recentEnq = await pool.query(`
@@ -1521,11 +1543,21 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
     );
 
     res.json({
-      total_enquiries:   parseInt(totalEnq.rows[0].c),
-      total_admissions:  parseInt(totalAdm.rows[0].c),
-      total_management:  parseInt(totalMgt.rows[0].c),
-      today_enquiries:   parseInt(todayEnq.rows[0].c),
-      today_admissions:  parseInt(todayAdm.rows[0].c),
+      total_enquiries:   totalEnq.total,
+      total_enquiries_ug: totalEnq.ug,
+      total_enquiries_pg: totalEnq.pg,
+      total_admissions:  totalAdm.total,
+      total_admissions_ug: totalAdm.ug,
+      total_admissions_pg: totalAdm.pg,
+      total_management:  totalMgt.total,
+      total_management_ug: totalMgt.ug,
+      total_management_pg: totalMgt.pg,
+      today_enquiries:   todayEnq.total,
+      today_enquiries_ug: todayEnq.ug,
+      today_enquiries_pg: todayEnq.pg,
+      today_admissions:  todayAdm.total,
+      today_admissions_ug: todayAdm.ug,
+      today_admissions_pg: todayAdm.pg,
       recent_enquiries:  recentEnq.rows,
       recent_admissions: recentAdm.rows,
       graphs: {
@@ -1546,7 +1578,11 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
         raw_conversion: (await pool.query(`
           SELECT 
             (SELECT COUNT(*) FROM raw_enquiries) as total_raw,
-            (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL) as converted
+            (SELECT COUNT(*) FROM raw_enquiries WHERE course NOT ILIKE '%MBA%' AND course NOT ILIKE '%MCA%' AND course NOT ILIKE '%M.Tech%' AND course NOT ILIKE '%MTECH%') as total_raw_ug,
+            (SELECT COUNT(*) FROM raw_enquiries WHERE course ILIKE '%MBA%' OR course ILIKE '%MCA%' OR course ILIKE '%M.Tech%' OR course ILIKE '%MTECH%') as total_raw_pg,
+            (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL) as converted,
+            (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL AND programme = 'UG') as converted_ug,
+            (SELECT COUNT(DISTINCT raw_id) FROM enquiries WHERE raw_id IS NOT NULL AND programme = 'PG') as converted_pg
         `)).rows[0]
       },
       quality: academicQuality.rows[0],

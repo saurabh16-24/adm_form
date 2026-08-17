@@ -623,18 +623,41 @@ async function loadOverview() {
     const stats = await apiFetch(url);
     
     document.getElementById('stat-enquiries').textContent   = stats.total_enquiries   || 0;
+    if (document.getElementById('stat-enq-ug')) document.getElementById('stat-enq-ug').textContent = stats.total_enquiries_ug || 0;
+    if (document.getElementById('stat-enq-pg')) document.getElementById('stat-enq-pg').textContent = stats.total_enquiries_pg || 0;
+
     document.getElementById('stat-admissions').textContent   = stats.total_admissions   || 0;
+    if (document.getElementById('stat-adm-ug')) document.getElementById('stat-adm-ug').textContent = stats.total_admissions_ug || 0;
+    if (document.getElementById('stat-adm-pg')) document.getElementById('stat-adm-pg').textContent = stats.total_admissions_pg || 0;
     
     if (document.getElementById('stat-management')) {
       document.getElementById('stat-management').textContent = stats.total_management || 0;
+      if (document.getElementById('stat-mgt-ug')) document.getElementById('stat-mgt-ug').textContent = stats.total_management_ug || 0;
+      if (document.getElementById('stat-mgt-pg')) document.getElementById('stat-mgt-pg').textContent = stats.total_management_pg || 0;
     }
+    
     document.getElementById('stat-today-enq').textContent    = stats.today_enquiries    || 0;
+    if (document.getElementById('stat-today-enq-ug')) document.getElementById('stat-today-enq-ug').textContent = stats.today_enquiries_ug || 0;
+    if (document.getElementById('stat-today-enq-pg')) document.getElementById('stat-today-enq-pg').textContent = stats.today_enquiries_pg || 0;
+
     document.getElementById('stat-today-adm').textContent    = stats.today_admissions   || 0;
+    if (document.getElementById('stat-today-adm-ug')) document.getElementById('stat-today-adm-ug').textContent = stats.today_admissions_ug || 0;
+    if (document.getElementById('stat-today-adm-pg')) document.getElementById('stat-today-adm-pg').textContent = stats.today_admissions_pg || 0;
 
     if (document.getElementById('stat-raw-conv') && stats.graphs.raw_conversion) {
-      const { total_raw, converted } = stats.graphs.raw_conversion;
+      const { total_raw, converted, total_raw_ug, converted_ug, total_raw_pg, converted_pg } = stats.graphs.raw_conversion;
+      
       const rate = total_raw > 0 ? ((converted / total_raw) * 100).toFixed(1) : 0;
       document.getElementById('stat-raw-conv').textContent = `${rate}%`;
+      
+      if (document.getElementById('stat-raw-ug')) {
+        const rateUg = total_raw_ug > 0 ? ((converted_ug / total_raw_ug) * 100).toFixed(1) : 0;
+        document.getElementById('stat-raw-ug').textContent = `${rateUg}%`;
+      }
+      if (document.getElementById('stat-raw-pg')) {
+        const ratePg = total_raw_pg > 0 ? ((converted_pg / total_raw_pg) * 100).toFixed(1) : 0;
+        document.getElementById('stat-raw-pg').textContent = `${ratePg}%`;
+      }
     }
 
     if (stats.quality) {
@@ -1242,7 +1265,7 @@ function _renderPGStatsTable() {
     const computed = computeRowValues(row, columns);
 
     let cells = `<td>${idx + 1}</td>`;
-    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${_escHtml(row.name)}" data-row-id="${row.id}" data-field="__name__" data-table="pg" oninput="_onPGStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
+    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${row.name}" data-row-id="${row.id}" data-field="__name__" data-table="pg" oninput="_onPGStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
 
     columns.forEach(col => {
       if (col.type === 'editable') {
