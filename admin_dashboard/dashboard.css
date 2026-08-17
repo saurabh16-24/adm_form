@@ -507,7 +507,57 @@ body {
 
 .card-header h3 .material-icons-round { font-size: 20px; color: var(--accent-blue); }
 
-.table-wrap { overflow-x: auto; }
+.table-wrap {
+  overflow-x: auto;
+  position: relative;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.stats-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-secondary);
+}
+
+.stats-table thead th {
+  padding: 12px 6px;
+  text-align: center;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+  border: 1px solid #cbd5e1;
+  position: sticky;
+  z-index: 11;
+}
+
+.stats-table thead tr:first-child th {
+  top: 0;
+  z-index: 12;
+}
+
+.stats-table thead tr:last-child th {
+  top: 34px; /* height of row 1 — adjust if row 1 wraps or padding changes */
+  z-index: 11;
+}
+
+/* Color-coded header sections */
+.stats-table thead th.section-get { background: #06b6d4; }
+.stats-table thead th.section-eng { background: #3b82f6; }
+.stats-table thead th.section-comed { background: #10b981; }
+.stats-table thead th.section-management { background: #f97316; }
+.stats-table thead th.section-actual { background: #3b82f6; }
+.stats-table thead th.section-stats { background: #ec4899; }
+.stats-table thead th.section-total { background: #8b5cf6; }
 
 .data-table {
   width: 100%;

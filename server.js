@@ -102,10 +102,10 @@ function fileToDataUrl(relativePath) {
       const mime = mimeMap[ext] || 'image/png';
       return `data:${mime};base64,${buf.toString('base64')}`;
     } else {
-      console.error('[fileToDataUrl] File not found:', fullPath);
+      
     }
   } catch (err) {
-    console.error('[fileToDataUrl] Error:', err.message);
+    
   }
   return '';
 }
@@ -179,7 +179,7 @@ async function initDB() {
 
     // Corrective reset for accidental edit requests (one-time logic)
     await client.query("UPDATE admissions SET edit_requested = FALSE, edit_enabled = FALSE WHERE id IN (24, 22)");
-    console.log("Applied one-time corrective reset for IDs 24 and 22.");
+    
     await client.query(`
       CREATE TABLE IF NOT EXISTS enquiries (
         id SERIAL PRIMARY KEY,
@@ -273,9 +273,9 @@ async function initDB() {
     // Backfill: set programme = 'UG' for all existing records where it's null
     await client.query(`UPDATE enquiries SET programme = 'UG' WHERE programme IS NULL`);
     
-    console.log("Database schema is up to date.");
+    
   } catch (err) {
-    console.error("DB Init Error:", err.message);
+    
   } finally {
     client.release();
   }
@@ -300,7 +300,7 @@ app.get('/api/next-token', async (req, res) => {
 
     res.json({ success: true, token, sequence: nextSeq });
   } catch (error) {
-    console.error('Error fetching next token:', error);
+    
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -311,7 +311,7 @@ app.get('/api/test-db', async (req, res) => {
     const result = await pool.query('SELECT NOW()');
     res.json({ connected: true, time: result.rows[0].now });
   } catch (error) {
-    console.error('Database connection error:', error);
+    
     res.status(500).json({ connected: false, error: error.message });
   }
 });
@@ -324,8 +324,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
     const d = req.body;
     const today = getISTDateString();
     
-    if (d.raw_id) console.log(`[Submission] Linked to Raw Lead ID: ${d.raw_id}`);
-
+    if (d.raw_id) 
     // ── Atomically assign token number (advisory lock prevents duplicates) ──
     await client.query('SELECT pg_advisory_xact_lock(1001)'); // lock id 1001 = enquiry tokens
     const seqResult = await client.query(
@@ -459,8 +458,7 @@ app.post('/api/submit-enquiry', async (req, res) => {
       try {
         const origin = process.env.PUBLIC_URL || req.headers.origin || ('http://' + req.headers.host);
         const autofillUrl = `${origin}/admission-form/?enquiry_id=${result.rows[0].id}`;
-        console.log(`[Enquiry-BG] Preparing email to ${d.student_email}...`);
-
+        
         const qrPngBuffer = await generateBrandedQR(autofillUrl, 300);
         const mailOptions = {
           from: '"Admission Team" <enquiry.svce@gmail.com>',
@@ -501,19 +499,19 @@ Admission Team<br>
         };
 
         await transporter.sendMail(mailOptions);
-        console.log('[Enquiry-BG] Email sent successfully to', d.student_email);
+        
       } catch (err) {
-        console.error('[Enquiry-BG] Background task error:', err.message);
+        
       }
     })();
 
   } catch (error) {
     if (!res.headersSent) {
       await client.query('ROLLBACK');
-      console.error('Error submitting enquiry:', error);
+      
       res.status(500).json({ success: false, message: 'Server error', error: error.message });
     } else {
-      console.error('Captured error after response headers sent:', error.message);
+      
     }
   } finally {
     client.release();
@@ -775,9 +773,12 @@ app.get('/api/enquiry/:id', async (req, res) => {
         id SERIAL PRIMARY KEY,
         academic_year VARCHAR(20) NOT NULL,
         course_id VARCHAR(50) NOT NULL,
+        cet_int INTEGER DEFAULT 0,
         cet_fill INTEGER DEFAULT 0,
         cet_snq INTEGER DEFAULT 0,
+        comed_int INTEGER DEFAULT 0,
         comed_fill INTEGER DEFAULT 0,
+        mgt_int INTEGER DEFAULT 0,
         aicte INTEGER DEFAULT 0,
         UNIQUE(academic_year, course_id)
       );
@@ -823,9 +824,17 @@ app.get('/api/enquiry/:id', async (req, res) => {
     ];
     for (const sql of enquiryAlterCols) await pool.query(sql);
 
-    console.log('Admissions table ready.');
+    // Add missing columns to course_manual_stats if they don't exist
+    const statsAlterCols = [
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS cet_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS comed_int INTEGER DEFAULT 0",
+      "ALTER TABLE course_manual_stats ADD COLUMN IF NOT EXISTS mgt_int INTEGER DEFAULT 0"
+    ];
+    for (const sql of statsAlterCols) await pool.query(sql);
+
+    
   } catch (err) {
-    console.error('Admissions table init error:', err.message);
+    
   }
 })();
 
@@ -1032,7 +1041,7 @@ app.post('/api/admissions/submit', (req, res) => {
               const bodyPrefs = typeof v.course_preferences === 'string' ? JSON.parse(v.course_preferences) : v.course_preferences;
               if (Array.isArray(bodyPrefs)) prefs = bodyPrefs;
             } catch (e) {
-              console.error('Error parsing body course_preferences:', e);
+              
             }
           }
 
@@ -1096,13 +1105,13 @@ app.post('/api/admissions/submit', (req, res) => {
           });
           console.log(`[Admission PDF] Email sent to ${v.email} (${v.application_number})`);
         } catch (mailErr) {
-          console.error('[Admission PDF] Email error:', mailErr.message);
+          
         }
       });
 
       res.status(201).json({ success: true, id: result.rows[0].id, application_number: v.application_number });
     } catch (error) {
-      console.error('Admission submit error:', error);
+      
       res.status(500).json({ success: false, error: error.message });
     }
   });
@@ -1162,7 +1171,7 @@ async function logAdminActivity(adminName, action, targetType, targetId, targetN
       [adminName, action, targetType || null, targetId || null, targetName || null, details || null]
     );
   } catch (err) {
-    console.error('[ActivityLog] Failed to log:', err.message);
+    
   }
 }
 
@@ -1216,10 +1225,20 @@ app.get('/api/admin/stats/manual', adminAuth, async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM course_manual_stats WHERE academic_year = $1', [year]);
     const data = {};
     rows.forEach(r => {
-      data[r.course_id] = { cet_fill: r.cet_fill, cet_snq: r.cet_snq, comed_fill: r.comed_fill, aicte: r.aicte };
+      data[r.course_id] = { 
+        cet_int: r.cet_int, 
+        cet_fill: r.cet_fill, 
+        cet_snq: r.cet_snq, 
+        comed_int: r.comed_int, 
+        comed_fill: r.comed_fill, 
+        mgt_int: r.mgt_int, 
+        aicte: r.aicte 
+      };
     });
     res.json(data);
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
@@ -1230,14 +1249,17 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     await pool.query('BEGIN');
     for (const [course_id, stats] of Object.entries(data)) {
       await pool.query(`
-        INSERT INTO course_manual_stats (academic_year, course_id, cet_fill, cet_snq, comed_fill, aicte)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO course_manual_stats (academic_year, course_id, cet_int, cet_fill, cet_snq, comed_int, comed_fill, mgt_int, aicte)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         ON CONFLICT (academic_year, course_id) DO UPDATE SET
+          cet_int = EXCLUDED.cet_int,
           cet_fill = EXCLUDED.cet_fill,
           cet_snq = EXCLUDED.cet_snq,
+          comed_int = EXCLUDED.comed_int,
           comed_fill = EXCLUDED.comed_fill,
+          mgt_int = EXCLUDED.mgt_int,
           aicte = EXCLUDED.aicte
-      `, [year, course_id, stats.cet_fill, stats.cet_snq, stats.comed_fill, stats.aicte]);
+      `, [year, course_id, stats.cet_int, stats.cet_fill, stats.cet_snq, stats.comed_int, stats.comed_fill, stats.mgt_int, stats.aicte]);
     }
     
     // Log activity
@@ -1250,7 +1272,6 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
     res.json({ success: true });
   } catch (err) { 
     await pool.query('ROLLBACK');
-    console.error('Stats update error:', err);
     res.status(500).json({ error: err.message }); 
   }
 });
@@ -1284,7 +1305,7 @@ app.post('/api/admin/stats/config', adminAuth, async (req, res) => {
     
     res.json({ success: true });
   } catch (err) {
-    console.error('Stats config update error:', err);
+    
     res.status(500).json({ error: err.message });
   }
 });
@@ -1711,7 +1732,7 @@ app.post('/api/admin/raw-enquiry/bulk', adminAuth, async (req, res) => {
     res.json({ success: true, count: imported });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('Bulk import error:', err);
+    
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -1835,7 +1856,7 @@ app.post('/api/admin/enquiries/bulk-email', adminAuth, upload.array('attachments
 
     res.json({ success: true, count: emails.length });
   } catch (err) {
-    console.error('Bulk email error:', err);
+    
     res.status(500).json({ error: err.message });
   }
 });
@@ -1908,7 +1929,7 @@ app.put('/api/admin/admission/:id', adminAuth, admissionUpload, async (req, res)
     logAdminActivity(req.userName, 'Updated Admission', 'admission', parseInt(id), null, 'Updated fields: ' + setClauses.map(c => c.split(' =')[0]).join(', '));
     res.json({ success: true, message: 'Updated successfully' });
   } catch (err) {
-    console.error('Update admission error:', err);
+    
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -2101,9 +2122,9 @@ app.post('/api/admin/management-form', adminAuth, async (req, res) => {
   </body>
   </html>`
           });
-          console.log('[Management-BG] Success email sent to', v.email);
+          
         } catch (err) {
-          console.error('[Management-BG] Email error:', err);
+          
         }
       });
     }
@@ -2137,6 +2158,106 @@ app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
     if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ row: result.rows[0] });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// GET Diagnostic: Raw branch data from management_forms
+app.get('/api/admin/management-branches', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year || '2026-27';
+    
+    // Get all data regardless of year to see what exists
+    const allYears = await pool.query(
+      'SELECT DISTINCT academic_year FROM management_forms WHERE academic_year IS NOT NULL ORDER BY academic_year DESC'
+    );
+    console.log('[Diagnostic] Available academic years:', allYears.rows.map(r => r.academic_year));
+    
+    // Get counts for the requested year
+    const result = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE academic_year = $1 AND branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC',
+      [year]
+    );
+    
+    
+    // Also try getting ALL data regardless of year
+    const allData = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC'
+    );
+    
+    console.log('[Diagnostic] ALL branch data (regardless of year):', allData.rows);
+    
+    res.json({ 
+      requestedYear: year,
+      availableYears: allYears.rows.map(r => r.academic_year),
+      dataForYear: result.rows,
+      allData: allData.rows,
+      totalCount: allData.rows.reduce((sum, r) => sum + parseInt(r.count), 0)
+    });
+  } catch (err) { 
+    
+    res.status(500).json({ error: err.message }); 
+  }
+});
+
+// GET Management Admissions Count by Course ID
+app.get('/api/admin/admissions/management', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year || '2026-27';
+    
+    // Get all branches regardless of year to debug
+    const allBranches = await pool.query(
+      'SELECT branch, COUNT(*) as count FROM management_forms WHERE branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC'
+    );
+    
+    // Map of course IDs to exact branch names from management_forms table
+    // ORDER MATTERS: More specific patterns must come before general ones
+    const courseMapping = [
+      { id: 'CSCA', patterns: ['Artificial Intelligence', 'CS-CA', 'CSCA', '(Artificial Intelligence)'] },
+      { id: 'CSCY', patterns: ['Cyber Security', 'CS-CY', 'CSCY', '(Cyber Security)'] },
+      { id: 'CSDS', patterns: ['Data Science', 'CS-DS', 'CSDS', '(Data Science)'] },
+      { id: 'CSE', patterns: ['Computer Science and Engineering'] },
+      { id: 'ECE', patterns: ['Electronics and Communication', 'Electronics & Communication'] },
+      { id: 'ISE', patterns: ['Information Science and Engineering'] },
+      { id: 'ME', patterns: ['Mechanical Engineering'] },
+      { id: 'CE', patterns: ['Civil Engineering'] }
+    ];
+    
+    const counts = {};
+    courseMapping.forEach(course => { counts[course.id] = 0; });
+    
+    // Match branches to course IDs
+    allBranches.rows.forEach(row => {
+      const branchValue = (row.branch || '').trim();
+      let matched = false;
+      
+      // Try each course mapping in order (specialized first, general last)
+      for (const course of courseMapping) {
+        // Try exact match first
+        if (course.patterns.some(pattern => branchValue === pattern)) {
+          counts[course.id] += parseInt(row.count) || 0;
+          matched = true;
+          console.log(`[Management API] Exact match: "${branchValue}" -> ${course.id} (count: ${row.count})`);
+          break;
+        }
+        // Then try includes (case-insensitive)
+        if (course.patterns.some(pattern => branchValue.toLowerCase().includes(pattern.toLowerCase()))) {
+          counts[course.id] += parseInt(row.count) || 0;
+          matched = true;
+          console.log(`[Management API] Includes match: "${branchValue}" -> ${course.id} (count: ${row.count})`);
+          break;
+        }
+      }
+      
+      if (!matched) {
+        console.log(`[Management API] NO MATCH: "${branchValue}" (count: ${row.count})`);
+      }
+    });
+    
+    
+    res.json({ counts });
+  } catch (err) { 
+    
+    res.status(500).json({ error: err.message }); 
+  }
 });
 
 // GET Audit Log for Admission/Management
@@ -2499,7 +2620,7 @@ app.get('/api/admin/enquiry/:id/print', adminAuthQuery, async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(html);
   } catch (err) {
-    console.error('Enquiry print error:', err);
+    
     res.status(500).send('Error generating print view: ' + err.message);
   }
 });
@@ -2545,7 +2666,7 @@ app.get('/api/admin/admission/:id/print-pdf', adminAuthQuery, async (req, res) =
     res.setHeader('Content-Length', pdfBuffer.length);
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('Admission PDF print error:', err);
+    
     res.status(500).send('Error generating PDF: ' + err.message);
   }
 });
@@ -2888,13 +3009,14 @@ app.get('/api/admin/admission/:id/print', adminAuthQuery, async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(printHint + html);
   } catch(err) {
-    console.error('Admission HTML print error:', err);
+    
     res.status(500).send('Error generating print view: ' + err.message);
   }
 });
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-  console.log(`Open http://localhost:${port} to see the form.`);
-  console.log(`Admin dashboard: http://localhost:${port}/admin_dashboard/`);
+  
+  
+  
 });
+
