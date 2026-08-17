@@ -767,8 +767,10 @@ async function fetchManagementAdmissions(year) {
 }
 
 function __mgt_fill__(courseId) {
-  const result = _mgtFilledCounts[courseId] || 0;
-  return result;
+  if (courseId === 'MTECH') {
+    return _mgtFilledCounts['M.Tech'] || _mgtFilledCounts['MTECH'] || 0;
+  }
+  return _mgtFilledCounts[courseId] || 0;
 }
 
 function evalFormula(formula, rowValues, courseId) {
@@ -1144,7 +1146,7 @@ const PG_COLUMNS = [
   { id: 'pg_cet_int', label: 'Intake', group: 'pg_cet', type: 'editable' },
   { id: 'pg_cet_fill', label: 'Filled', group: 'pg_cet', type: 'editable' },
   { id: 'pg_mgt_int', label: 'Intake', group: 'pg_management', type: 'editable' },
-  { id: 'pg_mgt_fill', label: 'Filled', group: 'pg_management', type: 'editable' },
+  { id: 'pg_mgt_fill', label: 'Filled', group: 'pg_management', type: 'formula', formula: '__mgt_fill__(courseId)' },
   { id: 'pg_act_int', label: 'Intake', group: 'pg_actual', type: 'formula', formula: 'pg_cet_int + pg_mgt_int' },
   { id: 'pg_act_fill', label: 'Filled', group: 'pg_actual', type: 'formula', formula: 'pg_cet_fill + pg_mgt_fill' },
   { id: 'pg_act_vac', label: 'Vacant', group: 'pg_actual', type: 'formula', formula: 'pg_act_int - pg_act_fill' },
