@@ -2254,7 +2254,10 @@ app.get('/api/admin/admissions/management', adminAuth, async (req, res) => {
       { id: 'ECE', patterns: ['Electronics and Communication', 'Electronics & Communication'] },
       { id: 'ISE', patterns: ['Information Science and Engineering'] },
       { id: 'ME', patterns: ['Mechanical Engineering'] },
-      { id: 'CE', patterns: ['Civil Engineering'] }
+      { id: 'CE', patterns: ['Civil Engineering'] },
+      { id: 'MBA', patterns: ['MBA', 'Master of Business Administration'] },
+      { id: 'MCA', patterns: ['MCA', 'Master of Computer Applications'] },
+      { id: 'MTECH', patterns: ['M.Tech', 'MTECH', 'Master of Technology'] }
     ];
     
     const counts = {};
