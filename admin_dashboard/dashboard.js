@@ -320,6 +320,12 @@ function exportPGAdmittedStatsPDF() {
 function exportPGAdmittedStatsCSV() {
   exportTableCSV('pg-admitted-stats-table', 'SVCE_PG_Admitted_Statistics');
 }
+function exportDiplomaAdmittedStatsPDF() {
+  exportTablePDF('diploma-admitted-stats-table', 'Diploma II Year Lateral Entry Statistics', 'Branch-wise CET, AICTE J&K, and Management quota admissions for Diploma II Year Lateral Entry students.');
+}
+function exportDiplomaAdmittedStatsCSV() {
+  exportTableCSV('diploma-admitted-stats-table', 'SVCE_Diploma_Lateral_Entry_Statistics');
+}
 
 function exportConversionRatioPDF() {
   exportChartPDF('ratioChart', 'Conversion Ratio Analysis', 'Comparison of Enquiries vs Applications vs Admissions — measures the admission funnel efficiency.', {
@@ -691,7 +697,8 @@ async function loadOverview() {
     // Admitted Stats
     await renderAdmittedStats();
     renderPGAdmittedStats();
-    
+    renderDiplomaAdmittedStats();
+
     updateLastRefreshInfo();
   } catch (err) { console.error('Overview load error:', err); }
 }
@@ -784,13 +791,31 @@ function __mgt_fill__(courseId) {
   return _mgtFilledCounts[courseId] || 0;
 }
 
+// Management-quota admissions for Diploma II Year Lateral Entry students only
+// (education_qualification = 'Diploma' on the originating enquiry). Kept separate
+// from _mgtFilledCounts so UG/PG stats and Diploma stats never double-count.
+let _diplomaMgtFilledCounts = {};
+
+async function fetchDiplomaManagementAdmissions(year) {
+  try {
+    const res = await apiFetch(`/api/admin/admissions/management-diploma?year=${year}`);
+    _diplomaMgtFilledCounts = res.counts || {};
+  } catch (e) {
+    _diplomaMgtFilledCounts = {};
+  }
+}
+
+function __dip_mgt_fill__(branchId) {
+  return _diplomaMgtFilledCounts[branchId] || 0;
+}
+
 function evalFormula(formula, rowValues, courseId) {
   try {
     // Build a safe evaluation context with all column values available
     const keys = Object.keys(rowValues);
     const vals = keys.map(k => parseFloat(rowValues[k]) || 0);
-    const fn = new Function('__pct__', '__mgt_fill__', 'courseId', ...keys, `return (${formula});`);
-    return fn(__pct__, __mgt_fill__, courseId, ...vals);
+    const fn = new Function('__pct__', '__mgt_fill__', '__dip_mgt_fill__', 'courseId', ...keys, `return (${formula});`);
+    return fn(__pct__, __mgt_fill__, __dip_mgt_fill__, courseId, ...vals);
   } catch (e) {
     return 0;
   }
@@ -1395,6 +1420,178 @@ async function savePGAdmittedStats() {
   } catch (e) {
     console.error('Failed to save PG stats config', e);
     alert('Failed to save PG statistics');
+  }
+}
+
+
+// ═══════════════ DIPLOMA (II YEAR LATERAL ENTRY) ADMITTED STATS ENGINE ═══════════════
+
+const DIPLOMA_COLUMNS = [
+  { id: 'dip_cet', label: 'CET Admitted', type: 'editable', headerStyle: 'background: #ccfbf1; color: #115e59;' },
+  { id: 'dip_aicte', label: 'AICTE JK Admitted', type: 'editable', headerStyle: 'background: #99f6e4; color: #115e59;' },
+  { id: 'dip_mgt', label: 'MGT Admitted', type: 'formula', formula: '__dip_mgt_fill__(courseId)', headerStyle: 'background: #5eead4; color: #134e4a;' },
+  { id: 'dip_total', label: 'Total Seats Admitted', type: 'formula', formula: 'dip_cet + dip_aicte + dip_mgt', headerStyle: 'background: #0d9488; color: white;' },
+];
+
+const DIPLOMA_DEFAULT_BRANCHES = [
+  { id: 'ECE', name: 'E&CE' },
+  { id: 'CSE', name: 'CS&E' },
+  { id: 'ISE', name: 'IS&E' },
+  { id: 'ME',  name: 'ME' },
+  { id: 'CV',  name: 'CV' },
+  { id: 'AI',  name: 'AI' },
+  { id: 'CYB', name: 'CYB' },
+  { id: 'DS',  name: 'DS' },
+];
+
+let _diplomaStatsConfig = {
+  columns: [],
+  rows: [],
+};
+
+async function renderDiplomaAdmittedStats() {
+  const yearSelect = document.getElementById('global-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
+  const tableEl = document.getElementById('diploma-admitted-stats-table');
+  if (!tableEl) return;
+
+  // Fetch management-quota admissions for Diploma Lateral Entry students only
+  await fetchDiplomaManagementAdmissions(selectedYear);
+
+  _diplomaStatsConfig.columns = JSON.parse(JSON.stringify(DIPLOMA_COLUMNS));
+
+  let savedData = {};
+  try { savedData = await apiFetch(`/api/admin/stats/diploma-manual?year=${selectedYear}`); }
+  catch (e) { /* ignore, use defaults */ }
+
+  _diplomaStatsConfig.rows = DIPLOMA_DEFAULT_BRANCHES.map(b => {
+    const manual = savedData[b.id] || {};
+    return {
+      id: b.id,
+      name: b.name,
+      values: {
+        dip_cet: parseInt(manual.dip_cet) || 0,
+        dip_aicte: parseInt(manual.dip_aicte) || 0,
+      }
+    };
+  });
+
+  _renderDiplomaStatsTable();
+}
+
+function _renderDiplomaStatsTable() {
+  const tableEl = document.getElementById('diploma-admitted-stats-table');
+  if (!tableEl) return;
+
+  const isAdmin = sessionStorage.getItem('admin_role') === 'admin';
+  const { columns, rows } = _diplomaStatsConfig;
+
+  let thead = tableEl.querySelector('thead');
+  if (!thead) { thead = document.createElement('thead'); tableEl.prepend(thead); }
+  const headerCells = columns.map(col => `<th style="${col.headerStyle || ''}" data-col-id="${col.id}">${col.label}</th>`).join('');
+  thead.innerHTML = `<tr><th style="width:40px;">Sl.No</th><th>Branch</th>${headerCells}</tr>`;
+
+  const tbody = document.getElementById('diploma-admitted-stats-body');
+  if (!tbody) return;
+
+  tbody.innerHTML = rows.map((row, idx) => {
+    const computed = computeRowValues(row, columns);
+
+    let cells = `<td>${idx + 1}</td>`;
+    cells += `<td class="course-name editable-cell" style="padding:0;"><input type="text" class="stats-input" style="text-align:left;padding-left:15px;color:#1e293b;font-weight:700;" value="${row.name}" data-row-id="${row.id}" data-field="__name__" data-table="diploma" oninput="_onDiplomaStatsNameChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
+
+    columns.forEach(col => {
+      if (col.type === 'editable') {
+        const val = parseFloat(row.values[col.id]) || 0;
+        cells += `<td class="editable-cell"><input type="number" min="0" class="stats-input" data-row-id="${row.id}" data-field="${col.id}" data-table="diploma" value="${val}" oninput="_onDiplomaStatsCellChange(this)" ${!isAdmin ? 'readonly' : ''}></td>`;
+      } else {
+        cells += `<td class="auto-cell" data-row-id="${row.id}" data-calc="${col.id}">${computed[col.id]}</td>`;
+      }
+    });
+
+    return `<tr data-id="${row.id}">${cells}</tr>`;
+  }).join('');
+
+  _recalcDiplomaStatsTotals();
+
+  const saveBtn = document.getElementById('save-diploma-stats-btn');
+  if (saveBtn) saveBtn.style.display = isAdmin ? 'flex' : 'none';
+}
+
+function _onDiplomaStatsNameChange(el) {
+  const rowId = el.dataset.rowId;
+  const row = _diplomaStatsConfig.rows.find(r => r.id === rowId);
+  if (row) row.name = el.value;
+}
+
+function _onDiplomaStatsCellChange(el) {
+  const rowId = el.dataset.rowId;
+  const field = el.dataset.field;
+  const row = _diplomaStatsConfig.rows.find(r => r.id === rowId);
+  if (!row) return;
+
+  row.values[field] = parseFloat(el.value) || 0;
+
+  const computed = computeRowValues(row, _diplomaStatsConfig.columns);
+  const tr = el.closest('tr');
+  _diplomaStatsConfig.columns.forEach(col => {
+    if (col.type === 'formula') {
+      const cell = tr.querySelector(`[data-calc="${col.id}"]`);
+      if (cell) cell.textContent = computed[col.id];
+    }
+  });
+
+  Object.assign(row.values, computed);
+  _recalcDiplomaStatsTotals();
+}
+
+function _recalcDiplomaStatsTotals() {
+  const { columns, rows } = _diplomaStatsConfig;
+  const tfoot = document.getElementById('diploma-admitted-stats-footer');
+  if (!tfoot) return;
+
+  const totals = {};
+  columns.forEach(col => { totals[col.id] = 0; });
+
+  rows.forEach(row => {
+    const computed = computeRowValues(row, columns);
+    columns.forEach(col => {
+      totals[col.id] += parseFloat(computed[col.id]) || 0;
+    });
+  });
+
+  let footerCells = '<td colspan="2" style="font-weight:800;">TOTAL</td>';
+  columns.forEach(col => {
+    footerCells += `<td id="diploma-tot-${col.id.replace(/_/g,'-')}" style="font-weight:700;">${Math.round(totals[col.id])}</td>`;
+  });
+
+  tfoot.innerHTML = `<tr class="total-row">${footerCells}</tr>`;
+}
+
+async function saveDiplomaAdmittedStats() {
+  const yearSelect = document.getElementById('global-academic-year');
+  const selectedYear = yearSelect ? yearSelect.value : '2026-27';
+
+  const data = {};
+  _diplomaStatsConfig.rows.forEach(row => {
+    data[row.id] = {
+      dip_cet: parseInt(row.values.dip_cet) || 0,
+      dip_aicte: parseInt(row.values.dip_aicte) || 0,
+      // dip_mgt is auto-fetched (not manually editable); persisted as a snapshot only.
+      dip_mgt: parseInt(row.values.dip_mgt) || 0,
+    };
+  });
+
+  try {
+    await apiFetch('/api/admin/stats/diploma-manual', {
+      method: 'POST',
+      body: JSON.stringify({ year: selectedYear, data })
+    });
+    showToast(`Diploma Lateral Entry Statistics for ${selectedYear} saved successfully`);
+  } catch (e) {
+    console.error('Failed to save Diploma stats', e);
+    alert('Failed to save Diploma statistics: ' + e.message);
   }
 }
 
@@ -2726,7 +2923,7 @@ function renderAdmissions(rows) {
     <td>${i + 1}</td>
     <td>${r.id}</td>
     <td>${r.application_number || '—'}</td>
-    <td>${r.student_name || '—'}</td>
+    <td>${r.student_name || '—'}<br><span class="status-badge ${r.is_lateral_entry ? 'tag-lateral' : 'tag-regular'}">${r.is_lateral_entry ? 'Lateral Entry' : 'Regular'}</span></td>
     <td>${r.email || '—'}</td>
     <td>${r.mobile_no || '—'}</td>
     <td>${formatDate(r.date_of_birth)}</td>
@@ -2801,6 +2998,7 @@ function filterAdmissions() {
   const search = document.getElementById('adm-search').value.toLowerCase();
   const dateFilter = document.getElementById('adm-filter-date').value;
   const courseFilter = document.getElementById('adm-filter-course').value;
+  const entryTypeFilter = document.getElementById('adm-filter-entry-type')?.value || '';
   let filtered = allAdmissions;
 
   if (search) {
@@ -2821,6 +3019,9 @@ function filterAdmissions() {
       filtered = filtered.filter(r => (r.course_preference || '').toLowerCase() === courseFilter.toLowerCase());
     }
   }
+
+  if (entryTypeFilter === 'lateral') filtered = filtered.filter(r => r.is_lateral_entry);
+  else if (entryTypeFilter === 'regular') filtered = filtered.filter(r => !r.is_lateral_entry);
 
   renderAdmissions(filtered);
 }
@@ -3588,11 +3789,20 @@ function renderManagement(rows) {
     return;
   }
 
-  tbody.innerHTML = rows.map((r, i) => `<tr>
+  const ALL_CONV_STATUSES = ['CET', 'COMEDK', 'Management', 'Cancelled'];
+  const CONV_TAG_CLASS = { Management: 'tag-conv-management', CET: 'tag-conv-cet', COMEDK: 'tag-conv-comedk', Cancelled: 'tag-conv-cancelled' };
+  const CONV_ROW_CLASS = { CET: 'row-conv-cet', COMEDK: 'row-conv-comedk', Cancelled: 'row-conv-cancelled' };
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const status = r.conversion_status || 'Management';
+    const rowClass = CONV_ROW_CLASS[status] || '';
+    const options = ALL_CONV_STATUSES.filter(s => s !== status);
+
+    return `<tr class="${rowClass}">
     <td>${i + 1}</td>
     <td>${r.id}</td>
     <td>${r.app_no || '—'}</td>
-    <td>${r.student_name || '—'}</td>
+    <td>${r.student_name || '—'}<br><span class="status-badge ${r.is_lateral_entry ? 'tag-lateral' : 'tag-regular'}">${r.is_lateral_entry ? 'Lateral Entry' : 'Regular'}</span></td>
     <td>${r.branch || '—'}</td>
     <td>${r.academic_year || '—'}</td>
     <td>₹${parseFloat(r.net_payable).toLocaleString()}</td>
@@ -3603,11 +3813,33 @@ function renderManagement(rows) {
     <td class="action-btns">
       <button class="btn btn-view" onclick="viewManagementForm(${r.id})" title="View Details"><span class="material-icons-round" style="font-size:16px">visibility</span></button>
       <button class="btn btn-print" onclick="printManagementFromRecord(${r.id})" title="Print Form"><span class="material-icons-round" style="font-size:16px">print</span></button>
+      <div style="position:relative;display:inline-block;vertical-align:middle;margin:0 4px;" class="conv-status-dropdown-wrap">
+        <span class="status-badge ${CONV_TAG_CLASS[status]}" style="cursor:pointer;" title="Converted To (currently: ${status})" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'">
+          <span class="material-icons-round" style="font-size:13px;">swap_horiz</span> ${status}
+        </span>
+        <div class="conv-status-menu">
+          ${options.map(opt => `<button onclick="updateConversionStatus(${r.id}, '${opt}');this.closest('.conv-status-menu').style.display='none';">${opt}</button>`).join('')}
+        </div>
+      </div>
       ${sessionStorage.getItem('admin_role') !== 'counsellor' ? `
         <button class="btn btn-delete" onclick="deleteManagement(${r.id})" title="Delete Record"><span class="material-icons-round" style="font-size:16px">delete</span></button>
       ` : ''}
     </td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
+}
+
+async function updateConversionStatus(id, status) {
+  try {
+    await apiFetch(`/api/admin/management-form/${id}/conversion-status`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+    showToast(`Marked as "${status}"`);
+    loadManagementStatus();
+  } catch (err) {
+    alert('Failed to update conversion status: ' + err.message);
+  }
 }
 
 async function saveAndPrintManagementForm(admissionId, isPG) {
@@ -3855,6 +4087,7 @@ function filterManagement() {
   const search = document.getElementById('mgt-search').value.toLowerCase();
   const dateFilter = document.getElementById('mgt-filter-date').value;
   const branchFilter = document.getElementById('mgt-filter-branch').value;
+  const entryTypeFilter = document.getElementById('mgt-filter-entry-type')?.value || '';
   let filtered = allManagement;
 
   if (search) {
@@ -3876,6 +4109,9 @@ function filterManagement() {
       filtered = filtered.filter(r => r.branch === branchFilter);
     }
   }
+
+  if (entryTypeFilter === 'lateral') filtered = filtered.filter(r => r.is_lateral_entry);
+  else if (entryTypeFilter === 'regular') filtered = filtered.filter(r => !r.is_lateral_entry);
 
   renderManagement(filtered);
 }

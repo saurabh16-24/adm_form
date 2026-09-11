@@ -739,7 +739,8 @@ app.get('/api/enquiry/:id', async (req, res) => {
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS updated_by VARCHAR(100)",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS contineo_id VARCHAR(50)",
       "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS remarks TEXT",
-      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS audit_log JSONB DEFAULT '[]'"
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS audit_log JSONB DEFAULT '[]'",
+      "ALTER TABLE management_forms ADD COLUMN IF NOT EXISTS conversion_status VARCHAR(20) DEFAULT 'Management'"
     ];
     for (const sql of mgtAlter) await pool.query(sql);
 
@@ -781,6 +782,19 @@ app.get('/api/enquiry/:id', async (req, res) => {
         mgt_int INTEGER DEFAULT 0,
         aicte INTEGER DEFAULT 0,
         UNIQUE(academic_year, course_id)
+      );
+    `);
+
+    // Create table for Diploma II Year Lateral Entry Admitted Students manual entries
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS diploma_manual_stats (
+        id SERIAL PRIMARY KEY,
+        academic_year VARCHAR(20) NOT NULL,
+        branch_id VARCHAR(50) NOT NULL,
+        dip_cet INTEGER DEFAULT 0,
+        dip_aicte INTEGER DEFAULT 0,
+        dip_mgt INTEGER DEFAULT 0,
+        UNIQUE(academic_year, branch_id)
       );
     `);
 
@@ -1273,6 +1287,56 @@ app.post('/api/admin/stats/manual', adminAuth, async (req, res) => {
   } catch (err) { 
     await pool.query('ROLLBACK');
     res.status(500).json({ error: err.message }); 
+  }
+});
+
+// ══════════ DIPLOMA II YEAR LATERAL ENTRY MANUAL STATS ══════════
+app.get('/api/admin/stats/diploma-manual', adminAuth, async (req, res) => {
+  try {
+    const year = req.query.year;
+    if (!year) return res.json({});
+    const { rows } = await pool.query('SELECT * FROM diploma_manual_stats WHERE academic_year = $1', [year]);
+    const data = {};
+    rows.forEach(r => {
+      data[r.branch_id] = {
+        dip_cet: r.dip_cet,
+        dip_aicte: r.dip_aicte,
+        dip_mgt: r.dip_mgt,
+      };
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/stats/diploma-manual', adminAuth, async (req, res) => {
+  try {
+    const { year, data } = req.body;
+    if (!year || !data) return res.status(400).json({ error: 'Missing year or data' });
+
+    await pool.query('BEGIN');
+    for (const [branch_id, stats] of Object.entries(data)) {
+      await pool.query(`
+        INSERT INTO diploma_manual_stats (academic_year, branch_id, dip_cet, dip_aicte, dip_mgt)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (academic_year, branch_id) DO UPDATE SET
+          dip_cet = EXCLUDED.dip_cet,
+          dip_aicte = EXCLUDED.dip_aicte,
+          dip_mgt = EXCLUDED.dip_mgt
+      `, [year, branch_id, stats.dip_cet, stats.dip_aicte, stats.dip_mgt]);
+    }
+
+    await pool.query(`
+      INSERT INTO admin_activity_log (admin_name, action, target_type, target_name, details)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [req.userName, 'update', 'diploma_admitted_stats', `Session ${year}`, 'Updated Diploma II Year Lateral Entry manual admission counts']);
+
+    await pool.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await pool.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -1921,9 +1985,11 @@ app.post('/api/admin/enquiries/bulk-email', adminAuth, upload.array('attachments
 app.get('/api/admin/admissions', adminAuth, async (req, res) => {
   try {
     const query = `
-      SELECT a.*, 
-        EXISTS(SELECT 1 FROM management_forms m WHERE m.admission_id = a.id) as has_management
-      FROM admissions a 
+      SELECT a.*,
+        EXISTS(SELECT 1 FROM management_forms m WHERE m.admission_id = a.id) as has_management,
+        (e.education_qualification = 'Diploma') as is_lateral_entry
+      FROM admissions a
+      LEFT JOIN enquiries e ON a.enquiry_id = e.id
       ORDER BY a.id DESC
     `;
     const result = await pool.query(query);
@@ -2204,7 +2270,13 @@ app.get('/api/admin/activity-log', adminAuth, async (req, res) => {
 
 app.get('/api/admin/management-forms', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM management_forms ORDER BY id DESC');
+    const result = await pool.query(`
+      SELECT m.*, (e.education_qualification = 'Diploma') as is_lateral_entry
+      FROM management_forms m
+      LEFT JOIN admissions a ON m.admission_id = a.id
+      LEFT JOIN enquiries e ON a.enquiry_id = e.id
+      ORDER BY m.id DESC
+    `);
     res.json({ rows: result.rows });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -2214,6 +2286,31 @@ app.get('/api/admin/management-form/:id', adminAuth, async (req, res) => {
     const result = await pool.query('SELECT * FROM management_forms WHERE id = $1', [req.params.id]);
     if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
     res.json({ row: result.rows[0] });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Update a management form's conversion status (Management / CET / COMEDK / Cancelled).
+// Only rows still marked 'Management' are counted in the UG, PG, and Diploma Lateral
+// Entry admitted-stats tables.
+app.post('/api/admin/management-form/:id/conversion-status', adminAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowed = ['CET', 'COMEDK', 'Management', 'Cancelled'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+    const existing = await pool.query('SELECT student_name, conversion_status FROM management_forms WHERE id = $1', [id]);
+    if (!existing.rows.length) return res.status(404).json({ error: 'Not found' });
+
+    await pool.query('UPDATE management_forms SET conversion_status = $1 WHERE id = $2', [status, id]);
+
+    logAdminActivity(
+      req.userName, 'Updated Conversion Status', 'management', parseInt(id),
+      existing.rows[0].student_name,
+      `Changed from ${existing.rows[0].conversion_status || 'Management'} to ${status}`
+    );
+
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -2259,12 +2356,21 @@ app.get('/api/admin/management-branches', adminAuth, async (req, res) => {
 app.get('/api/admin/admissions/management', adminAuth, async (req, res) => {
   try {
     const year = req.query.year || '2026-27';
-    
-    // Get all branches regardless of year to debug
+
+    // Get all branches regardless of year to debug.
+    // Excludes Diploma II Year Lateral Entry admissions (education_qualification = 'Diploma'
+    // on the originating enquiry) — those are counted separately in the Diploma stats table.
     const allBranches = await pool.query(
-      'SELECT branch, COUNT(*) as count FROM management_forms WHERE branch IS NOT NULL AND branch != \'\' GROUP BY branch ORDER BY count DESC'
+      `SELECT m.branch, COUNT(*) as count
+       FROM management_forms m
+       LEFT JOIN admissions a ON m.admission_id = a.id
+       LEFT JOIN enquiries e ON a.enquiry_id = e.id
+       WHERE m.branch IS NOT NULL AND m.branch != ''
+         AND e.education_qualification IS DISTINCT FROM 'Diploma'
+         AND COALESCE(m.conversion_status, 'Management') = 'Management'
+       GROUP BY m.branch ORDER BY count DESC`
     );
-    
+
     // Map of course IDs to exact branch names from management_forms table
     // ORDER MATTERS: More specific patterns must come before general ones
     const courseMapping = [
@@ -2317,6 +2423,64 @@ app.get('/api/admin/admissions/management', adminAuth, async (req, res) => {
   } catch (err) { 
     
     res.status(500).json({ error: err.message }); 
+  }
+});
+
+// GET Diploma II Year Lateral Entry Management Admissions Count by Branch
+// Only counts management_forms admissions whose originating enquiry had
+// education_qualification = 'Diploma' (the Lateral Entry indicator).
+app.get('/api/admin/admissions/management-diploma', adminAuth, async (req, res) => {
+  try {
+    const branchCounts = await pool.query(
+      `SELECT m.branch, COUNT(*) as count
+       FROM management_forms m
+       JOIN admissions a ON m.admission_id = a.id
+       JOIN enquiries e ON a.enquiry_id = e.id
+       WHERE e.education_qualification = 'Diploma' AND m.branch IS NOT NULL AND m.branch != ''
+         AND COALESCE(m.conversion_status, 'Management') = 'Management'
+       GROUP BY m.branch ORDER BY count DESC`
+    );
+
+    // ORDER MATTERS: More specific patterns must come before general ones
+    const branchMapping = [
+      { id: 'AI',  patterns: ['Artificial Intelligence', 'CS-CA', 'CSCA', '(Artificial Intelligence)'] },
+      { id: 'CYB', patterns: ['Cyber Security', 'CS-CY', 'CSCY', '(Cyber Security)'] },
+      { id: 'DS',  patterns: ['Data Science', 'CS-DS', 'CSDS', '(Data Science)'] },
+      { id: 'CSE', patterns: ['Computer Science and Engineering'] },
+      { id: 'ECE', patterns: ['Electronics and Communication', 'Electronics & Communication'] },
+      { id: 'ISE', patterns: ['Information Science and Engineering'] },
+      { id: 'ME',  patterns: ['Mechanical Engineering'] },
+      { id: 'CV',  patterns: ['Civil Engineering'] },
+    ];
+
+    const counts = {};
+    branchMapping.forEach(b => { counts[b.id] = 0; });
+
+    branchCounts.rows.forEach(row => {
+      const branchValue = (row.branch || '').trim();
+      let matched = false;
+
+      for (const b of branchMapping) {
+        if (b.patterns.some(pattern => branchValue === pattern)) {
+          counts[b.id] += parseInt(row.count) || 0;
+          matched = true;
+          break;
+        }
+        if (b.patterns.some(pattern => branchValue.toLowerCase().includes(pattern.toLowerCase()))) {
+          counts[b.id] += parseInt(row.count) || 0;
+          matched = true;
+          break;
+        }
+      }
+
+      if (!matched) {
+        console.log(`[Diploma Management API] NO MATCH: "${branchValue}" (count: ${row.count})`);
+      }
+    });
+
+    res.json({ counts });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
