@@ -520,12 +520,14 @@ body {
 }
 
 .stats-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 10;
   background: var(--bg-secondary);
 }
 
+/* Not position:sticky: .table-wrap has overflow-x:auto, which per spec forces its
+   overflow-y to compute as 'auto' too, making it (not the page) the sticky containing
+   block. That made the header stick just ~111px into its own box instead of the
+   viewport, visually covering the first row(s) of every stats table. A static header
+   avoids the whole class of bug on a table this short (8-11 rows). */
 .stats-table thead th {
   padding: 12px 6px;
   text-align: center;
@@ -536,18 +538,6 @@ body {
   letter-spacing: 0.025em;
   white-space: nowrap;
   border: 1px solid #cbd5e1;
-  position: sticky;
-  z-index: 11;
-}
-
-.stats-table thead tr:first-child th {
-  top: 0;
-  z-index: 12;
-}
-
-.stats-table thead tr:last-child th {
-  top: 34px; /* height of row 1 — adjust if row 1 wraps or padding changes */
-  z-index: 11;
 }
 
 /* Color-coded header sections */
