@@ -4125,6 +4125,88 @@ function exportManagementCSV() {
   downloadCSV('management_export.csv', headers, rows);
 }
 
+async function exportManagementPDF() {
+  if (!allManagement.length) return alert('No management records to export.');
+
+  // Row color depends ONLY on conversion status — never on entry type (Regular/Lateral
+  // Entry), which is shown as a badge only.
+  const CONV_BADGE = {
+    Management: { bg: '#f8fafc', color: '#64748b', border: '#e2e8f0' },
+    CET:        { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+    COMEDK:     { bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+    Cancelled:  { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
+  };
+  const ROW_TINT = {
+    Management: '#ffffff',
+    CET: 'rgba(37, 99, 235, 0.10)',
+    COMEDK: 'rgba(22, 163, 74, 0.10)',
+    Cancelled: 'rgba(220, 38, 38, 0.12)',
+  };
+  const badge = (bg, color, border, label) =>
+    `<span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em;background:${bg};color:${color};border:1px solid ${border};white-space:nowrap;">${label}</span>`;
+
+  const rowsHtml = allManagement.map((r, i) => {
+    const status = r.conversion_status || 'Management';
+    const cb = CONV_BADGE[status] || CONV_BADGE.Management;
+    const rowBg = ROW_TINT[status] || ROW_TINT.Management;
+    const entryBadge = r.is_lateral_entry
+      ? badge('#f0fdfa', '#0f766e', '#99f6e4', 'Lateral Entry')
+      : badge('#f8fafc', '#64748b', '#e2e8f0', 'Regular');
+
+    return `<tr style="background:${rowBg};">
+      <td>${i + 1}</td>
+      <td>${r.id}</td>
+      <td>${r.app_no || '—'}</td>
+      <td style="text-align:left;">
+        <div style="font-weight:700;">${r.student_name || '—'}</div>
+        <div style="margin-top:3px;">${entryBadge}</div>
+      </td>
+      <td>${r.branch || '—'}</td>
+      <td>${r.academic_year || '—'}</td>
+      <td>₹${parseFloat(r.net_payable || 0).toLocaleString()}</td>
+      <td>${badge(cb.bg, cb.color, cb.border, status)}</td>
+      <td>${formatDate(r.updated_at)}</td>
+    </tr>`;
+  }).join('');
+
+  const th = (label) => `<th style="padding:6px 8px;border:1px solid #cbd5e1;font-size:7.5px;text-transform:uppercase;letter-spacing:0.03em;color:#475569;background:#f1f5f9;">${label}</th>`;
+  const tableHtml = `
+    <table style="width:100%;border-collapse:collapse;font-size:9px;">
+      <thead><tr>${['Sr.No','ID','App No.','Name','Branch','Ac. Year','Net Payable','Conversion Status','Updated'].map(th).join('')}</tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <div style="margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:8px;color:#475569;">
+      <span>${badge('#f0fdfa','#0f766e','#99f6e4','Lateral Entry')} Diploma II Year Lateral Entry admission</span>
+      <span>${badge('#f8fafc','#64748b','#e2e8f0','Regular')} Regular UG/PG admission</span>
+      <span>${badge('#f8fafc','#64748b','#e2e8f0','Management')} White row — counted in UG/PG/Diploma stats</span>
+      <span>${badge('#eff6ff','#1d4ed8','#bfdbfe','CET')} Blue row — converted to CET</span>
+      <span>${badge('#f0fdf4','#15803d','#bbf7d0','COMEDK')} Green row — converted to COMEDK</span>
+      <span>${badge('#fef2f2','#b91c1c','#fecaca','Cancelled')} Red row — admission cancelled</span>
+    </div>`;
+
+  const logoUrl = await getLogoDataURL();
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`
+    <!DOCTYPE html><html><head><title>Management Admissions — SVCE Report</title>
+    <style>
+      @page { size: A4 landscape; margin: 12mm; }
+      body { font-family: 'Inter','Segoe UI',sans-serif; padding: 0; margin: 0; font-size: 9px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 5px 8px; border: 1px solid #cbd5e1; text-align: center; }
+      td { font-size: 9px; }
+      @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+    </style></head><body>
+    ${buildPDFHeader('Management Admissions', `${allManagement.length} records — includes Entry Type and Conversion Status badges`, logoUrl)}
+    ${tableHtml}
+    <div style="margin-top:24px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:8px;color:#94a3b8;display:flex;justify-content:space-between;">
+      <span>SVCE Admissions Intelligence System</span>
+      <span>Confidential — For Internal Use Only</span>
+    </div>
+    </body></html>`);
+  printWin.document.close();
+  setTimeout(() => { printWin.focus(); printWin.print(); }, 600);
+}
+
 // ═══════════════ BULK MAIL ═══════════════
 let currentBulkEmails = [];
 
